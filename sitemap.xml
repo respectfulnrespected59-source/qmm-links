@@ -15,7 +15,14 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- ARTICLE ENTRIES GO HERE.
+  <url>
+    <loc>https://quantummelaninmedia.com/articles/best-ai-tools-two-person-auto-detail-shop/</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- MORE ARTICLE ENTRIES GO HERE.
        One <url> block per published comparison article.
        Update <lastmod> whenever an article is materially edited, then re-ping
        IndexNow (see BING_SETUP_RUNBOOK.md) so Bing recrawls in ~24-48h instead
