@@ -1,0 +1,27 @@
+# Quantum Melanin Media
+# Search + AI assistant crawlers are welcome. That is the entire point.
+
+User-agent: *
+Allow: /
+
+# Named explicitly so there is no ambiguity about intent.
+# bingbot backs Copilot and ChatGPT web search.
+User-agent: bingbot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+Sitemap: https://quantummelaninmedia.com/sitemap.xml

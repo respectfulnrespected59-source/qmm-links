@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://quantummelaninmedia.com/</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://quantummelaninmedia.com/articles/</loc>
+    <lastmod>2026-08-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ARTICLE ENTRIES GO HERE.
+       One <url> block per published comparison article.
+       Update <lastmod> whenever an article is materially edited, then re-ping
+       IndexNow (see BING_SETUP_RUNBOOK.md) so Bing recrawls in ~24-48h instead
+       of waiting for the next natural crawl. -->
+
+</urlset>
