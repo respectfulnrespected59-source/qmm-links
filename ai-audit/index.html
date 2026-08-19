@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Delivery Assurance — Quantum Melanin Media</title>
+<meta name="description" content="Training and fractional architecture for teams shipping with AI. Your agent reports success on work that never shipped. I find it, and I train your team to find it.">
+<link rel="canonical" href="https://quantummelaninmedia.com/ai-audit/">
+<meta property="og:title" content="AI Delivery Assurance">
+<meta property="og:description" content="Training and fractional architecture for teams shipping with AI. Your agent reports success on work that never shipped. I find it, and I train your team to find it.">
+<meta property="og:url" content="https://quantummelaninmedia.com/ai-audit/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+
+<style>
+  :root {
+    --ground:    #F4F6F8;
+    --surface:   #FFFFFF;
+    --panel:     #16202E;
+    --panel-ink: #E8EDF2;
+    --panel-mut: #B9C6D3;
+    --panel-fai: #8A9BAC;
+    --ink:       #10151C;
+    --slate:     #5C6B7A;
+    --rule:      #D6DDE4;
+    --accent:    #B96C12;
+    --accent-lo: #F3E4CE;
+    --false:     #3D7A5E;
+    --alarm:     #B4321F;
+    --alarm-bg:  rgba(180,50,31,0.16);
+    --alarm-ink: #F2D5CE;
+    --hairline:  rgba(255,255,255,0.14);
+
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body:    "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+    --measure: 34rem;
+    --wide:    64rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0D1219;
+      --surface:   #141C26;
+      --panel:     #1C2836;
+      --panel-ink: #E8EDF2;
+      --panel-mut: #AEBECC;
+      --panel-fai: #8A9BAC;
+      --ink:       #E6EBF0;
+      --slate:     #94A3B1;
+      --rule:      #2A3644;
+      --accent:    #E8A34A;
+      --accent-lo: #33270F;
+      --false:     #4E9C79;
+      --alarm:     #E2664E;
+      --alarm-bg:  rgba(226,102,78,0.14);
+      --alarm-ink: #F6DCD4;
+      --hairline:  rgba(255,255,255,0.12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #0D1219;
+    --surface:   #141C26;
+    --panel:     #1C2836;
+    --panel-ink: #E8EDF2;
+    --panel-mut: #AEBECC;
+    --panel-fai: #8A9BAC;
+    --ink:       #E6EBF0;
+    --slate:     #94A3B1;
+    --rule:      #2A3644;
+    --accent:    #E8A34A;
+    --accent-lo: #33270F;
+    --false:     #4E9C79;
+    --alarm:     #E2664E;
+    --alarm-bg:  rgba(226,102,78,0.14);
+    --alarm-ink: #F6DCD4;
+    --hairline:  rgba(255,255,255,0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 1.5rem; }
+  .measure { max-width: var(--measure); }
+
+  h1, h2, h3 { font-family: var(--display); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  .mono { font-family: var(--mono); font-size: 0.9em; }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    background: var(--panel);
+    color: var(--panel-ink);
+    padding: 4.5rem 0 3.25rem;
+    border-bottom: 3px solid var(--accent);
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 1.4rem + 4.4vw, 4.5rem);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    margin: 0.75rem 0 0;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .deck {
+    max-width: 38rem;
+    margin: 1.5rem 0 0;
+    font-size: 1.1875rem;
+    line-height: 1.6;
+    color: var(--panel-mut);
+  }
+  .hero .who {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--panel-fai);
+    margin: 2.5rem 0 0;
+  }
+
+  /* the thesis, as instrumentation */
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2.5rem 0 0;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+  .tick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    color: var(--panel-fai);
+  }
+  .tick::before { content: "\2713"; color: var(--false); font-weight: 700; }
+  .tick.bad {
+    border-color: var(--alarm);
+    color: var(--alarm-ink);
+    background: var(--alarm-bg);
+  }
+  .tick.bad::before {
+    content: "\25CF";
+    color: var(--alarm);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) {
+    .tick.bad::before { animation: none; }
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding: 3.5rem 0; }
+  section + section { border-top: 1px solid var(--rule); }
+
+  h2 {
+    font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0.6rem 0 1.25rem;
+  }
+  h3 { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  p { margin: 0 0 1.1rem; }
+  p:last-child { margin-bottom: 0; }
+  .lede { font-size: 1.1875rem; line-height: 1.6; }
+  .after { margin-top: 1.7rem; max-width: 44rem; }
+
+  .symptoms {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0 0;
+    display: grid;
+    gap: 0.9rem;
+    max-width: 44rem;
+  }
+  .symptoms li { padding-left: 1.6rem; position: relative; }
+  .symptoms li::before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--false);
+  }
+
+  .doctrine {
+    margin: 2.25rem 0 0;
+    padding: 1.5rem 1.75rem;
+    background: var(--accent-lo);
+    border-left: 3px solid var(--accent);
+    max-width: 44rem;
+  }
+  .doctrine strong { font-weight: 600; }
+
+  /* ---------- tables ---------- */
+
+  .scroll { overflow-x: auto; margin: 1.5rem 0 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; min-width: 34rem; }
+  th {
+    font-family: var(--display);
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--slate);
+    padding: 0 1rem 0.65rem 0;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td { padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td:last-child, th:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  .t-name { font-family: var(--display); font-weight: 600; }
+  .t-note { color: var(--slate); font-size: 0.875rem; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 1px; }
+  .link-mono { font-family: var(--mono); font-size: 0.8125rem; word-break: break-all; }
+
+  /* ---------- ladder ---------- */
+
+  .ladder {
+    display: grid;
+    gap: 1px;
+    background: var(--rule);
+    margin: 2rem 0 0;
+    border: 1px solid var(--rule);
+  }
+  .rung {
+    background: var(--surface);
+    padding: 1.6rem 1.75rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem 2rem;
+    align-items: baseline;
+  }
+  .rung.lead { border-left: 3px solid var(--accent); }
+  .price {
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .price .unit { font-size: 0.75rem; font-weight: 500; }
+  .rung.lead .price { color: var(--accent); }
+  .terms {
+    grid-column: 1 / -1;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slate);
+  }
+  .rung p { grid-column: 1 / -1; margin: 0.5rem 0 0; font-size: 0.9375rem; }
+  .rung ul { grid-column: 1 / -1; margin: 0.75rem 0 0; padding-left: 1.1rem; font-size: 0.9375rem; }
+  .rung li { margin-bottom: 0.35rem; }
+  .flag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.15rem 0.45rem;
+    margin-left: 0.6rem;
+    vertical-align: 0.15em;
+  }
+
+  /* ---------- close ---------- */
+
+  .close { background: var(--panel); color: var(--panel-ink); padding: 3.5rem 0; }
+  .close h2 { color: var(--panel-ink); margin-top: 0; }
+  .close p { color: var(--panel-mut); }
+  .contact { font-family: var(--mono); font-size: 0.9375rem; line-height: 2; margin-top: 1.75rem; }
+  .contact strong {
+    font-family: var(--display);
+    font-size: 1.125rem;
+    display: block;
+    color: var(--panel-ink);
+    margin-bottom: 0.4rem;
+  }
+</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">AI Delivery Assurance</p>
+    <h1>Green checkmarks <em>lie.</em></h1>
+    <p class="deck">
+      Your team adopted AI coding tools. Velocity went up — and so did the gap between
+      &ldquo;the agent says it&rsquo;s done&rdquo; and &ldquo;it is actually running in production.&rdquo;
+      I close that gap, and I train your engineers to close it without me.
+    </p>
+
+    <div class="strip" role="img" aria-label="Status strip: tests passed, build succeeded, CI green, pull request merged — but the deployed artifact is four commits stale.">
+      <span class="tick">tests passed</span>
+      <span class="tick">build succeeded</span>
+      <span class="tick">CI green</span>
+      <span class="tick">PR merged</span>
+      <span class="tick bad">deployed artifact &mdash; 4 commits stale</span>
+    </div>
+
+    <p class="who">Robert Hadden Jr. · Quantum Melanin Media · Fremont, CA</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">The problem</p>
+    <h2>Every team hits this in month three</h2>
+    <p class="lede measure">Four things go wrong, and all four of them report success.</p>
+    <ul class="symptoms">
+      <li>The agent reports success on work that never shipped.</li>
+      <li>Tests pass against the assumption the code itself made &mdash; so the suite agrees with the bug.</li>
+      <li>CI is green, <span class="mono">git log</span> is clean, and the host is serving a build four commits old.</li>
+      <li>Nobody can tell which AI-authored changes were verified and which were waved through.</li>
+    </ul>
+    <p class="after">
+      This is not a prompting problem. It is a <strong>verification and control</strong> problem &mdash;
+      the most expensive failure mode in AI-assisted engineering right now, because it stays
+      invisible until a customer finds it.
+    </p>
+
+    <div class="doctrine">
+      <strong>The rule everything here is built on:</strong>
+      audit the running artifact, never the reporting channel.
+      Live URL over <span class="mono">git log</span>. Rendered file over build output.
+      The actual database row over the write that &ldquo;succeeded.&rdquo;
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Engagements</p>
+    <h2>Start with the audit. Everything else upsells from it.</h2>
+
+    <div class="ladder">
+      <article class="rung lead">
+        <h3>AI Delivery Audit <span class="flag">Start here</span></h3>
+        <span class="price">$2,500</span>
+        <span class="terms">1 week · remote · fixed price</span>
+        <p>A read-only pass over one product&rsquo;s AI-assisted pipeline, finding where <em>reported-done</em> has drifted from <em>actually-running</em>.</p>
+        <ul>
+          <li>Drift report &mdash; every place the reporting channel disagrees with the deployed artifact</li>
+          <li>Ranked findings (Critical / High / Medium), each with <span class="mono">file:line</span> and a concrete fix</li>
+          <li><strong>One working drift alarm, handed over</strong> &mdash; tested against a known-bad case, so you know it can actually go red</li>
+          <li>60-minute readout with the team</li>
+        </ul>
+      </article>
+
+      <article class="rung">
+        <h3>Half-Day Workshop</h3>
+        <span class="price">$4,500</span>
+        <span class="terms">4 hours · up to 20 engineers</span>
+        <p>GitHub control, context engineering, and verification discipline &mdash; hands-on. Includes the handout, exercise repo, and two weeks of async follow-up.</p>
+      </article>
+
+      <article class="rung">
+        <h3>Two-Day Intensive</h3>
+        <span class="price">$12,000</span>
+        <span class="terms">2 days · up to 15 engineers</span>
+        <p>All three quadrants at depth, built against your real repo &mdash; not a toy. Your team leaves with a working CI drift alarm and a written verification standard it can enforce after I&rsquo;m gone. 30 days async support.</p>
+      </article>
+
+      <article class="rung">
+        <h3>Fractional AI Architect</h3>
+        <span class="price">$6,500<span class="unit">/mo</span></span>
+        <span class="terms">~20 hrs per month · 3-month minimum</span>
+        <p>I own the agentic architecture and the verification standard, review the AI-authored changes that matter, and level up your engineers in-flight.</p>
+      </article>
+
+      <article class="rung">
+        <h3>Advisory</h3>
+        <span class="price">$185<span class="unit">/hr</span></span>
+        <span class="terms">10-hour blocks</span>
+        <p>Architecture calls, pipeline review, agent harness design, pull-request triage.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Curriculum</p>
+    <h2>Three quadrants</h2>
+    <p class="measure">
+      Every module ends with the team having built something that can go red.
+      Nothing is taught from a demo where everything works.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Quadrant</th><th>What it covers</th><th>They leave with</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="t-name">1 · GitHub Control</td>
+            <td>Branch topology that survives agent-authored PRs, reviewable diffs, blocking review gates, Actions as the enforcement layer</td>
+            <td class="t-note">Branch policy, configured rulesets, working CI</td>
+          </tr>
+          <tr>
+            <td class="t-name">2 · Context Engineering</td>
+            <td>Scope as the primary control, standing repo instructions, spec-before-generation, characterization-first refactors, and the test-generation trap</td>
+            <td class="t-note">Standing instruction set, spec and review templates</td>
+          </tr>
+          <tr>
+            <td class="t-name">3 · Verification Discipline</td>
+            <td>Audit the artifact not the channel, proof gates, reading a green suite skeptically, escalation channels, adversarial review, honest status reporting</td>
+            <td class="t-note">A drift alarm proven against a failing case, and their own written standard</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="after">
+      <strong>Quadrant 3 is the differentiator, and it never gets cut.</strong>
+      The market teaches prompt technique &mdash; that&rsquo;s a commodity your engineers can get free.
+      What&rsquo;s missing is the control layer around the prompt: the part that decides whether
+      what came out is real.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Proof</p>
+    <h2>Public, and checkable</h2>
+    <p class="measure">
+      I don&rsquo;t teach this from a slide deck. I teach it from systems I built, shipped,
+      and publicly documented breaking.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Artifact</th><th>What it proves</th><th>Link</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="t-name">One Agentic Stack Built All Of This</td>
+            <td class="t-note">10 products, 4 games and a feature film from one operator plus pipeline</td>
+            <td class="link-mono"><a href="https://www.youtube.com/watch?v=9mGXmo48cMY">youtu.be/9mGXmo48cMY</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">Everything That Broke Said It Worked</td>
+            <td class="t-note">The core failure mode, on camera</td>
+            <td class="link-mono"><a href="https://youtu.be/x1eraJX4o9c">youtu.be/x1eraJX4o9c</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">My AI Passed Its Own Test</td>
+            <td class="t-note">A verifier built on the code&rsquo;s own premise passes the bug</td>
+            <td class="link-mono"><a href="https://youtu.be/c7pd7AOauvY">youtu.be/c7pd7AOauvY</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">I Built a 3D Racing Game in a Browser Tab</td>
+            <td class="t-note">End-to-end agentic build, narrated</td>
+            <td class="link-mono"><a href="https://youtu.be/4kITY75evOU">youtu.be/4kITY75evOU</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">MarketPulse</td>
+            <td class="t-note">Production SaaS &mdash; 441 tests, tiered billing, real test discipline</td>
+            <td class="link-mono"><a href="https://marketpulse-22bi.onrender.com">marketpulse-22bi.onrender.com</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">Alignment 365</td>
+            <td class="t-note">Full-stack SaaS on Render and TiDB &mdash; Stripe, i18n, live ops automation</td>
+            <td class="link-mono"><a href="https://alignment365.onrender.com">alignment365.onrender.com</a></td>
+          </tr>
+          <tr>
+            <td class="t-name">QUANTUM MOTORS 3D</td>
+            <td class="t-note">Shipped WebGL racer &mdash; physics tuning, multi-platform release</td>
+            <td class="link-mono"><a href="https://quantum-melanin-media.itch.io/quantum-motors">itch.io/quantum-motors</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer class="close">
+  <div class="wrap">
+    <p class="eyebrow">Next step</p>
+    <h2>Twenty minutes to see if it applies to your stack</h2>
+    <p class="measure">
+      Fixed-scope engagements are fixed-price &mdash; no surprise invoices. And I report outcomes
+      straight: if a check didn&rsquo;t run or a finding couldn&rsquo;t be confirmed, it gets labeled
+      unverified. I don&rsquo;t pad a report with things I didn&rsquo;t check.
+    </p>
+    <p class="contact">
+      <strong>Robert Hadden Jr.</strong>
+      <a href="mailto:respectfulnrespected59@gmail.com">respectfulnrespected59@gmail.com</a><br>
+      510-730-6882 · Fremont, CA<br>
+      <a href="https://www.linkedin.com/in/robert-hadden-jr-b2b987163">LinkedIn</a> ·
+      <a href="https://github.com/respectfulnrespected59-source">GitHub</a> ·
+      <a href="https://quantummelaninmedia.com">quantummelaninmedia.com</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
