@@ -86,6 +86,27 @@ for (const route of ROUTES) {
       [...document.images].filter(i => !i.naturalWidth).map(i => i.getAttribute('src')));
     for (const b of broken) { console.log('   BROKEN IMG ' + b); bad++; }
 
+    // Every <video> must actually DECODE, not merely load. A shipped VP9 webm once passed
+    // every other check here — 200 OK, right duration, ffmpeg decoded it clean — and then
+    // died in Chrome with PIPELINE_ERROR_DECODE a third of a second in, so the hero was a
+    // frozen poster on the live site. canPlayType() says "probably" for that same file, so
+    // the only honest test is to press play and watch the clock move.
+    const vids = await page.evaluate(async () => {
+      const out = [];
+      for (const v of document.querySelectorAll('video')) {
+        v.muted = true;
+        try { await v.play(); } catch { /* autoplay refusal is reported via t below */ }
+        await new Promise(r => setTimeout(r, 1500));
+        out.push({ src: (v.currentSrc || v.src).split('/').pop(), t: +v.currentTime.toFixed(2),
+                   err: v.error ? `${v.error.code} ${v.error.message}` : null });
+      }
+      return out;
+    });
+    for (const v of vids) {
+      if (v.err || v.t < 0.4) { console.log(`   VIDEO STALLED ${v.src} t=${v.t} ${v.err || ''}`); bad++; }
+      else console.log(`   video ok  ${v.src}  t=${v.t}`);
+    }
+
     const name = (route.replace(/[^a-z0-9]+/gi, '_') || 'root') + '_' + tag + '.png';
     await page.screenshot({ path: join(OUT, name), fullPage: true });
     // Horizontal overflow is the one bug a full-page screenshot hides: the image is simply

@@ -369,11 +369,14 @@
 
 <header class="hero" id="top">
   <div class="hero-media">
+    <!-- h264/mp4 only, deliberately. The VP9 webm was 20% smaller and every browser claims
+         canPlayType("video/webm; codecs=vp9") === "probably" -- but on this rig it dies with
+         PIPELINE_ERROR_DECODE about a third of a second in, in both stock Chrome and the
+         Playwright build, at every CRF and bitrate tried. A hero that silently freezes on the
+         poster for some fraction of visitors is not worth 600 KB. -->
     <video id="heroVid" autoplay muted loop playsinline preload="metadata"
-           poster="/assets/video/qm3d-reel.jpg" aria-hidden="true" tabindex="-1">
-      <source src="/assets/video/qm3d-reel.webm" type="video/webm">
-      <source src="/assets/video/qm3d-reel.mp4" type="video/mp4">
-    </video>
+           poster="/assets/video/qm3d-reel.jpg" aria-hidden="true" tabindex="-1"
+           src="/assets/video/qm3d-reel.mp4"></video>
   </div>
   <div class="wrap hero-in">
     <span class="eyebrow">Catch the myth · become the fisherman</span>
@@ -445,10 +448,8 @@
       <div class="shot">
         <span class="tagpill">Live match</span>
         <video class="reel" muted loop playsinline preload="none"
-               poster="/assets/video/chess-reel.jpg" aria-label="BLOODLINES gameplay: a Mali Empire opening against the machine in Djenné at golden hour">
-          <source src="/assets/video/chess-reel.webm" type="video/webm">
-          <source src="/assets/video/chess-reel.mp4" type="video/mp4">
-        </video>
+               poster="/assets/video/chess-reel.jpg" src="/assets/video/chess-reel.mp4"
+               aria-label="BLOODLINES gameplay: a Mali Empire opening against the machine in Djenné at golden hour"></video>
       </div>
       <div class="copy">
         <p class="meta">3D chess · WebGL</p>

@@ -161,17 +161,21 @@ Shrink169 "$CHESS\store\screenshot-tutorial.png" (Join-Path $IMG 'chess-tutorial
 
 # ---- reels --------------------------------------------------------------------------
 # 1152x648 is the compromise: sharp enough behind a dark scrim on a desktop hero, small
-# enough that a phone on cellular is not paying 8 MB for a background loop. webm first in
-# the <video>, mp4 second -- Safari takes the mp4, everything else the webm.
+# enough that a phone on cellular is not paying 8 MB for a background loop.
+#
+# H264 ONLY. This used to also emit a VP9 webm and list it first in the <video>, because it
+# was 20% smaller and canPlayType() answers "probably" everywhere. It does not decode: stock
+# Chrome and the Playwright build both die with PIPELINE_ERROR_DECODE about 0.3s in, at
+# -b:v 800k, at -crf 34, and with alt-ref/lag-in-frames tuned -- while ffmpeg decodes the
+# same file to /dev/null without a single warning. The mp4 of the identical frames plays
+# start to finish. A hero that freezes on its poster for some slice of visitors is not worth
+# 600 KB, so there is nothing to fall back FROM.
 Write-Output 'reels'
 $goldFrames = "$RACE3D\docs\reel\_frames_gold\list.txt"
 if (Test-Path $goldFrames) {
   ffmpeg -y -hide_banner -loglevel error -f concat -safe 0 -i $goldFrames -fps_mode cfr -r 24 `
     -vf 'scale=1152:648' -c:v libx264 -preset veryslow -crf 32 -pix_fmt yuv420p `
     -movflags +faststart (Join-Path $VID 'qm3d-reel.mp4')
-  ffmpeg -y -hide_banner -loglevel error -f concat -safe 0 -i $goldFrames -fps_mode cfr -r 24 `
-    -vf 'scale=1152:648' -c:v libvpx-vp9 -b:v 800k -row-mt 1 -pix_fmt yuv420p `
-    (Join-Path $VID 'qm3d-reel.webm')
   Shrink169 "$RACE3D\docs\reel\gold.jpg" (Join-Path $VID 'qm3d-reel.jpg') 1152 5
 } else { Write-Warning "no gold frames -- in ${RACE3D}: node tools/reel.mjs gold --secs 14 --w 1280 --h 720" }
 
@@ -179,18 +183,22 @@ if (Test-Path $goldFrames) {
 # tiny (a board holds still, so h264 has almost nothing to spend bits on). Copy, do not
 # re-encode: a second generation over a near-static picture only adds mush.
 if (Test-Path "$CHESS\docs\reel\bloodlines.mp4") {
-  foreach ($f in 'bloodlines.mp4', 'bloodlines.webm', 'bloodlines.jpg') {
+  foreach ($f in 'bloodlines.mp4', 'bloodlines.jpg') {
     Copy-Item "$CHESS\docs\reel\$f" (Join-Path $VID ('chess-reel' + [IO.Path]::GetExtension($f))) -Force
   }
-  foreach ($f in 'chess-reel.mp4', 'chess-reel.webm', 'chess-reel.jpg') {
+  foreach ($f in 'chess-reel.mp4', 'chess-reel.jpg') {
     Write-Output ("  {0,-30} {1,5} KB" -f $f, [int]((Get-Item (Join-Path $VID $f)).Length / 1KB))
   }
 } else { Write-Warning "no chess reel -- in ${CHESS}: node tools/reel.mjs --secs 17" }
 
-foreach ($f in 'qm3d-reel.mp4', 'qm3d-reel.webm') {
-  $p = Join-Path $VID $f
-  if (Test-Path $p) { Write-Output ("  {0,-30} {1,5} KB" -f $f, [int]((Get-Item $p).Length / 1KB)) }
+# Sweep any webm left behind by an older run of this script, so a stale unplayable file
+# cannot get picked up and shipped again.
+Get-ChildItem $VID -Filter *.webm -ErrorAction SilentlyContinue | ForEach-Object {
+  Remove-Item $_.FullName -Force; Write-Output ("  removed stale {0}" -f $_.Name)
 }
+
+$p = Join-Path $VID 'qm3d-reel.mp4'
+if (Test-Path $p) { Write-Output ("  {0,-30} {1,5} KB" -f 'qm3d-reel.mp4', [int]((Get-Item $p).Length / 1KB)) }
 
 # ---- share image --------------------------------------------------------------------
 Write-Output 'og'
