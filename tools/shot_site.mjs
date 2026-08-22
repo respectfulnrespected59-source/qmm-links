@@ -82,8 +82,11 @@ for (const route of ROUTES) {
         : new Promise(r => { i.onload = i.onerror = r; })));
     });
     await page.waitForTimeout(600);
+    // An <img> with no src yet is not broken — the lightbox ships one empty and fills it on
+    // open. Only a src that failed to decode counts.
     const broken = await page.evaluate(() =>
-      [...document.images].filter(i => !i.naturalWidth).map(i => i.getAttribute('src')));
+      [...document.images].filter(i => i.getAttribute('src') && !i.naturalWidth)
+        .map(i => i.getAttribute('src')));
     for (const b of broken) { console.log('   BROKEN IMG ' + b); bad++; }
 
     // Every <video> must actually DECODE, not merely load. A shipped VP9 webm once passed

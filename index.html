@@ -244,6 +244,46 @@
   .prod .arrow{margin-left:auto;color:var(--mut);font-size:.85rem;transition:color .18s,transform .18s}
   .prod:hover .arrow{color:var(--gold);transform:translateX(3px)}
 
+  /* ---------- comic pages ---------- */
+  /* A rail at a FIXED HEIGHT with the width left free. The four volumes are drawn at three
+     different page ratios (Vol.1 is 477x738pt, Vol.2-4 are 1106x1981pt), so a grid with a
+     shared aspect-ratio would crop somebody's art no matter which ratio won. Same height,
+     own width, reads like pages laid out on a table. */
+  .pages{display:flex;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;padding:2px 20px 14px;margin:0 -20px;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .pages::-webkit-scrollbar{height:8px}
+  .pages::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .page{position:relative;flex:0 0 auto;scroll-snap-align:start;padding:0;text-align:left;
+    cursor:zoom-in;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;
+    transition:transform .18s cubic-bezier(.16,1,.3,1),border-color .18s,box-shadow .18s}
+  .page:hover,.page:focus-visible{transform:translateY(-4px);border-color:var(--gold);
+    box-shadow:0 20px 44px -22px rgba(232,194,90,.8);outline:none}
+  .page img{height:380px;width:auto;max-width:none}
+  /* The caption is ABSOLUTE, over the foot of the page. In flow it was the widest child of
+     a shrink-to-fit button, so a long title like "Perfect Coherence Achieved" made the tile
+     wider than its own artwork and left a black gutter down one side. */
+  .page .cap{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 9px;
+    font-size:.68rem;letter-spacing:.12em;line-height:1.35;text-transform:uppercase;color:var(--txt);
+    background:linear-gradient(180deg,transparent,rgba(7,5,13,.55) 45%,rgba(7,5,13,.94))}
+  @media (max-width:700px){ .page img{height:270px} }
+
+  /* ---------- lightbox ---------- */
+  .lb{position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:26px 70px 54px;
+    background:rgba(4,3,9,.95);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .lb.open{display:grid}
+  .lb img{max-width:100%;max-height:calc(100vh - 90px);width:auto;height:auto;
+    border-radius:10px;box-shadow:0 30px 80px -28px #000}
+  .lb .lbcap{position:absolute;left:0;right:0;bottom:18px;text-align:center;color:var(--mut);
+    font-size:.74rem;letter-spacing:.16em;text-transform:uppercase}
+  .lb button{position:absolute;border:1px solid var(--line);background:rgba(22,15,36,.85);
+    color:var(--gold);border-radius:12px;transition:border-color .15s,color .15s}
+  .lb button:hover,.lb button:focus-visible{border-color:var(--gold);color:var(--gold-hi);outline:none}
+  .lb .x{top:16px;right:18px;width:42px;height:42px;border-radius:50%;font-size:1.1rem;color:var(--txt)}
+  .lb .prev,.lb .next{top:50%;transform:translateY(-50%);width:46px;height:64px;font-size:1.3rem}
+  .lb .prev{left:14px} .lb .next{right:14px}
+  @media (max-width:640px){ .lb{padding:20px 12px 52px} .lb .prev,.lb .next{width:38px;height:52px} }
+
   /* ---------- link cards ---------- */
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   @media (max-width:900px){ .grid3{grid-template-columns:1fr 1fr} }
@@ -760,6 +800,53 @@
     </div>
 
     <div class="subhead rv">
+      <h3>Inside the pages</h3>
+      <p>Eight pages pulled straight out of the four volumes. Tap any one to read it full size.</p>
+    </div>
+    <div class="pages rv">
+      <button class="page" type="button" data-cap="Vol. 1 · The Awakening Begins">
+        <img src="/assets/img/mg-v1-awakening.jpg" width="711" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 1, The Awakening Begins: a young Black girl levitates inside a ring of gold light in a school hallway as classmates are thrown back">
+        <span class="cap">Vol. 1 · The Awakening Begins</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 1 · Meeting the Team">
+        <img src="/assets/img/mg-v1-team.jpg" width="711" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 1, Meeting the Team: the Guardians gathered under a domed chamber, each holding a different colour of energy">
+        <span class="cap">Vol. 1 · Meeting the Team</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 2 · Perfect Coherence Achieved">
+        <img src="/assets/img/mg-v2-whoom.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 2: a full-page splash of gold flower-of-life geometry spinning through teal light">
+        <span class="cap">Vol. 2 · Perfect Coherence Achieved</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 2 · The Others">
+        <img src="/assets/img/mg-v2-surge.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 2: Zara amplifies Marcus's signal and he surges with gold energy against a dark attacker">
+        <span class="cap">Vol. 2 · The Others</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 3 · Five Become One">
+        <img src="/assets/img/mg-v3-five.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 3, Five Become One: the team silhouetted against a city skyline at sunset inside the research institute">
+        <span class="cap">Vol. 3 · Five Become One</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 3 · The Venus Secret">
+        <img src="/assets/img/mg-v3-venus.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 3, The Venus Secret: a gold-ringed planet burning in deep space above the Guardians">
+        <span class="cap">Vol. 3 · The Venus Secret</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 4 · The Portal Transformation">
+        <img src="/assets/img/mg-v4-portal.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 4, The Portal Transformation: the Mount Shasta portal blazing into a second sun">
+        <span class="cap">Vol. 4 · The Portal Transformation</span>
+      </button>
+      <button class="page" type="button" data-cap="Vol. 4 · New Earth Emerges">
+        <img src="/assets/img/mg-v4-newearth.jpg" width="614" height="1100" loading="lazy"
+             alt="Melanin Guardians Vol. 4, New Earth Emerges: a green city of towers and airships under a golden sun">
+        <span class="cap">Vol. 4 · New Earth Emerges</span>
+      </button>
+    </div>
+
+    <div class="subhead rv">
       <h3>The Black Shogun Ancestors: Bloodline</h3>
       <p>A QMM novella in three parts — read it whole, read it a part at a time, or listen to
         the unabridged recording.</p>
@@ -1035,6 +1122,14 @@
   </div>
 </section>
 
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Melanin Guardians page viewer" hidden>
+  <button class="x" type="button" aria-label="Close">✕</button>
+  <button class="prev" type="button" aria-label="Previous page">‹</button>
+  <img alt="">
+  <button class="next" type="button" aria-label="Next page">›</button>
+  <p class="lbcap"></p>
+</div>
+
 <footer>
   <div class="wrap">
     <div class="fgrid">
@@ -1118,6 +1213,44 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) { hero.pause(); reels.forEach(v => v.pause()); }
   else if (!reduced.matches) tryPlay(hero);
 });
+
+// Comic-page lightbox. The rail thumbnail and the full view are the SAME file — the pages
+// render at 1100px tall and land around 220 KB each, so a second "full size" copy would
+// double the section's weight to buy nothing a reader can see.
+const pageBtns = [...document.querySelectorAll('.page')];
+if (pageBtns.length) {
+  const lb = document.getElementById('lb');
+  const lbImg = lb.querySelector('img'), lbCap = lb.querySelector('.lbcap');
+  let idx = 0, opener = null;
+  const show = (i) => {
+    idx = (i + pageBtns.length) % pageBtns.length;
+    const b = pageBtns[idx], src = b.querySelector('img');
+    lbImg.src = src.currentSrc || src.src;
+    lbImg.alt = src.alt;
+    lbCap.textContent = b.dataset.cap;
+    lb.hidden = false; lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    lb.querySelector('.x').focus();
+  };
+  const close = () => {
+    lb.classList.remove('open'); lb.hidden = true;
+    document.body.style.overflow = '';
+    // Send focus back where it came from, or a keyboard reader is dumped at the top of the
+    // document every time they close a page.
+    if (opener) opener.focus();
+  };
+  pageBtns.forEach((b, i) => b.addEventListener('click', () => { opener = b; show(i); }));
+  lb.addEventListener('click', e => { if (e.target === lb || e.target === lbImg) close(); });
+  lb.querySelector('.x').addEventListener('click', close);
+  lb.querySelector('.prev').addEventListener('click', () => show(idx - 1));
+  lb.querySelector('.next').addEventListener('click', () => show(idx + 1));
+  addEventListener('keydown', e => {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') show(idx - 1);
+    else if (e.key === 'ArrowRight') show(idx + 1);
+  });
+}
 
 // YouTube facade: the thumbnail is a local file and the player is only fetched on click, so
 // the page costs nothing to Google until a visitor asks for a video. Swapping in the iframe

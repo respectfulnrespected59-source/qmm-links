@@ -119,6 +119,16 @@ foreach ($g in $GR) {
   Shrink169 $raw (Join-Path $IMG ($g.slug + '.jpg')) 720 5
 }
 
+# ---- Melanin Guardians interior art ------------------------------------------------
+# Rendered out of the four volume PDFs by a Python helper (PyMuPDF), because ffmpeg cannot
+# read PDF and there is no poppler/ghostscript on this box. Guarded: the PDFs live in
+# Downloads rather than in a repo, so a missing file warns and leaves the shipped art alone.
+Write-Output 'melanin guardians pages'
+try {
+  python (Join-Path $PSScriptRoot 'extract_mg_art.py')
+  if ($LASTEXITCODE -ne 0) { Write-Warning 'extract_mg_art.py failed - keeping existing mg-*.jpg' }
+} catch { Write-Warning "python not available - keeping existing mg-*.jpg" }
+
 # ---- YouTube thumbnails ------------------------------------------------------------
 # Downloaded, not hotlinked. The Watch section is a click-to-load facade, so no request
 # reaches Google until a visitor actually asks for a video; hotlinking the poster would
