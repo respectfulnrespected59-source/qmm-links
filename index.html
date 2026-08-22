@@ -3,245 +3,675 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quantum Melanin Media — Books, Games & Tools</title>
-<meta name="description" content="Books, free games, and tools from Quantum Melanin Media. Plain-English receipts on melanin, history & truth.">
-<meta property="og:title" content="Quantum Melanin Media">
-<meta property="og:description" content="Books, free games & tools. Plain-English receipts on melanin, history & truth.">
+<title>Quantum Melanin Media — Afrofuturist Games, Books &amp; Tools</title>
+<meta name="description" content="Free browser games, books and AI tools from Quantum Melanin Media. Play Quantum Motors 3D and BLOODLINES chess right in your browser. Plain-English receipts on melanin, history &amp; truth.">
+<link rel="canonical" href="https://quantummelaninmedia.com/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0712">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Quantum Melanin Media">
+<meta property="og:url" content="https://quantummelaninmedia.com/">
+<meta property="og:title" content="Quantum Melanin Media — Afrofuturist Games, Books &amp; Tools">
+<meta property="og:description" content="Free browser games, books and AI tools. Play Quantum Motors 3D and BLOODLINES chess right now — no download, no signup.">
+<meta property="og:image" content="https://quantummelaninmedia.com/assets/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="msvalidate.01" content="AB56D27D64ED7D46A3F09C8E859D9BB9">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"Quantum Melanin Media",
+ "url":"https://quantummelaninmedia.com/","logo":"https://quantummelaninmedia.com/favicon.svg",
+ "founder":[{"@type":"Person","name":"Robert Hadden Jr."},{"@type":"Person","name":"Mahal Kita"}],
+ "sameAs":["https://www.youtube.com/@quantummelaninmedia","https://www.tiktok.com/@quantummelaninmedia",
+ "https://www.instagram.com/quantummelaninmedia","https://quantum-melanin-media.itch.io",
+ "https://quantummelaninmedia.gumroad.com"]}
+</script>
 <style>
   :root{
-    --gold:#e8c25a; --violet:#a877e6;
-    --ink:#0a0712; --card:#160f24; --card-hi:#1e1533;
+    --gold:#e8c25a; --gold-hi:#f5dc8e; --violet:#a877e6;
+    --ink:#07050d; --ink-2:#0d0918; --card:#160f24; --card-hi:#1e1533;
     --txt:#f3efe6; --mut:#a99fc0; --line:#2c2140;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw:1180px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:78px}
   body{
-    background:
-      radial-gradient(120% 80% at 50% -10%, #241a3d 0%, #0a0712 60%),
-      var(--ink);
-    color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    line-height:1.5; min-height:100vh; padding:38px 18px 60px; overflow-x:hidden;
+    background:var(--ink); color:var(--txt);
+    font-family:var(--sans); line-height:1.6; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{position:relative;z-index:1;max-width:540px;margin:0 auto}
+  /* height:auto is load-bearing. Every <img> here carries width/height attributes so the
+     browser can reserve the box before the bytes arrive — but those attributes map to CSS
+     presentational hints, and an explicit height silently beats `aspect-ratio`. Without this
+     line every card image renders at its intrinsic pixel height and object-fit crops a
+     16:9 screenshot into a portrait sliver. */
+  img,video{display:block;max-width:100%;height:auto}
+  a{color:inherit}
+  ::selection{background:rgba(232,194,90,.3)}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 20px}
 
-  header{text-align:center;margin-bottom:30px}
-  .mark{width:92px;height:92px;margin:0 auto 16px;display:block;filter:drop-shadow(0 4px 18px rgba(232,194,90,.35))}
-  h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,7vw,2.3rem);letter-spacing:.02em;line-height:1.1}
-  h1 .q{color:var(--gold)}
-  .tag{color:var(--mut);font-size:.95rem;margin-top:10px;font-style:italic;font-family:Georgia,serif}
-  .tag2{color:var(--gold);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;margin-top:12px}
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(7,5,13,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid transparent;transition:border-color .25s,background .25s;
+  }
+  .nav.stuck{border-bottom-color:var(--line);background:rgba(7,5,13,.92)}
+  .nav-in{display:flex;align-items:center;gap:18px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:0 0 auto}
+  .brand svg{width:30px;height:30px;filter:drop-shadow(0 2px 10px rgba(232,194,90,.4))}
+  .brand b{font-family:var(--serif);font-weight:400;font-size:1.02rem;letter-spacing:.01em;white-space:nowrap}
+  .brand b i{color:var(--gold);font-style:normal}
+  .nav-links{display:flex;gap:4px;margin-left:auto}
+  .nav-links a{
+    text-decoration:none;color:var(--mut);font-size:.82rem;letter-spacing:.13em;
+    text-transform:uppercase;padding:9px 12px;border-radius:9px;transition:color .18s,background .18s;
+  }
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--gold);background:rgba(232,194,90,.08);outline:none}
+  .nav-cta{
+    flex:0 0 auto;text-decoration:none;font-weight:800;font-size:.8rem;letter-spacing:.04em;
+    color:#20180a;background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+    padding:10px 16px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 8px 22px -12px rgba(232,194,90,.9);transition:transform .16s,filter .16s;
+  }
+  .nav-cta:hover,.nav-cta:focus-visible{transform:translateY(-1px);filter:brightness(1.07);outline:none}
+  @media (max-width:860px){ .nav-links{display:none} .nav-in{gap:12px} .nav-cta{margin-left:auto} }
 
-  .section{margin-top:30px}
-  .section > h2{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);
-     margin:0 0 12px 6px;display:flex;align-items:center;gap:10px}
-  .section > h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  /* ---------- hero ---------- */
+  .hero{position:relative;min-height:min(88vh,760px);display:flex;align-items:center;overflow:hidden}
+  .hero-media{position:absolute;inset:0;z-index:0}
+  .hero-media video,.hero-media img{width:100%;height:100%;object-fit:cover}
+  .hero-media::after{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,rgba(7,5,13,.82) 0%,rgba(7,5,13,.55) 32%,rgba(7,5,13,.86) 78%,var(--ink) 100%),
+      radial-gradient(80% 60% at 18% 55%,rgba(7,5,13,.72),transparent 70%);
+  }
+  .hero-in{position:relative;z-index:1;padding:74px 0 84px;max-width:760px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;color:var(--gold);
+    font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;margin-bottom:20px;
+    border:1px solid rgba(232,194,90,.35);border-radius:999px;padding:6px 14px;
+    background:rgba(232,194,90,.07);
+  }
+  .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 10px var(--gold);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{
+    font-family:var(--serif);font-weight:400;
+    font-size:clamp(2.4rem,7.2vw,4.5rem);line-height:1.03;letter-spacing:-.01em;
+  }
+  h1 .q{color:var(--gold);display:block}
+  .lede{color:#d8d0e6;font-size:clamp(1rem,2.1vw,1.2rem);margin-top:20px;max-width:34em}
+  .motto{color:var(--mut);font-family:var(--serif);font-style:italic;margin-top:12px;font-size:1rem}
+  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;text-decoration:none;
+    padding:14px 24px;border-radius:12px;font-weight:800;font-size:.98rem;
+    transition:transform .16s cubic-bezier(.16,1,.3,1),filter .16s,box-shadow .16s,border-color .16s;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#20180a;
+    box-shadow:0 14px 34px -14px rgba(232,194,90,.85)}
+  .btn-gold:hover,.btn-gold:focus-visible{transform:translateY(-2px);filter:brightness(1.06);
+    box-shadow:0 20px 42px -14px rgba(232,194,90,1);outline:none}
+  .btn-ghost{border:1px solid var(--line);color:var(--txt);background:rgba(22,15,36,.6)}
+  .btn-ghost:hover,.btn-ghost:focus-visible{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);outline:none}
+  .stats{display:flex;flex-wrap:wrap;gap:26px 38px;margin-top:38px;padding-top:26px;
+    border-top:1px solid rgba(255,255,255,.08)}
+  .stat b{display:block;font-family:var(--serif);font-size:1.9rem;line-height:1;color:var(--gold)}
+  .stat span{color:var(--mut);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase}
 
-  a.card{
-    display:flex;align-items:center;gap:14px;
+  /* ---------- sections ---------- */
+  section{padding:78px 0;position:relative}
+  section+section{border-top:1px solid rgba(44,33,64,.55)}
+  .kicker{color:var(--gold);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;margin-bottom:12px}
+  h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.75rem,4.2vw,2.7rem);line-height:1.12}
+  .sub{color:var(--mut);margin-top:12px;max-width:46em;font-size:1.02rem}
+  .head{margin-bottom:38px}
+
+  /* ---------- feature game ---------- */
+  .feature{
+    display:grid;grid-template-columns:1.25fr 1fr;gap:0;
+    border:1px solid var(--line);border-radius:20px;overflow:hidden;
     background:linear-gradient(180deg,var(--card-hi),var(--card));
-    border:1px solid var(--line);border-radius:16px;
-    padding:15px 16px;margin-bottom:11px;text-decoration:none;color:var(--txt);
-    transition:transform .16s cubic-bezier(.16,1,.3,1),border-color .16s,box-shadow .16s;
   }
-  a.card:hover,a.card:focus-visible{
-    transform:translateY(-2px);border-color:var(--gold);
-    box-shadow:0 10px 30px -12px rgba(232,194,90,.5);outline:none;
+  .feature .shot{position:relative;min-height:300px;background:#000}
+  .feature .shot img{width:100%;height:100%;object-fit:cover}
+  .feature .shot::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent 55%,rgba(22,15,36,.9) 100%)}
+  .tagpill{
+    position:absolute;z-index:2;top:16px;left:16px;
+    background:rgba(7,5,13,.78);border:1px solid rgba(232,194,90,.5);color:var(--gold);
+    font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;padding:6px 12px;border-radius:999px;
   }
-  a.card:active{transform:translateY(0) scale(.99)}
-  .ic{width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:grid;place-items:center;font-size:1.4rem;
-     background:radial-gradient(circle at 30% 25%,rgba(232,194,90,.28),rgba(168,119,230,.12));border:1px solid var(--line)}
-  .body{flex:1;min-width:0}
-  .body .t{font-weight:700;font-size:1.02rem;line-height:1.25}
-  .body .s{color:var(--mut);font-size:.82rem;margin-top:2px}
-  .price{flex:0 0 auto;font-weight:800;font-size:.86rem;color:var(--ink);
-     background:var(--gold);border-radius:999px;padding:5px 11px;white-space:nowrap}
+  .feature .copy{padding:34px;display:flex;flex-direction:column;justify-content:center}
+  .feature h3{font-family:var(--serif);font-weight:400;font-size:1.9rem;line-height:1.1}
+  .feature .meta{color:var(--gold);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+  .feature p{color:var(--mut);margin-top:12px;font-size:.96rem}
+  .feature .btns{margin-top:24px}
+  .feature .btn{padding:12px 20px;font-size:.9rem}
+  @media (max-width:820px){ .feature{grid-template-columns:1fr} .feature .shot{min-height:210px}
+    .feature .shot::after{background:linear-gradient(180deg,transparent 45%,rgba(22,15,36,.95) 100%)}
+    .feature .copy{padding:26px 22px 30px} }
+
+  /* ---------- screenshot strip ---------- */
+  .strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .strip figure{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;
+    transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s}
+  .strip figure:hover{transform:translateY(-3px);border-color:rgba(232,194,90,.6);
+    box-shadow:0 16px 34px -18px rgba(232,194,90,.7)}
+  .strip img{width:100%;aspect-ratio:16/9;object-fit:cover}
+  .strip figcaption{padding:9px 12px;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+  @media (max-width:700px){ .strip{grid-template-columns:1fr 1fr;gap:10px} }
+
+  /* ---------- game cards ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  @media (max-width:820px){ .grid2{grid-template-columns:1fr} }
+  .gcard{
+    display:flex;flex-direction:column;text-decoration:none;overflow:hidden;
+    border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--card-hi),var(--card));
+    transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s;
+  }
+  .gcard:hover,.gcard:focus-visible{transform:translateY(-4px);border-color:var(--gold);
+    box-shadow:0 22px 48px -22px rgba(232,194,90,.75);outline:none}
+  .gcard img{width:100%;aspect-ratio:16/9;object-fit:cover}
+  .gcard .c{padding:20px 22px 24px}
+  .gcard h3{font-family:var(--serif);font-weight:400;font-size:1.35rem;line-height:1.15}
+  .gcard p{color:var(--mut);font-size:.9rem;margin-top:8px}
+  .row{display:flex;align-items:center;gap:10px;margin-top:16px}
+  .chip{font-size:.66rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    border-radius:999px;padding:6px 12px;border:1px solid var(--gold);color:var(--gold)}
+  .chip.solid{background:var(--gold);color:#20180a;border-color:transparent}
+  .go{margin-left:auto;color:var(--gold);font-size:.8rem;font-weight:700;letter-spacing:.08em}
+
+  /* ---------- books ---------- */
+  .books{display:grid;grid-template-columns:repeat(5,1fr);gap:18px}
+  @media (max-width:980px){ .books{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:620px){ .books{grid-template-columns:repeat(2,1fr);gap:14px} }
+  .book{text-decoration:none;display:block;transition:transform .22s cubic-bezier(.16,1,.3,1)}
+  .book:hover,.book:focus-visible{transform:translateY(-6px);outline:none}
+  .book .cov{display:block;position:relative;border-radius:8px;overflow:hidden;
+    box-shadow:0 18px 34px -20px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.06) inset;
+    transition:box-shadow .22s}
+  .book:hover .cov{box-shadow:0 26px 50px -20px rgba(232,194,90,.6),0 0 0 1px rgba(232,194,90,.5) inset}
+  .book .cov img{width:100%;aspect-ratio:2/3;object-fit:cover}
+  .book .cov::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;z-index:2;
+    background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(255,255,255,.12) 55%,transparent)}
+  .book b{display:block;margin-top:12px;font-weight:700;font-size:.92rem;line-height:1.3}
+  .book span{display:block;color:var(--mut);font-size:.78rem;margin-top:3px}
+  .book em{display:block;color:var(--gold);font-style:normal;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;margin-top:7px}
+
+  /* ---------- link cards ---------- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:900px){ .grid3{grid-template-columns:1fr 1fr} }
+  @media (max-width:600px){ .grid3{grid-template-columns:1fr} }
+  .lcard{
+    display:flex;align-items:center;gap:14px;text-decoration:none;
+    background:linear-gradient(180deg,var(--card-hi),var(--card));
+    border:1px solid var(--line);border-radius:16px;padding:16px 18px;
+    transition:transform .18s cubic-bezier(.16,1,.3,1),border-color .18s,box-shadow .18s;
+  }
+  .lcard:hover,.lcard:focus-visible{transform:translateY(-3px);border-color:var(--gold);
+    box-shadow:0 16px 34px -18px rgba(232,194,90,.65);outline:none}
+  .ic{width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;
+    background:radial-gradient(circle at 30% 25%,rgba(232,194,90,.3),rgba(168,119,230,.12));border:1px solid var(--line)}
+  .lcard .t{display:block;font-weight:700;font-size:1rem;line-height:1.25}
+  .lcard .s{display:block;color:var(--mut);font-size:.8rem;margin-top:2px}
+  .lcard .b{flex:1;min-width:0}
+  .price{flex:0 0 auto;font-weight:800;font-size:.76rem;color:#20180a;background:var(--gold);
+    border-radius:999px;padding:5px 11px;white-space:nowrap}
   .price.free{background:transparent;color:var(--gold);border:1px solid var(--gold)}
-  .chev{flex:0 0 auto;color:var(--mut);font-size:1.1rem}
 
+  /* ---------- product cards (gumroad art) ---------- */
+  .pcard{
+    display:flex;flex-direction:column;text-decoration:none;overflow:hidden;
+    border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--card-hi),var(--card));
+    transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s;
+  }
+  .pcard:hover,.pcard:focus-visible{transform:translateY(-4px);border-color:var(--gold);
+    box-shadow:0 20px 44px -22px rgba(232,194,90,.7);outline:none}
+  .pcard img{width:100%;aspect-ratio:16/9;object-fit:cover;border-bottom:1px solid var(--line)}
+  .pcard .c{padding:16px 18px 20px;display:flex;flex-direction:column;flex:1}
+  .pcard h3{font-size:1.02rem;font-weight:700;line-height:1.3}
+  .pcard p{color:var(--mut);font-size:.84rem;margin-top:6px;flex:1}
 
-  /* ---- capture block ---- */
+  /* ---------- capture ---------- */
   .capture{
-    position:relative;margin:26px 0 4px;padding:22px 20px 20px;border-radius:20px;text-align:center;
+    position:relative;padding:40px 28px;border-radius:22px;text-align:center;
     background:
-      radial-gradient(120% 140% at 50% 0%, rgba(232,194,90,.13) 0%, rgba(168,119,230,.06) 45%, transparent 75%),
+      radial-gradient(120% 140% at 50% 0%,rgba(232,194,90,.15) 0%,rgba(168,119,230,.07) 45%,transparent 75%),
       linear-gradient(180deg,var(--card-hi),var(--card));
     border:1px solid rgba(232,194,90,.42);
-    box-shadow:0 18px 44px -26px rgba(232,194,90,.55), inset 0 1px 0 rgba(255,255,255,.045);
+    box-shadow:0 24px 60px -34px rgba(232,194,90,.6),inset 0 1px 0 rgba(255,255,255,.05);
   }
-  .capture::before{
-    content:"";position:absolute;inset:-1px;border-radius:20px;pointer-events:none;
-    background:linear-gradient(115deg,transparent 28%,rgba(232,194,90,.28) 50%,transparent 72%);
-    mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
-    padding:1px;
-  }
-  .cap-k{color:var(--gold);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;display:block;margin-bottom:9px}
-  .cap-h{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.25rem,5.2vw,1.55rem);line-height:1.2;letter-spacing:.01em}
-  .cap-s{color:var(--mut);font-size:.88rem;margin:9px auto 0;max-width:23em;line-height:1.55}
-  .cap-btn{
-    display:block;width:100%;margin-top:16px;padding:14px 18px;border-radius:13px;
-    background:linear-gradient(180deg,#f5dc8e,#e8c25a);color:#20180a;
-    font-weight:800;font-size:1rem;letter-spacing:.01em;text-decoration:none;
-    transition:transform .16s cubic-bezier(.16,1,.3,1),box-shadow .16s,filter .16s;
-    box-shadow:0 10px 26px -12px rgba(232,194,90,.75);
-  }
-  .cap-btn:hover,.cap-btn:focus-visible{transform:translateY(-2px);filter:brightness(1.06);
-    box-shadow:0 16px 34px -12px rgba(232,194,90,.9);outline:none}
-  .cap-btn:active{transform:translateY(0) scale(.99);box-shadow:0 6px 16px -10px rgba(232,194,90,.7)}
-  .cap-fine{color:var(--mut);font-size:.72rem;margin-top:10px;opacity:.85}
+  .capture .kicker{margin-bottom:10px}
+  .capture h2{font-size:clamp(1.5rem,4vw,2.1rem)}
+  .capture p{color:var(--mut);margin:12px auto 0;max-width:30em}
+  .capture .btn{margin-top:22px}
+  .fine{color:var(--mut);font-size:.74rem;margin-top:12px;opacity:.85}
 
-  footer{text-align:center;margin-top:38px;color:var(--mut);font-size:.8rem;line-height:1.7}
-  footer .hand{color:var(--gold);font-weight:700;letter-spacing:.04em}
+  /* ---------- footer ---------- */
+  footer{padding:56px 0 44px;border-top:1px solid var(--line);background:var(--ink-2)}
+  .fgrid{display:flex;flex-wrap:wrap;gap:30px;justify-content:space-between;align-items:flex-start}
+  .fbrand svg{width:44px;height:44px;margin-bottom:12px}
+  .fbrand p{color:var(--mut);font-size:.85rem;max-width:26em}
+  .fnav{display:flex;gap:44px;flex-wrap:wrap}
+  .fnav h4{color:var(--gold);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+  .fnav a{display:block;color:var(--mut);text-decoration:none;font-size:.88rem;padding:4px 0;transition:color .15s}
+  .fnav a:hover,.fnav a:focus-visible{color:var(--gold);outline:none}
+  .fbot{margin-top:38px;padding-top:22px;border-top:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;color:var(--mut);font-size:.78rem}
+  .fbot .hand{color:var(--gold);font-weight:700;letter-spacing:.04em}
+
+  /* ---------- reveal ---------- */
+  .rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
+  .rv.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .rv{opacity:1;transform:none;transition:none}
+    .eyebrow::before{animation:none}
+    *{transition-duration:.01ms !important}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <svg class="mark" viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="1.4" aria-hidden="true">
-      <circle cx="50" cy="50" r="15"/><circle cx="50" cy="35" r="15"/><circle cx="50" cy="65" r="15"/>
-      <circle cx="37" cy="42.5" r="15"/><circle cx="63" cy="42.5" r="15"/>
-      <circle cx="37" cy="57.5" r="15"/><circle cx="63" cy="57.5" r="15"/>
-      <circle cx="50" cy="50" r="30" stroke-width="1.8"/>
-    </svg>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="Quantum Melanin Media — home">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="2" aria-hidden="true">
+        <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+        <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+        <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+        <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
+      </svg>
+      <b><i>Quantum</i> Melanin Media</b>
+    </a>
+    <div class="nav-links">
+      <a href="#games">Games</a>
+      <a href="#books">Books</a>
+      <a href="#watch">Watch</a>
+      <a href="#build">Build</a>
+      <a href="#shop">Shop</a>
+    </div>
+    <a class="nav-cta" href="https://quantummelaninmedia.gumroad.com/subscribe" target="_blank" rel="noopener">Join the list</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-media">
+    <video id="heroVid" autoplay muted loop playsinline preload="metadata"
+           poster="/assets/video/qm3d-reel.jpg" aria-hidden="true" tabindex="-1">
+      <source src="/assets/video/qm3d-reel.webm" type="video/webm">
+      <source src="/assets/video/qm3d-reel.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="wrap hero-in">
+    <span class="eyebrow">Catch the myth · become the fisherman</span>
     <h1><span class="q">Quantum</span> Melanin Media</h1>
-    <p class="tag">Plain-English receipts on melanin, history &amp; truth.</p>
-    <p class="tag2">Catch the myth · become the fisherman</p>
-  </header>
-
-
-  <section class="capture" aria-labelledby="cap-h">
-    <span class="cap-k">Don't miss a drop</span>
-    <h2 class="cap-h" id="cap-h">Get new books, games &amp; tools first</h2>
-    <p class="cap-s">One email when something new lands &mdash; a book, a free game, a tool. That's it.</p>
-    <a class="cap-btn" href="https://quantummelaninmedia.gumroad.com/subscribe" target="_blank" rel="noopener">Join the list &rarr;</a>
-    <p class="cap-fine">Free &middot; no spam &middot; unsubscribe anytime</p>
-  </section>
-
-  <div class="section">
-    <h2>▶️ Watch · free</h2>
-    <a class="card" href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">
-      <span class="ic">▶️</span>
-      <span class="body"><span class="t">YouTube — 177 videos</span>
-        <span class="s">Hieroglyph classes, AI receipts, cinematic drops</span></span>
-      <span class="price free">FREE</span>
-    </a>
-    <a class="card" href="https://www.tiktok.com/@quantummelaninmedia" target="_blank" rel="noopener">
-      <span class="ic">🎵</span>
-      <span class="body"><span class="t">TikTok</span>
-        <span class="s">Shorts · I Call Bullshit · no fog, no cap</span></span>
-      <span class="price free">FREE</span>
-    </a>
-    <a class="card" href="https://www.instagram.com/quantummelaninmedia" target="_blank" rel="noopener">
-      <span class="ic">📸</span>
-      <span class="body"><span class="t">Instagram</span>
-        <span class="s">Reels &amp; stills from the cinematic engine</span></span>
-      <span class="price free">FREE</span>
-    </a>
+    <p class="lede">Afrofuturist games, books and tools — built in the open by Robert Hadden Jr.
+      &amp; Mahal Kita. Plain-English receipts on melanin, history &amp; truth.</p>
+    <div class="btns">
+      <a class="btn btn-gold" href="/quantummotors3dracing/">▶ Play Quantum Motors 3D</a>
+      <a class="btn btn-ghost" href="#books">Browse the books</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>3</b><span>Free browser games</span></div>
+      <div class="stat"><b>5</b><span>Books on Amazon</span></div>
+      <div class="stat"><b>177</b><span>Videos on YouTube</span></div>
+    </div>
   </div>
+</header>
 
-  <div class="section">
-    <h2>🧭 Start here · free</h2>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com/l/cmphu" target="_blank" rel="noopener">
-      <span class="ic">🧭</span>
-      <span class="body"><span class="t">The AI Business GPS — Starter Map</span>
-        <span class="s">Free: pick a real money goal &amp; let AI call your next move</span></span>
-      <span class="price free">FREE</span>
-    </a>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com/l/ooduha" target="_blank" rel="noopener">
-      <span class="ic">🚗</span>
-      <span class="body"><span class="t">AI Business GPS — Builder Kit</span>
-        <span class="s">Persistent AI persona + 12 prompts + templates</span></span>
-      <span class="price">$19+</span>
-    </a>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com/l/qsuiwo" target="_blank" rel="noopener">
-      <span class="ic">🛠️</span>
-      <span class="body"><span class="t">Done-With-You GPS Build</span>
-        <span class="s">We build your GPS live, on your numbers — 1:1</span></span>
-      <span class="price">$297</span>
-    </a>
+<!-- ============ GAMES ============ -->
+<section id="games">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="kicker">🎮 Play free</p>
+      <h2>Three games. No download, no signup.</h2>
+      <p class="sub">Two of them run right here on this site — click and you are driving.
+        Everything is free, forever, and made in-house.</p>
+    </div>
+
+    <div class="feature rv">
+      <div class="shot">
+        <span class="tagpill">Latest build</span>
+        <img src="/assets/img/qm3d-gold.jpg" width="1100" height="619" loading="lazy"
+             alt="Quantum Motors 3D — a red coupe drifting through the neon Golden City track at 151 mph">
+      </div>
+      <div class="copy">
+        <p class="meta">Arcade racer · WebGL</p>
+        <h3>QUANTUM MOTORS 3D</h3>
+        <p>Full 3D chase-cam racing across ten tracks — the neon Golden City, a jump over a real
+          hole in a San Francisco road, a Hot Wheels loop in Egypt, and the long red dusk of Mali.
+          Garage, upgrades, championship ladder and a police-pursuit street mode.</p>
+        <div class="btns">
+          <a class="btn btn-gold" href="/quantummotors3dracing/">▶ Play now</a>
+          <a class="btn btn-ghost" href="https://quantum-melanin-media.itch.io/quantum-motors-3d"
+             target="_blank" rel="noopener">itch.io page</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="strip rv">
+      <figure>
+        <img src="/assets/img/qm3d-sf.jpg" width="1100" height="619" loading="lazy"
+             alt="Quantum Motors 3D — boosting across the San Francisco bridge at 228 mph">
+        <figcaption>San Francisco · 228 mph</figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/img/qm3d-egypt.jpg" width="1100" height="619" loading="lazy"
+             alt="Quantum Motors 3D — sliding along the Egypt track under a red desert sunset">
+        <figcaption>Egypt · sunset run</figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/img/qm3d-mali.jpg" width="1100" height="619" loading="lazy"
+             alt="Quantum Motors 3D — the Mali track running toward a low sun over red earth">
+        <figcaption>Mali · the long dusk</figcaption>
+      </figure>
+    </div>
+
+    <div class="grid2 rv">
+      <a class="gcard" href="/bloodlines-chess/">
+        <img src="/assets/img/chess-cosmos.jpg" width="1100" height="619" loading="lazy"
+             alt="BLOODLINES Noble Chess — a chess board floating in orbit above Earth">
+        <div class="c">
+          <h3>BLOODLINES — Noble Chess</h3>
+          <p>3D chess fought through melanated empires: Ancient Khem, Elam, Mali, the Moors,
+            Sengoku Japan, the Maya. Real engine, difficulty ladder, and worlds you actually
+            want to sit inside.</p>
+          <div class="row"><span class="chip solid">Play free</span>
+            <span class="chip">Runs on this site</span><span class="go">→</span></div>
+        </div>
+      </a>
+      <a class="gcard" href="https://quantum-melanin-media.itch.io/quantum-motors" target="_blank" rel="noopener">
+        <img src="/assets/img/qm2d-drift.jpg" width="1100" height="619" loading="lazy"
+             alt="Quantum Motors — top-down neon arcade racer showing a six-car drift chain">
+        <div class="c">
+          <h3>QUANTUM MOTORS — arcade</h3>
+          <p>The original top-down drift racer. Chain your slides, burn melanin nitro, and
+            outrun the Eraser Patrol through a neon city that never stops raining.</p>
+          <div class="row"><span class="chip solid">Play free</span>
+            <span class="chip">on itch.io</span><span class="go">→</span></div>
+        </div>
+      </a>
+    </div>
+
+    <div class="strip rv" style="margin-top:18px">
+      <figure>
+        <img src="/assets/img/chess-shogun.jpg" width="1100" height="619" loading="lazy"
+             alt="BLOODLINES — chess board under cherry blossom at a Sengoku Japan castle at night">
+        <figcaption>Sengoku night</figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/img/chess-mali.jpg" width="1100" height="619" loading="lazy"
+             alt="BLOODLINES — chess board set in the Mali Empire world">
+        <figcaption>Mali Empire</figcaption>
+      </figure>
+      <figure>
+        <img src="/assets/img/chess-select.jpg" width="1100" height="619" loading="lazy"
+             alt="BLOODLINES — the empire selection screen">
+        <figcaption>Pick your empire</figcaption>
+      </figure>
+    </div>
   </div>
+</section>
 
-  <div class="section">
-    <h2>📚 Books · on Amazon</h2>
-    <a class="card" href="https://a.co/d/087ycg8c" target="_blank" rel="noopener">
-      <span class="ic">📕</span>
-      <span class="body"><span class="t">The Magnum Opus of Melanin</span>
-        <span class="s">Immortality, time travel &amp; cosmic consciousness</span></span>
-      <span class="price">$43.99</span>
-    </a>
-    <a class="card" href="https://a.co/d/0cqAXnIH" target="_blank" rel="noopener">
-      <span class="ic">📗</span>
-      <span class="body"><span class="t">The Cosmic Lie</span>
-        <span class="s">Reclaiming the stolen legacy of melanated peoples</span></span>
-      <span class="price">$63.99</span>
-    </a>
-    <a class="card" href="https://a.co/d/06VyQmsd" target="_blank" rel="noopener">
-      <span class="ic">🌊</span>
-      <span class="body"><span class="t">Sea Moss Unveiled</span>
-        <span class="s">Rebooting the body's immortal coding</span></span>
-      <span class="price">$24.99</span>
-    </a>
+<!-- ============ BOOKS ============ -->
+<section id="books">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="kicker">📚 The library</p>
+      <h2>Five books. One argument.</h2>
+      <p class="sub">Melanin, memory and the paper trail behind what got taken — written plain
+        enough to hand to anybody. All titles are on Amazon in Kindle, paperback and hardcover.</p>
+    </div>
+    <div class="books rv">
+      <a class="book" href="https://www.amazon.com/dp/B0GKZSPH45" target="_blank" rel="noopener">
+        <span class="cov"><img src="/assets/img/book-magnum-opus.jpg" width="520" height="780" loading="lazy"
+          alt="Cover of The Magnum Opus of Melanin by Robert Hadden Jr."></span>
+        <b>The Magnum Opus of Melanin</b>
+        <span>The master key to immortality, time travel &amp; cosmic consciousness</span>
+        <em>Amazon →</em>
+      </a>
+      <a class="book" href="https://www.amazon.com/dp/B0GB6L4MR3" target="_blank" rel="noopener">
+        <span class="cov"><img src="/assets/img/book-cosmic-lie.jpg" width="520" height="780" loading="lazy"
+          alt="Cover of The Cosmic Lie by Robert Hadden Jr."></span>
+        <b>The Cosmic Lie</b>
+        <span>Reclaiming the stolen legacy of melanated people</span>
+        <em>Amazon →</em>
+      </a>
+      <a class="book" href="https://www.amazon.com/dp/B0GJN5DPCQ" target="_blank" rel="noopener">
+        <span class="cov"><img src="/assets/img/book-melanin-key.jpg" width="520" height="780" loading="lazy"
+          alt="Cover of The Melanin Key: Consciousness Mastery by Robert Hadden Jr."></span>
+        <b>The Melanin Key</b>
+        <span>Melanin biology meets the CIA Gateway Process</span>
+        <em>Amazon →</em>
+      </a>
+      <a class="book" href="https://www.amazon.com/dp/B0GRPMVX8S" target="_blank" rel="noopener">
+        <span class="cov"><img src="/assets/img/book-legacy-document.jpg" width="520" height="780" loading="lazy"
+          alt="Cover of The Legacy Document by Robert Hadden Jr. and Free Mahal Kita"></span>
+        <b>The Legacy Document</b>
+        <span>A unified field theory of thievery</span>
+        <em>Amazon →</em>
+      </a>
+      <a class="book" href="https://www.amazon.com/dp/B0GQ54G8F2" target="_blank" rel="noopener">
+        <span class="cov"><img src="/assets/img/book-sea-moss.jpg" width="520" height="780" loading="lazy"
+          alt="Cover of Sea Moss Unveiled by Myan Free Mahal Kita Marshall"></span>
+        <b>Sea Moss Unveiled</b>
+        <span>Mahal Kita · a full nutritional analysis of sea moss</span>
+        <em>Amazon →</em>
+      </a>
+    </div>
   </div>
+</section>
 
-  <div class="section">
-    <h2>🎮 Games · play free in browser</h2>
-    <a class="card" href="https://quantum-melanin-media.itch.io/quantum-motors" target="_blank" rel="noopener">
-      <span class="ic">🏎️</span>
-      <span class="body"><span class="t">Quantum Motors</span>
-        <span class="s">Neon-city arcade drift racer</span></span>
-      <span class="price free">FREE</span>
-    </a>
-    <a class="card" href="https://quantum-melanin-media.itch.io/bloodlines-noble-chess" target="_blank" rel="noopener">
-      <span class="ic">♟️</span>
-      <span class="body"><span class="t">BLOODLINES — Noble Chess</span>
-        <span class="s">3D chess through melanated empires</span></span>
-      <span class="price free">FREE</span>
-    </a>
+<!-- ============ WATCH ============ -->
+<section id="watch">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="kicker">▶️ Watch · free</p>
+      <h2>177 videos and counting.</h2>
+      <p class="sub">Hieroglyph classes, AI receipts, cinematic drops and the
+        <em>I Call Bullshit</em> series. No fog, no cap.</p>
+    </div>
+    <div class="grid3 rv">
+      <a class="lcard" href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">
+        <span class="ic">▶️</span>
+        <span class="b"><span class="t">YouTube</span>
+          <span class="s">Hieroglyph classes · long-form receipts</span></span>
+        <span class="price free">Free</span>
+      </a>
+      <a class="lcard" href="https://www.tiktok.com/@quantummelaninmedia" target="_blank" rel="noopener">
+        <span class="ic">🎵</span>
+        <span class="b"><span class="t">TikTok</span>
+          <span class="s">Shorts · I Call Bullshit</span></span>
+        <span class="price free">Free</span>
+      </a>
+      <a class="lcard" href="https://www.instagram.com/quantummelaninmedia" target="_blank" rel="noopener">
+        <span class="ic">📸</span>
+        <span class="b"><span class="t">Instagram</span>
+          <span class="s">Reels &amp; stills from the cinematic engine</span></span>
+        <span class="price free">Free</span>
+      </a>
+    </div>
   </div>
+</section>
 
-  <div class="section">
-    <h2>🛠️ Tools</h2>
-    <a class="card" href="/leak-sheet/">
-      <span class="ic">🔍</span>
-      <span class="body"><span class="t">The Leak Sheet — auto detail shops</span>
-        <span class="s">Where detail, PPF &amp; tint shops lose booked jobs · run your own numbers</span></span>
-      <span class="price free">FREE</span>
-    </a>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com/l/detailshopkit" target="_blank" rel="noopener">
-      <span class="ic">🧽</span>
-      <span class="body"><span class="t">The Detail Shop Builder Kit</span>
-        <span class="s">DIY the three quick wins · DM scripts, flows &amp; ROI calculator</span></span>
-      <span class="price">$19+</span>
-    </a>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com/l/karen-manuscript-repair" target="_blank" rel="noopener">
-      <span class="ic">🔧</span>
-      <span class="body"><span class="t">KAREN — Manuscript Repair</span>
-        <span class="s">Fix AI-shattered book formatting · 1 command</span></span>
-      <span class="price">$39</span>
-    </a>
+<!-- ============ BUILD ============ -->
+<section id="build">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="kicker">🧭 Build with us</p>
+      <h2>The AI Business GPS.</h2>
+      <p class="sub">Pick one real money goal, and let a persistent AI persona call your next move
+        on your actual numbers. Start free — go as deep as you want after that.</p>
+    </div>
+    <div class="grid3 rv">
+      <a class="pcard" href="https://quantummelaninmedia.gumroad.com/l/cmphu" target="_blank" rel="noopener">
+        <img src="/assets/img/gr-starter-map.jpg" width="860" height="484" loading="lazy"
+             alt="The AI Business GPS — Starter Map cover">
+        <div class="c">
+          <h3>The Starter Map</h3>
+          <p>Pick a real money goal and let AI call your next move. The whole method, free.</p>
+          <div class="row"><span class="chip">Free</span><span class="go">Gumroad →</span></div>
+        </div>
+      </a>
+      <a class="pcard" href="https://quantummelaninmedia.gumroad.com/l/ooduha" target="_blank" rel="noopener">
+        <img src="/assets/img/gr-builder-kit.jpg" width="860" height="484" loading="lazy"
+             alt="The AI Business GPS — Builder Kit cover">
+        <div class="c">
+          <h3>The Builder Kit</h3>
+          <p>Persistent AI persona, 12 prompts and the templates that keep it honest.</p>
+          <div class="row"><span class="chip solid">$19+</span><span class="go">Gumroad →</span></div>
+        </div>
+      </a>
+      <a class="pcard" href="https://quantummelaninmedia.gumroad.com/l/qsuiwo" target="_blank" rel="noopener">
+        <img src="/assets/img/gr-dwy-build.jpg" width="860" height="484" loading="lazy"
+             alt="The AI Business GPS — Done-With-You Build cover">
+        <div class="c">
+          <h3>Done-With-You Build</h3>
+          <p>We build your GPS live, 1:1, on your numbers — and you keep the whole thing.</p>
+          <div class="row"><span class="chip solid">$297</span><span class="go">Gumroad →</span></div>
+        </div>
+      </a>
+    </div>
+
+    <div class="head rv" style="margin:52px 0 26px">
+      <p class="kicker">🛠️ Tools &amp; receipts</p>
+      <h2>Things that do the work.</h2>
+    </div>
+    <div class="grid3 rv">
+      <a class="lcard" href="/leak-sheet/">
+        <span class="ic">🔍</span>
+        <span class="b"><span class="t">The Leak Sheet</span>
+          <span class="s">Where detail, PPF &amp; tint shops lose booked jobs</span></span>
+        <span class="price free">Free</span>
+      </a>
+      <a class="lcard" href="https://quantummelaninmedia.gumroad.com/l/detailshopkit" target="_blank" rel="noopener">
+        <span class="ic">🧽</span>
+        <span class="b"><span class="t">Detail Shop Builder Kit</span>
+          <span class="s">DM scripts, flows &amp; an ROI calculator</span></span>
+        <span class="price">$19+</span>
+      </a>
+      <a class="lcard" href="https://quantummelaninmedia.gumroad.com/l/karen-manuscript-repair" target="_blank" rel="noopener">
+        <span class="ic">🔧</span>
+        <span class="b"><span class="t">KAREN — Manuscript Repair</span>
+          <span class="s">Fix AI-shattered book formatting in one command</span></span>
+        <span class="price">$39</span>
+      </a>
+      <a class="lcard" href="/articles/">
+        <span class="ic">📰</span>
+        <span class="b"><span class="t">Honest AI comparisons</span>
+          <span class="s">Tool guides for small local shops — and we say what we sell</span></span>
+        <span class="price free">Read</span>
+      </a>
+      <a class="lcard" href="/ai-audit/">
+        <span class="ic">✅</span>
+        <span class="b"><span class="t">AI Delivery Assurance</span>
+          <span class="s">Green checkmarks lie. We find the work that never shipped.</span></span>
+        <span class="price free">Info</span>
+      </a>
+      <a class="lcard" href="https://quantummelaninmedia.gumroad.com" target="_blank" rel="noopener">
+        <span class="ic">🧬</span>
+        <span class="b"><span class="t">Everything else</span>
+          <span class="s">The full Gumroad shelf</span></span>
+        <span class="price free">Browse</span>
+      </a>
+    </div>
   </div>
+</section>
 
-  <div class="section">
-    <h2>🛍️ Shop everything</h2>
-    <a class="card" href="https://quantummelaninmedia.gumroad.com" target="_blank" rel="noopener">
-      <span class="ic">🧬</span>
-      <span class="body"><span class="t">Gumroad Store</span>
-        <span class="s">All QMM books, spells &amp; tools</span></span>
-      <span class="chev">→</span>
-    </a>
-    <a class="card" href="https://quantum-melanin-media.itch.io" target="_blank" rel="noopener">
-      <span class="ic">🎲</span>
-      <span class="body"><span class="t">All QMM Games</span>
-        <span class="s">Every free browser game on itch.io</span></span>
-      <span class="chev">→</span>
-    </a>
+<!-- ============ DROPS ============ -->
+<section id="shop">
+  <div class="wrap">
+    <div class="capture rv">
+      <p class="kicker">Don't miss a drop</p>
+      <h2>Get new books, games &amp; tools first</h2>
+      <p>One email when something new lands — a book, a free game, a tool. That's it.</p>
+      <a class="btn btn-gold" href="https://quantummelaninmedia.gumroad.com/subscribe"
+         target="_blank" rel="noopener">Join the list →</a>
+      <p class="fine">Free · no spam · unsubscribe anytime</p>
+    </div>
   </div>
+</section>
 
-  <footer>
-    <span class="hand">@quantummelaninmedia</span><br>
-    Built by Robert Hadden Jr. &amp; Mahal Kita · Àṣẹ
-  </footer>
-</div>
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div class="fbrand">
+        <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="1.6" aria-hidden="true">
+          <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+          <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+          <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+          <circle cx="50" cy="50" r="26" stroke-width="2"/>
+        </svg>
+        <p>Afrofuturist games, books and tools out of East Oakland.
+          Plain-English receipts on melanin, history &amp; truth.</p>
+      </div>
+      <div class="fnav">
+        <div>
+          <h4>Play</h4>
+          <a href="/quantummotors3dracing/">Quantum Motors 3D</a>
+          <a href="/bloodlines-chess/">BLOODLINES Chess</a>
+          <a href="https://quantum-melanin-media.itch.io" target="_blank" rel="noopener">All games on itch.io</a>
+        </div>
+        <div>
+          <h4>Read</h4>
+          <a href="#books">The books</a>
+          <a href="/articles/">Articles</a>
+          <a href="/leak-sheet/">The Leak Sheet</a>
+        </div>
+        <div>
+          <h4>Follow</h4>
+          <a href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">YouTube</a>
+          <a href="https://www.tiktok.com/@quantummelaninmedia" target="_blank" rel="noopener">TikTok</a>
+          <a href="https://www.instagram.com/quantummelaninmedia" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://quantummelaninmedia.gumroad.com" target="_blank" rel="noopener">Gumroad</a>
+        </div>
+      </div>
+    </div>
+    <div class="fbot">
+      <span class="hand">@quantummelaninmedia</span>
+      <span>Built by Robert Hadden Jr. &amp; Mahal Kita · Àṣẹ</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Nav gets its hairline only once the page has moved — a border under a nav sitting on top of
+// the hero video reads as a seam across the picture.
+const nav = document.getElementById('nav');
+const onScroll = () => nav.classList.toggle('stuck', window.scrollY > 12);
+onScroll();
+addEventListener('scroll', onScroll, { passive: true });
+
+// Reveal on enter. Anything already on screen at load is revealed immediately, so a short
+// viewport never shows a blank section waiting for a scroll that never comes.
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+}, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+// The hero loop is decoration, not content: if the OS asks for reduced motion, or the browser
+// refuses to autoplay, the poster frame is the whole experience and nothing is missing.
+const vid = document.getElementById('heroVid');
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  vid.removeAttribute('autoplay'); vid.pause();
+} else {
+  const p = vid.play();
+  if (p && p.catch) p.catch(() => {});
+}
+// Don't burn a phone's battery rendering a background nobody is looking at.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) vid.pause();
+  else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
+});
+</script>
 </body>
 </html>

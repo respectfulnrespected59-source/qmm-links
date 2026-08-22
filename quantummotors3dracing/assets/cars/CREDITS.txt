@@ -33,6 +33,11 @@ Model pages (https://sketchfab.com/3d-models/<uid>):
 
 CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 
+NOT third-party: Q'MARO zQ23 (qmaro.glb) is an original model generated on Tripo3D by
+Quantum Melanin Media. It carries no CC-BY obligation and is deliberately absent from the
+attribution list above and from ui.js MODEL_CREDITS -- crediting it to a Sketchfab author
+would be a false attribution, not a courtesy.
+
 Only CC Attribution models were used. ShareAlike and NonCommercial models were deliberately
 excluded -- ShareAlike would try to pull the game under its own terms, and NonCommercial
 rules out commercial release outright.

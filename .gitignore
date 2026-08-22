@@ -1,3 +1,7 @@
+# QA output and download cache — regenerable, and neither one is served.
+# NOTE: this used to be a blanket `*.png`, which silently excluded real site art
+# (apple-touch-icon, any future PNG screenshot). Ignore the scratch dirs, not the format.
+tools/_shots/
+tools/_cache/
 _qa.py
 hub_preview.png
-*.png
