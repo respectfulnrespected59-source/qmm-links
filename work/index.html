@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work With Me — Robert Hadden Jr. · Quantum Melanin Media</title>
+<meta name="description" content="I build fast sites and the automation behind them. This site is 74 KB, has no frameworks, hosts two 3D games playable in the browser, and ships with a QA gate that blocks the deploy if a video won't play. Available for freelance.">
+<link rel="canonical" href="https://quantummelaninmedia.com/work/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0712">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Quantum Melanin Media">
+<meta property="og:url" content="https://quantummelaninmedia.com/work/">
+<meta property="og:title" content="Work With Me — Robert Hadden Jr.">
+<meta property="og:description" content="74 KB. No frameworks. Two 3D games playable in the browser. And a QA gate that blocks the deploy if a video won't play.">
+<meta property="og:image" content="https://quantummelaninmedia.com/assets/img/work-responsive.jpg">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="1000">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Robert Hadden Jr.",
+ "jobTitle":"AI Automation Engineer & Web Developer",
+ "url":"https://quantummelaninmedia.com/work/",
+ "email":"mailto:respectfulnrespected59@gmail.com",
+ "worksFor":{"@type":"Organization","name":"Quantum Melanin Media","url":"https://quantummelaninmedia.com/"},
+ "knowsAbout":["Web Development","WebGL","Three.js","Playwright","Python","Large Language Models","Stripe","Browser Automation"],
+ "sameAs":["https://github.com/respectfulnrespected59-source","https://linkedin.com/in/robert-hadden-jr-b2b987163"]}
+</script>
+<style>
+  /* Same tokens as the homepage. This page is the argument, so it has to look like the
+     thing it is arguing about — and carry no external font, script or stylesheet, for
+     exactly the reason the copy claims. */
+  :root{
+    --gold:#e8c25a; --gold-hi:#f5dc8e; --violet:#a877e6;
+    --ink:#07050d; --ink-2:#0d0918; --card:#160f24; --card-hi:#1e1533;
+    --txt:#f3efe6; --mut:#a99fc0; --line:#2c2140;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:78px}
+  body{background:var(--ink);color:var(--txt);font-family:var(--sans);line-height:1.6;
+    overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  img{display:block;max-width:100%;height:auto}
+  a{color:inherit}
+  ::selection{background:rgba(232,194,90,.3)}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  /* ---------- nav ---------- */
+  .nav{position:sticky;top:0;z-index:50;background:rgba(7,5,13,.72);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid transparent;transition:border-color .25s,background .25s}
+  .nav.stuck{border-bottom-color:var(--line);background:rgba(7,5,13,.92)}
+  .nav-in{display:flex;align-items:center;gap:18px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:0 0 auto}
+  .brand svg{width:30px;height:30px;filter:drop-shadow(0 2px 10px rgba(232,194,90,.4))}
+  .brand b{font-family:var(--serif);font-weight:400;font-size:1.02rem;white-space:nowrap}
+  .brand b i{color:var(--gold);font-style:normal}
+  .nav-links{display:flex;gap:2px;margin-left:auto}
+  .nav-links a{text-decoration:none;color:var(--mut);font-size:.78rem;letter-spacing:.13em;
+    text-transform:uppercase;padding:9px 11px;border-radius:9px;transition:color .18s,background .18s}
+  .nav-links a:hover,.nav-links a:focus-visible{color:var(--gold);background:rgba(232,194,90,.08);outline:none}
+  .nav-cta{flex:0 0 auto;text-decoration:none;font-weight:800;font-size:.8rem;letter-spacing:.04em;
+    color:#20180a;background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+    padding:10px 16px;border-radius:999px;white-space:nowrap;
+    box-shadow:0 8px 22px -12px rgba(232,194,90,.9);transition:transform .16s,filter .16s}
+  .nav-cta:hover,.nav-cta:focus-visible{transform:translateY(-1px);filter:brightness(1.07);outline:none}
+  @media (max-width:1020px){ .nav-links{display:none} .nav-in{gap:12px} .nav-cta{margin-left:auto} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:74px 0 66px;position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(70% 55% at 12% 0%,rgba(168,119,230,.18),transparent 70%),
+               radial-gradient(60% 50% at 92% 12%,rgba(232,194,90,.11),transparent 72%)}
+  .hero .wrap{position:relative;z-index:1}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold);
+    font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;margin-bottom:20px;
+    border:1px solid rgba(232,194,90,.35);border-radius:999px;padding:6px 14px;
+    background:rgba(232,194,90,.07)}
+  .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 10px var(--gold);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,6.2vw,4rem);
+    line-height:1.04;letter-spacing:-.01em;max-width:16em}
+  h1 .q{color:var(--gold)}
+  .lede{color:#d8d0e6;font-size:clamp(1rem,2.1vw,1.18rem);margin-top:20px;max-width:36em}
+  .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .btn{display:inline-flex;align-items:center;gap:9px;text-decoration:none;
+    padding:14px 24px;border-radius:12px;font-weight:800;font-size:.98rem;
+    transition:transform .16s cubic-bezier(.16,1,.3,1),filter .16s,box-shadow .16s,border-color .16s}
+  .btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#20180a;
+    box-shadow:0 14px 34px -14px rgba(232,194,90,.85)}
+  .btn-gold:hover,.btn-gold:focus-visible{transform:translateY(-2px);filter:brightness(1.06);outline:none}
+  .btn-ghost{border:1px solid var(--line);color:var(--txt);background:rgba(22,15,36,.6)}
+  .btn-ghost:hover,.btn-ghost:focus-visible{border-color:var(--gold);color:var(--gold);
+    transform:translateY(-2px);outline:none}
+  .stats{display:flex;flex-wrap:wrap;gap:22px 38px;margin-top:38px;padding-top:26px;
+    border-top:1px solid rgba(255,255,255,.08)}
+  .stat b{display:block;font-family:var(--serif);font-size:1.9rem;line-height:1;color:var(--gold)}
+  .stat span{color:var(--mut);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase}
+
+  /* ---------- sections ---------- */
+  section{padding:74px 0;position:relative}
+  section+section{border-top:1px solid rgba(44,33,64,.55)}
+  .kicker{color:var(--gold);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;margin-bottom:12px}
+  h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.12}
+  .sub{color:var(--mut);margin-top:12px;max-width:48em;font-size:1.02rem}
+  .head{margin-bottom:34px}
+
+  /* ---------- before / after ---------- */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:26px}
+  @media (max-width:760px){ .ba{grid-template-columns:1fr} }
+  .ba > div{border:1px solid var(--line);border-radius:16px;padding:24px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card))}
+  .ba h3{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px}
+  .ba .was h3{color:var(--mut)}
+  .ba .is{border-color:rgba(232,194,90,.42)}
+  .ba .is h3{color:var(--gold)}
+  .ba p{color:var(--mut);font-size:.95rem}
+  .ba .is p{color:var(--txt)}
+  .ba ul{list-style:none;margin-top:12px}
+  .ba li{color:var(--mut);font-size:.9rem;padding-left:16px;position:relative;margin-top:7px}
+  .ba li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;
+    border-radius:50%;background:var(--line)}
+  .ba .is li::before{background:var(--gold)}
+
+  .shotwrap{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#000;
+    box-shadow:0 30px 70px -40px rgba(0,0,0,.95)}
+
+  /* ---------- the bug callout ---------- */
+  .bug{border:1px solid rgba(232,194,90,.4);border-radius:20px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(30,21,51,.95),rgba(13,9,24,.95))}
+  .bug-in{padding:34px}
+  @media (max-width:640px){ .bug-in{padding:24px 20px} }
+  .bug h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;line-height:1.15}
+  .bug p{color:var(--mut);margin-top:14px;max-width:52em}
+  .bug p strong{color:var(--txt);font-weight:700}
+  .checks{list-style:none;margin:22px 0 0;display:grid;gap:8px}
+  .checks li{display:flex;gap:12px;align-items:baseline;font-size:.93rem;color:var(--mut);
+    border-left:2px solid rgba(232,194,90,.3);padding:6px 0 6px 14px}
+  .checks code{font-family:var(--mono);font-size:.84rem;color:var(--gold);white-space:nowrap}
+  .verdict{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);
+    font-family:var(--serif);font-size:1.2rem;line-height:1.4;color:var(--txt)}
+  .verdict em{color:var(--gold);font-style:normal}
+
+  /* ---------- ships-with table ---------- */
+  .ships{display:grid;gap:12px}
+  .ship{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start;
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card))}
+  @media (max-width:700px){ .ship{grid-template-columns:1fr;gap:6px} }
+  .ship b{font-family:var(--mono);font-size:.82rem;color:var(--gold);word-break:break-word}
+  .ship p{color:var(--mut);font-size:.93rem}
+
+  /* ---------- work cards ---------- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:900px){ .grid3{grid-template-columns:1fr 1fr} }
+  @media (max-width:600px){ .grid3{grid-template-columns:1fr} }
+  .wcard{display:flex;flex-direction:column;text-decoration:none;overflow:hidden;
+    border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card));
+    transition:transform .2s cubic-bezier(.16,1,.3,1),border-color .2s,box-shadow .2s}
+  .wcard:hover,.wcard:focus-visible{transform:translateY(-4px);border-color:var(--gold);
+    box-shadow:0 22px 48px -24px rgba(232,194,90,.75);outline:none}
+  .wcard img{width:100%;aspect-ratio:16/9;object-fit:cover;border-bottom:1px solid var(--line)}
+  .wcard .c{padding:18px 20px 22px;display:flex;flex-direction:column;flex:1;gap:8px}
+  .wcard .vol{color:var(--gold);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase}
+  .wcard h3{font-family:var(--serif);font-weight:400;font-size:1.25rem;line-height:1.15}
+  .wcard p{color:var(--mut);font-size:.86rem;line-height:1.5;flex:1}
+  .wcard .go{color:var(--gold);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-top:2px}
+
+  /* ---------- services ---------- */
+  .svcs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:900px){ .svcs{grid-template-columns:1fr} }
+  .svc{border:1px solid var(--line);border-radius:16px;padding:26px 24px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card))}
+  .svc .n{font-family:var(--serif);font-size:1.6rem;color:var(--gold);line-height:1}
+  .svc h3{font-size:1.05rem;font-weight:700;margin-top:14px}
+  .svc p{color:var(--mut);font-size:.92rem;margin-top:9px}
+  .svc ul{list-style:none;margin-top:14px}
+  .svc li{color:var(--mut);font-size:.86rem;padding-left:16px;position:relative;margin-top:7px}
+  .svc li::before{content:"";position:absolute;left:0;top:.6em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold)}
+
+  /* ---------- close ---------- */
+  .close{text-align:center;padding:84px 0}
+  .close h2{max-width:16em;margin:0 auto}
+  .close p{color:var(--mut);margin:14px auto 0;max-width:34em}
+  .close .btns{justify-content:center}
+  .fine{color:var(--mut);font-size:.78rem;margin-top:20px}
+  .fine a{color:var(--gold);text-decoration:none}
+  .fine a:hover{text-decoration:underline}
+
+  /* ---------- footer ---------- */
+  footer{padding:48px 0 40px;border-top:1px solid var(--line);background:var(--ink-2)}
+  .fbot{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;
+    color:var(--mut);font-size:.8rem}
+  .fbot a{color:var(--mut);text-decoration:none}
+  .fbot a:hover,.fbot a:focus-visible{color:var(--gold);outline:none}
+  .fbot .hand{color:var(--gold);font-weight:700;letter-spacing:.04em}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .eyebrow::before{animation:none}
+    *{transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/" aria-label="Quantum Melanin Media — home">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="2" aria-hidden="true">
+        <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+        <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+        <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+        <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
+      </svg>
+      <b><i>Quantum</i> Melanin Media</b>
+    </a>
+    <div class="nav-links">
+      <a href="#proof">The proof</a>
+      <a href="#bug">The bug</a>
+      <a href="#ships">What ships</a>
+      <a href="#other">Other work</a>
+      <a href="/">The studio</a>
+    </div>
+    <a class="nav-cta" href="mailto:respectfulnrespected59@gmail.com?subject=Project%20enquiry">Start a project</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow">Available for freelance</span>
+    <h1>You are standing in <span class="q">the portfolio</span>.</h1>
+    <p class="lede">I'm Robert Hadden Jr. I build fast sites and the automation behind them.
+      This page, and every page on this domain, is the work sample — one hand-written file,
+      no framework, no third-party script, and two complete 3D games you can play without
+      downloading anything.</p>
+    <div class="btns">
+      <a class="btn btn-gold" href="mailto:respectfulnrespected59@gmail.com?subject=Project%20enquiry">Start a project</a>
+      <a class="btn btn-ghost" href="#proof">See how it was built</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>74 KB</b><span>Homepage HTML</span></div>
+      <div class="stat"><b>0</b><span>Frameworks</span></div>
+      <div class="stat"><b>~0.5s</b><span>To first byte</span></div>
+      <div class="stat"><b>2</b><span>3D games in-browser</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="proof">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">The proof</p>
+      <h2>The brief was a link page. I shipped a studio.</h2>
+      <p class="sub">Quantum Melanin Media is my own company, which means nobody signed off on
+        a shortcut. Everything below is verifiable by viewing source on the page you are
+        reading.</p>
+    </div>
+
+    <div class="ba">
+      <div class="was">
+        <h3>What was here</h3>
+        <p>A 540-pixel column of emoji link cards.</p>
+        <ul>
+          <li>Every card sent the visitor off the domain — itch.io, Amazon, Gumroad</li>
+          <li>Nothing the studio made could be seen without leaving first</li>
+          <li>Three book links pointed at the wrong book; one title was never listed</li>
+          <li>No way to check a deploy — GitHub Pages has no staging</li>
+        </ul>
+      </div>
+      <div class="is">
+        <h3>What is here now</h3>
+        <p>One hand-written page that shows the work instead of naming it.</p>
+        <ul>
+          <li>A 14-second hero loop captured off real gameplay, not a mockup</li>
+          <li>Two full 3D games hosted on the domain — no download, no signup</li>
+          <li>Graphic-novel interiors in a lightbox with arrow keys, Escape, and focus return</li>
+          <li>A pre-deploy gate that fails the build before a broken page can ship</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="shotwrap">
+      <img src="/assets/img/work-responsive.jpg" width="1600" height="1000" loading="lazy"
+           alt="The Quantum Melanin Media homepage shown at desktop width beside the same page on a phone.">
+    </div>
+  </div>
+</section>
+
+<section id="bug">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">The part worth reading</p>
+      <h2>Every check passed. The page was still broken.</h2>
+      <p class="sub">Anyone can show you a layout. This is the thing that actually separates
+        a finished build from one that merely looks finished.</p>
+    </div>
+
+    <div class="bug">
+      <div class="bug-in">
+        <h3>A hero video that reported perfect health and never played</h3>
+        <p>The hero and the chess reel originally served a VP9 <code>.webm</code> with an
+          h264 <code>.mp4</code> fallback. Nothing ever reached the fallback, because every
+          browser answers <code>canPlayType("video/webm; codecs=vp9")</code> with
+          <strong>"probably"</strong> — and then Chrome dies on the file with
+          <code>PIPELINE_ERROR_DECODE</code> about three tenths of a second in. Live, that is
+          a hero frozen on its poster image, on every single visit.</p>
+
+        <ul class="checks">
+          <li><code>HTTP 200</code><span>The file served fine.</span></li>
+          <li><code>duration</code><span>Correct in the metadata.</span></li>
+          <li><code>ffmpeg -f null</code><span>Decoded the identical file with zero warnings.</span></li>
+          <li><code>canPlayType</code><span>Reported "probably" in every browser tested.</span></li>
+          <li><code>-crf 34 · -b:v 800k</code><span>Reproduced at every bitrate, and with auto-alt-ref and lag-in-frames tuned.</span></li>
+        </ul>
+
+        <p class="verdict">Every measurement agreed with every other measurement, and all of
+          them were wrong. <em>Only pressing play told the truth.</em></p>
+
+        <p>So the fix was not an encoder setting. It was a format to stop shipping — mp4 only,
+          no <code>&lt;source&gt;</code> list, nothing to fall back from. Then I wrote the check
+          that would have caught it: the pre-deploy harness now presses play on every video on
+          the page and fails the build if the clock does not move. It costs 600 KB on the hero
+          to be certain the hero plays, and that gate is permanent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ships">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">What ships with every build</p>
+      <h2>You get the site, and the thing that keeps it honest.</h2>
+      <p class="sub">Three tools live in this site's repository. They are the reason a
+        one-person studio can push straight to production without a staging environment.</p>
+    </div>
+
+    <div class="ships">
+      <div class="ship">
+        <b>build_assets</b>
+        <p>Regenerates every image and video on the site from their real sources — the game
+          repositories, Amazon, Gumroad. Nothing in the assets folder is hand-made, so nothing
+          on the page can quietly go stale while the product moves on without it.</p>
+      </div>
+      <div class="ship">
+        <b>reel</b>
+        <p>Records genuine gameplay to mp4 by driving a headless build and capturing frames
+          over the debugging protocol. The hero loop is real frames from the real game, which
+          is why it looks like the thing you are about to play.</p>
+      </div>
+      <div class="ship">
+        <b>shot_site</b>
+        <p>The deploy gate. Serves the repository, screenshots desktop and phone, and fails on
+          404s, JavaScript errors, broken images, horizontal overflow, and any video whose
+          clock does not advance when you press play.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="other">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">Other production work</p>
+      <h2>Live systems, real money, real users.</h2>
+      <p class="sub">Not demos. Each of these has customers, payment rails, or both.</p>
+    </div>
+
+    <div class="grid3">
+      <a class="wcard" href="https://alignment365.onrender.com" target="_blank" rel="noopener">
+        <img src="/assets/img/work-alignment365.jpg" width="1280" height="720" loading="lazy"
+             alt="The Alignment 365 landing page.">
+        <div class="c">
+          <span class="vol">Live · Stripe + OAuth</span>
+          <h3>Alignment 365</h3>
+          <p>Wellness subscription platform on Render with live-key Stripe billing. I rebuilt
+            the auth stack in production — the original silently failed for every Google user —
+            and shipped both sign-in paths with zero regressions on paying customers.</p>
+          <span class="go">Visit the app →</span>
+        </div>
+      </a>
+      <a class="wcard" href="https://github.com/respectfulnrespected59-source/marketpulse" target="_blank" rel="noopener">
+        <img src="/assets/img/work-marketpulse.jpg" width="1280" height="720" loading="lazy"
+             alt="The MarketPulse live chart showing NVDA candles with EMA bands and volume.">
+        <div class="c">
+          <span class="vol">Python · Hand-rolled SVG</span>
+          <h3>MarketPulse</h3>
+          <p>Trading dashboard with a charting engine I wrote by hand in SVG, because every
+            off-the-shelf library drifted one to three pixels off the candle body — fatal when
+            a trader is marking a precise entry.</p>
+          <span class="go">Read the source →</span>
+        </div>
+      </a>
+      <a class="wcard" href="https://github.com/respectfulnrespected59-source/karen" target="_blank" rel="noopener">
+        <img src="/assets/img/gr-karen.jpg" width="1280" height="720" loading="lazy"
+             alt="KAREN, the manuscript typography scanner.">
+        <div class="c">
+          <span class="vol">Open source · Python</span>
+          <h3>KAREN</h3>
+          <p>Scans Word, PDF and Markdown manuscripts for structural typography damage —
+            orphan fragments, false-bold sentences, headings buried mid-paragraph, and the
+            merge bugs that survive every spellcheck.</p>
+          <span class="go">Read the source →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="hire">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">How this usually starts</p>
+      <h2>Three shapes that fit most projects.</h2>
+      <p class="sub">If none of them describe your situation, say so in the email and I will
+        tell you honestly whether I am the right person for it.</p>
+    </div>
+
+    <div class="svcs">
+      <div class="svc">
+        <div class="n">01</div>
+        <h3>Measure it first</h3>
+        <p>A fixed-scope audit of a site you are unhappy with. You get numbers, not opinions,
+          and a written list of what to fix in priority order.</p>
+        <ul>
+          <li>Real page weight and first-byte timing</li>
+          <li>What is loading that does not need to</li>
+          <li>Mobile and accessibility failures, with screenshots</li>
+          <li>An honest verdict on whether a rebuild is worth it</li>
+        </ul>
+      </div>
+      <div class="svc">
+        <div class="n">02</div>
+        <h3>Build it properly</h3>
+        <p>A site, a landing page, or a WebGL experience, built the way this one was and
+          handed over with the tooling that maintains it.</p>
+        <ul>
+          <li>Hand-built, framework only where it earns its weight</li>
+          <li>Three.js / WebGL when the project needs depth</li>
+          <li>An asset pipeline so the images regenerate themselves</li>
+          <li>A pre-deploy gate wired to your host</li>
+        </ul>
+      </div>
+      <div class="svc">
+        <div class="n">03</div>
+        <h3>Automate the thing you dread</h3>
+        <p>The workflow currently eating a person's week. Playwright, Python, and LLM
+          pipelines with verification built in from the start.</p>
+        <ul>
+          <li>Browser automation against real, hostile sites</li>
+          <li>OAuth, payments, and live-key operations</li>
+          <li>Multi-agent LLM systems on the Claude Agent SDK</li>
+          <li>Evaluation harnesses, because plausible is not correct</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap">
+    <h2>Send me the thing you cannot afford to keep doing by hand.</h2>
+    <p>Tell me what is broken and what it is costing you. If I am not the right fit I will
+      say so in the first reply rather than the third invoice.</p>
+    <div class="btns">
+      <a class="btn btn-gold" href="mailto:respectfulnrespected59@gmail.com?subject=Project%20enquiry">respectfulnrespected59@gmail.com</a>
+      <a class="btn btn-ghost" href="https://github.com/respectfulnrespected59-source" target="_blank" rel="noopener">See the code</a>
+    </div>
+    <p class="fine">Robert Hadden Jr. · Fremont, CA · remote worldwide ·
+      <a href="https://linkedin.com/in/robert-hadden-jr-b2b987163" target="_blank" rel="noopener">LinkedIn</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fbot">
+      <span class="hand">@quantummelaninmedia</span>
+      <span>
+        <a href="/">The studio</a> ·
+        <a href="/quantummotors3dracing/">Quantum Motors 3D</a> ·
+        <a href="/bloodlines-chess/">BLOODLINES Chess</a> ·
+        <a href="/ai-audit/">AI Delivery Assurance</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Same sticky-nav treatment as the homepage, so crossing between the two does not feel
+  // like crossing between two sites.
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('stuck', scrollY > 8);
+  addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+</script>
+</body>
+</html>

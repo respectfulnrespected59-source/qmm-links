@@ -59,6 +59,15 @@
     <priority>0.8</priority>
   </url>
 
+  <!-- The freelance case study. Linked from Upwork, LinkedIn and outbound proposals, so it
+       gets crawled whether or not anything on this site points at it. -->
+  <url>
+    <loc>https://quantummelaninmedia.com/work/</loc>
+    <lastmod>2026-08-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- MORE ARTICLE ENTRIES GO HERE.
        One <url> block per published comparison article.
        Update <lastmod> whenever an article is materially edited, then re-ping
