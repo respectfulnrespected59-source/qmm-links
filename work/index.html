@@ -173,6 +173,15 @@
   .wcard p{color:var(--mut);font-size:.86rem;line-height:1.5;flex:1}
   .wcard .go{color:var(--gold);font-size:.78rem;font-weight:700;letter-spacing:.08em;margin-top:2px}
 
+  /* ---------- rate ---------- */
+  .rate{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-bottom:22px;
+    border:1px solid rgba(232,194,90,.42);border-radius:16px;padding:22px 26px;
+    background:linear-gradient(90deg,rgba(232,194,90,.09),rgba(22,15,36,.5) 60%)}
+  .rate-n{display:flex;align-items:baseline;gap:9px;flex:0 0 auto}
+  .rate-n b{font-family:var(--serif);font-weight:400;font-size:2.6rem;line-height:1;color:var(--gold)}
+  .rate-n span{color:var(--mut);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase}
+  .rate p{color:var(--mut);font-size:.94rem;flex:1;min-width:18em}
+
   /* ---------- services ---------- */
   .svcs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   @media (max-width:900px){ .svcs{grid-template-columns:1fr} }
@@ -423,6 +432,13 @@
       <h2>Three shapes that fit most projects.</h2>
       <p class="sub">If none of them describe your situation, say so in the email and I will
         tell you honestly whether I am the right person for it.</p>
+    </div>
+
+    <div class="rate">
+      <div class="rate-n"><b>$85</b><span>per hour</span></div>
+      <p>That is the rate for ongoing and open-ended work. Anything with a clear edge to it
+        I would rather quote as a fixed price, so you are buying the outcome instead of my
+        clock — and either way you see the number before I start, not on the invoice.</p>
     </div>
 
     <div class="svcs">
