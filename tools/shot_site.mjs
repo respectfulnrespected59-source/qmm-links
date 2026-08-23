@@ -5,16 +5,45 @@
 //   node tools/shot_site.mjs                 # / at 1440 and 390
 //   node tools/shot_site.mjs /bloodlines-chess/
 //
-// playwright-core is borrowed from the racer repo rather than installed here — this repo is a
-// static site with no package.json and it should stay that way.
+// playwright-core is borrowed from a sibling repo rather than installed here — this repo is a
+// static site with no package.json and it should stay that way. The borrow is searched, not
+// hard-coded: a single absolute path pinned to one machine meant this script crashed on import
+// on every other rig and in CI, so the "deploy gate" could not run in the one place that gates.
+// Set QMM_PW_ROOT to any directory whose node_modules has playwright-core.
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile, stat, mkdir } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const require = createRequire('file:///C:/Users/respe/qmm-racing-3d/');
-const { chromium } = require('playwright-core');
-const { chromePath } = await import('file:///C:/Users/respe/qmm-racing-3d/tools/chrome.mjs');
+const PW_ROOTS = [
+  process.env.QMM_PW_ROOT,
+  'C:/Users/respe/qmm-racing-3d/',
+  'C:/Users/respe/QMM-Games/QMM_Racing3D/',
+  resolve('.') + '/',
+].filter(Boolean);
+
+let chromium = null;
+let pwRoot = null;
+for (const root of PW_ROOTS) {
+  try {
+    const dir = root.endsWith('/') ? root : root + '/';
+    ({ chromium } = createRequire(pathToFileURL(dir).href)('playwright-core'));
+    pwRoot = dir;
+    break;
+  } catch { /* try the next candidate */ }
+}
+if (!chromium) {
+  console.error('playwright-core not found. Tried:\n  ' + PW_ROOTS.join('\n  ') +
+    '\nSet QMM_PW_ROOT to a directory whose node_modules has playwright-core.');
+  process.exit(2);
+}
+// chrome.mjs pins a specific local Chrome on the rigs that have one. Where it is absent
+// (CI, a fresh clone) fall through to the chromium playwright downloaded for itself.
+let chromePath = () => undefined;
+try {
+  ({ chromePath } = await import(new URL('tools/chrome.mjs', pathToFileURL(pwRoot)).href));
+} catch { /* bundled chromium it is */ }
 
 const ROOT = resolve('.');
 const OUT = resolve('tools/_shots');
@@ -45,7 +74,7 @@ await mkdir(OUT, { recursive: true });
 await new Promise(r => server.listen(PORT, r));
 
 const browser = await chromium.launch({
-  executablePath: chromePath(), headless: true,
+  ...(chromePath() ? { executablePath: chromePath() } : {}), headless: true,
   args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--mute-audio',
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
@@ -124,3 +153,7 @@ for (const route of ROUTES) {
 await browser.close();
 server.close();
 console.log(bad ? `\n${bad} problem(s)` : '\nclean');
+// Counting problems and printing them is not a gate. Until this line existed the script
+// exited 0 with a page full of stalled video, so wiring it into CI would have produced a
+// check that could never go red — the exact green-checkmark lie this site sells against.
+process.exitCode = bad ? 1 : 0;

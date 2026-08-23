@@ -1,0 +1,94 @@
+# The deploy gate.
+#
+# /work/ tells clients this site "ships with a QA gate that blocks the deploy if a video
+# won't play." Until this file existed that was not true in two separate ways: Pages was
+# publishing straight off the branch, so nothing could block anything, and shot_site.mjs
+# always exited 0, so even in CI it could never have gone red. Both are fixed — the script
+# now sets a non-zero exit code, and Pages publishes from THIS workflow, so a failed qa job
+# means deploy never runs and the previous version stays live.
+#
+# Proving it still works is a negative test, not a green run: break a video src on purpose,
+# push, and watch the deploy refuse. A check nobody has ever seen fail is a rumour.
+
+name: QA gate + deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let a running one finish rather than shipping a half-state.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  qa:
+    name: shot_site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Installed in the runner temp dir, NOT the repo: this is a static site with no
+      # package.json and it stays that way. shot_site.mjs finds it via QMM_PW_ROOT.
+      # Installing playwright and its browser together means the two can never drift out
+      # of version sync, which is exactly what breaks the borrow-from-a-sibling-repo path.
+      - name: Install playwright + chromium
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw"
+          cd "$RUNNER_TEMP/pw"
+          npm init -y > /dev/null
+          npm install --no-fund --no-audit playwright@1.61.1
+          npx playwright install --with-deps chromium
+
+      # The seven content routes. The two 3D game routes (/bloodlines-chess/ and
+      # /quantummotors3dracing/) are deliberately NOT gated here: measured locally, they
+      # exceed 280s under software rendering because CI has no GPU, so including them
+      # would block good deploys on a timeout rather than on a real defect. Check those
+      # two on a rig with a real GPU:  node tools/shot_site.mjs /bloodlines-chess/
+      - name: Gate
+        env:
+          QMM_PW_ROOT: ${{ runner.temp }}/pw/
+        run: |
+          node tools/shot_site.mjs \
+            / \
+            /work/ \
+            /ai-audit/ \
+            /leak-sheet/ \
+            /articles/ \
+            /articles/best-ai-tools-two-person-auto-detail-shop/ \
+            /articles/best-ai-tools-solo-mobile-mechanic-business/
+
+      # Uploaded even when the gate fails — the screenshots are how you see WHAT broke.
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shots
+          path: tools/_shots/
+          if-no-files-found: warn
+
+  deploy:
+    name: publish
+    needs: qa
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - id: deployment
+        uses: actions/deploy-pages@v4
