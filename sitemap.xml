@@ -68,6 +68,17 @@
     <priority>0.8</priority>
   </url>
 
+  <!-- C.U.I. — the Common Unity Initiative block builder. A game route, so it is NOT in
+       the CI gate (see .github/workflows/deploy.yml); check it locally with
+       node tools/shot_site.mjs /cui/  . Shared with the class directly, so it needs to be
+       crawlable whether or not the hub links it. -->
+  <url>
+    <loc>https://quantummelaninmedia.com/cui/</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
   <!-- MORE ARTICLE ENTRIES GO HERE.
        One <url> block per published comparison article.
        Update <lastmod> whenever an article is materially edited, then re-ping
