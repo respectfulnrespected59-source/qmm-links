@@ -192,6 +192,21 @@
     background:linear-gradient(180deg,var(--card-hi),var(--card))}
   .svc .n{font-family:var(--serif);font-size:1.6rem;color:var(--gold);line-height:1}
   .svc h3{font-size:1.05rem;font-weight:700;margin-top:14px}
+  /* The number sits directly under the shape it belongs to. A price that makes
+     you email to find it out is a price the reader assumes they cannot afford. */
+  .price{margin-top:6px;color:var(--mut);font-size:.76rem;letter-spacing:.14em;
+    text-transform:uppercase}
+  .price b{font-family:var(--serif);font-weight:400;font-size:1.5rem;color:var(--gold);
+    letter-spacing:0;margin-right:6px}
+
+  /* ---------- the reel ---------- */
+  #reel{padding:0 0 12px}
+  .reelvid{display:block;width:100%;height:auto;border-radius:16px;
+    border:1px solid var(--line);background:#000;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.9)}
+  .reelnote{margin-top:16px;color:var(--mut);font-size:.94rem;max-width:52em}
+  .reelnote a{color:var(--gold);text-decoration:none;white-space:nowrap}
+  .reelnote a:hover{text-decoration:underline}
   .svc p{color:var(--mut);font-size:.92rem;margin-top:9px}
   .svc ul{list-style:none;margin-top:14px}
   .svc li{color:var(--mut);font-size:.86rem;padding-left:16px;position:relative;margin-top:7px}
@@ -428,6 +443,29 @@
   </div>
 </section>
 
+<section id="reel">
+  <div class="wrap">
+    <div class="head">
+      <p class="kicker">Built here, all of it</p>
+      <h2>The game, the film, and the page it lives on.</h2>
+      <p class="sub">Real capture from Quantum Motors 3D — a WebGL racer that runs in a browser
+        tab with no download and no plugin. The cuts land where they do because the track was
+        measured at 136&nbsp;BPM and every clip is a whole number of bars. The game, the edit,
+        the music and this page came out of the same room.</p>
+    </div>
+
+    <video class="reelvid" controls playsinline preload="metadata" muted
+           poster="/assets/img/work-qm3d-reel.jpg" width="1280" height="720"
+           aria-label="Quantum Motors 3D action reel">
+      <source src="/assets/video/qm3d-action-reel.mp4" type="video/mp4">
+    </video>
+
+    <p class="reelnote">If you need the site <em>and</em> the thing that sells it, that is one
+      conversation instead of three vendors who blame each other.
+      <a href="/quantummotors3dracing/">Play the game it came from →</a></p>
+  </div>
+</section>
+
 <section id="hire">
   <div class="wrap">
     <div class="head">
@@ -439,15 +477,17 @@
 
     <div class="rate">
       <div class="rate-n"><b>$85</b><span>per hour</span></div>
-      <p>That is the rate for ongoing and open-ended work. Anything with a clear edge to it
-        I would rather quote as a fixed price, so you are buying the outcome instead of my
-        clock — and either way you see the number before I start, not on the invoice.</p>
+      <p>That is the rate for ongoing and open-ended work. Anything with a clear edge to it I
+        quote as a fixed price instead, so you are buying the outcome rather than my clock —
+        the three below are priced off that same rate, and you see the number before I start,
+        not on the invoice.</p>
     </div>
 
     <div class="svcs">
       <div class="svc">
         <div class="n">01</div>
         <h3>Measure it first</h3>
+        <p class="price"><b>$450</b> fixed</p>
         <p>A fixed-scope audit of a site you are unhappy with. You get numbers, not opinions,
           and a written list of what to fix in priority order.</p>
         <ul>
@@ -460,6 +500,7 @@
       <div class="svc">
         <div class="n">02</div>
         <h3>Build it properly</h3>
+        <p class="price"><b>from $2,400</b> fixed</p>
         <p>A site, a landing page, or a WebGL experience, built the way this one was and
           handed over with the tooling that maintains it.</p>
         <ul>
@@ -472,6 +513,7 @@
       <div class="svc">
         <div class="n">03</div>
         <h3>Automate the thing you dread</h3>
+        <p class="price"><b>from $1,200</b> fixed</p>
         <p>The workflow currently eating a person's week. Playwright, Python, and LLM
           pipelines with verification built in from the start.</p>
         <ul>
