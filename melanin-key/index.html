@@ -1071,7 +1071,7 @@ body::before {
   </div>
 </div>
 
-<div hidden><button id="videoBtn"></button><div id="videoModal"><video id="video"></video></div></div><div class="sr" id="live" aria-live="polite"></div>
+<div class="sr" id="live" aria-live="polite"></div>
 
 <script>window.BOOK_DATA={"slug":"melanin-key-web","pageCount":24,"pageDir":"pages/","pageExt":".webp","pageW":873,"pageH":1296,"refRange":null,"linkCount":25,"marks":[{"page":9,"kind":"chapter","n":1,"title":"Introduction — The Hidden Key to Human Potential"},{"page":13,"kind":"chapter","n":2,"title":"Melanin — Nature's Quantum Semiconductor"},{"page":20,"kind":"chapter","n":3,"title":"The Electromagnetic Spectrum and Melanin Absorption"}],"parts":[{"label":"PART I","title":"Foundation — The Melanin Matrix","chapters":[{"n":1,"title":"Introduction — The Hidden Key to Human Potential","page":9},{"n":2,"title":"Melanin — Nature's Quantum Semiconductor","page":13},{"n":3,"title":"The Electromagnetic Spectrum and Melanin Absorption","page":20}]}],"backmatter":[],"playlist":[{"n":1,"group":"Quantum Melanin Media","title":"I Refuse","file":"/assets/audio/01_i_refuse.mp3","seconds":152},{"n":2,"group":"Quantum Melanin Media","title":"World Wide Wake Up","file":"/assets/audio/02_world_wide_wake_up.mp3","seconds":229},{"n":3,"group":"Quantum Melanin Media","title":"It Is What It Is","file":"/assets/audio/03_it_is_what_it_is.mp3","seconds":215},{"n":4,"group":"Quantum Melanin Media","title":"They Don't","file":"/assets/audio/04_they_don_t.mp3","seconds":224},{"n":5,"group":"Quantum Melanin Media","title":"SCFL 10-2","file":"/assets/audio/05_scfl_10_2.mp3","seconds":224},{"n":6,"group":"Quantum Melanin Media","title":"Supa Groovy Plugged In","file":"/assets/audio/06_supa_groovy_plugged_in.mp3","seconds":150},{"n":7,"group":"Quantum Melanin Media","title":"Soulful Plugged In","file":"/assets/audio/07_soulful_plugged_in.mp3","seconds":154},{"n":8,"group":"Quantum Melanin Media","title":"I Am Affirmation","file":"/assets/audio/08_i_am_affirmation.mp3","seconds":124},{"n":9,"group":"Lion of Mali","title":"The Lion Rises","file":"/assets/audio/09_the_lion_rises.mp3","seconds":170},{"n":10,"group":"Lion of Mali","title":"Battle of Kirina","file":"/assets/audio/10_battle_of_kirina.mp3","seconds":144},{"n":11,"group":"Lion of Mali","title":"Nine Witches of Mali","file":"/assets/audio/11_nine_witches_of_mali.mp3","seconds":193},{"n":12,"group":"Lion of Mali","title":"Buffalo Woman Rising","file":"/assets/audio/12_buffalo_woman_rising.mp3","seconds":173},{"n":13,"group":"Lion of Mali","title":"Crippled Prince","file":"/assets/audio/13_crippled_prince.mp3","seconds":167},{"n":14,"group":"Lion of Mali","title":"Nana Triban","file":"/assets/audio/14_nana_triban.mp3","seconds":166},{"n":15,"group":"Lion of Mali","title":"Kurukan Fuga","file":"/assets/audio/15_kurukan_fuga.mp3","seconds":188},{"n":16,"group":"Light as a Feather","title":"Light as a Feather","file":"/assets/audio/16_light_as_a_feather.mp3","seconds":183},{"n":17,"group":"Light as a Feather","title":"Truth Is the Feather","file":"/assets/audio/17_truth_is_the_feather.mp3","seconds":124},{"n":18,"group":"Light as a Feather","title":"Kind Hands","file":"/assets/audio/18_kind_hands.mp3","seconds":155},{"n":19,"group":"Light as a Feather","title":"My Heart at Home","file":"/assets/audio/19_my_heart_at_home.mp3","seconds":193},{"n":20,"group":"Light as a Feather","title":"Balance of Maat","file":"/assets/audio/20_balance_of_maat.mp3","seconds":181}],"sampler":{"endText":"That's the free 24 pages. The full edition has all 198, plus the film.","ctaLabel":"Get the full edition","ctaUrl":"https://quantummelaninmedia.gumroad.com/l/ztecum"}};</script>
 <script>/* THE MELANIN KEY — interactive edition engine.
@@ -1366,13 +1366,20 @@ body::before {
     el.tocBtn.setAttribute("aria-pressed", "false");
     el.linksBtn.setAttribute("aria-pressed", "false");
   }
+  // The web build ships no film. Don't leave an empty <video> in the DOM for it —
+  // the site's deploy gate presses play on every one and fails any whose clock
+  // never moves, which is exactly right and exactly what a stub would trip.
+  var hasFilm = !!(el.modal && el.video && el.videoBtn);
+
   function openVideo() {
+    if (!hasFilm) return;
     el.modal.classList.add("on");
     el.player.classList.add("tucked");
     if (!el.audio.paused) { el.audio.pause(); syncPlay(); }
     try { el.video.play(); } catch (e) { /* the reader can hit play */ }
   }
   function closeVideo() {
+    if (!hasFilm) return;
     el.modal.classList.remove("on");
     el.player.classList.remove("tucked");
     el.video.pause();
@@ -1506,11 +1513,13 @@ body::before {
   document.querySelectorAll("[data-close]").forEach(function (b) {
     b.addEventListener("click", closeAll);
   });
-  el.videoBtn.addEventListener("click", openVideo);
-  document.querySelectorAll("[data-close-video]").forEach(function (b) {
-    b.addEventListener("click", closeVideo);
-  });
-  el.modal.addEventListener("click", function (e) { if (e.target === el.modal) closeVideo(); });
+  if (hasFilm) {
+    el.videoBtn.addEventListener("click", openVideo);
+    document.querySelectorAll("[data-close-video]").forEach(function (b) {
+      b.addEventListener("click", closeVideo);
+    });
+    el.modal.addEventListener("click", function (e) { if (e.target === el.modal) closeVideo(); });
+  }
 
   el.playBtn.addEventListener("click", toggleMusic);
   el.musicBtn.addEventListener("click", toggleMusic);
@@ -1550,7 +1559,7 @@ body::before {
   document.addEventListener("keydown", function (e) {
     if (e.target.matches("input, textarea")) return;
     if (e.key === "Escape") { closeAll(); closeVideo(); hideNudge(); return; }
-    if (el.modal.classList.contains("on")) return;
+    if (hasFilm && el.modal.classList.contains("on")) return;
     switch (e.key) {
       case "ArrowLeft": case "PageUp": go(-1); e.preventDefault(); break;
       case "ArrowRight": case "PageDown": case " ": go(1); e.preventDefault(); break;
