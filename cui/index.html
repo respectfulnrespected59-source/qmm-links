@@ -565,6 +565,20 @@ body.drawer-open #rail{max-height:calc(100vh - 512px);}
 /* ── barter on the roster ──────────────────────────────────────────────── */
 .troffer{margin-top:4px;font-size:.62rem;letter-spacing:.04em;color:var(--gold);
   font-variant-numeric:tabular-nums;}
+/* The reason a bar is falling, and the verb that answers it. Sits under the
+   number, dimmer than it — a diagnosis is context, not an alarm. The bar's own
+   .warn/.crit colour already carries the urgency. */
+.why{margin-top:2px;font-size:.55rem;line-height:1.3;opacity:.6;
+  letter-spacing:.02em;text-transform:lowercase;}
+[data-state="critical"] .why{opacity:.85;}
+[data-state="recovering"] .why{opacity:.5;}
+
+/* What a household remembers. Quieter than the trade offer above it — this is
+   context for the standing bar, not an action, so it must not compete. */
+.rmem{margin-top:4px;display:flex;flex-direction:column;gap:1px;}
+.rmem i{font-size:.58rem;line-height:1.35;font-style:normal;opacity:.62;
+  letter-spacing:.01em;}
+.rmem i:first-child{opacity:.8;}
 .trbtn{margin-top:5px;padding:5px 12px;font-weight:900;font-size:.56rem;
   letter-spacing:.16em;background:transparent;color:var(--gold);
   border:1px solid var(--gold);transition:.15s;}
@@ -1147,6 +1161,8 @@ body.drawer-open #tutorial{bottom:462px;}
             <input id="music-vol" type="range" min="0" max="100" step="1" value="42"
                    aria-label="Music level" title="Music level">
           </div>
+          <button class="abtn" id="btn-makedo"
+                  title="Run shops on the other substrate when their input runs dry — twice the cost, half the yield">🔧 MAKE DO</button>
           <button class="abtn" id="btn-reset">RESET BLOCK</button>
         </div>
       </div>
@@ -1475,6 +1491,19 @@ const LAND = {
 };
 const LAND_ORDER = ['flora', 'mineral'];
 
+// ── making do ────────────────────────────────────────────────────────────
+// A shop whose upkeep input is dry stops dead. That is honest but it is not a
+// DECISION — the block just fails and the player watches. MAKE DO lets a shop
+// run on the other substrate at a real price: twice the input for a fraction of
+// the output. Flora and mineral stand in for each other because that is what
+// improvising looks like — you burn what you have to keep the lights on, and
+// you pay for it.
+//
+// Off by default, and it must stay that way. The point is the choice.
+const SUBSTITUTE = { flora: 'mineral', mineral: 'flora' };
+const SUB_INPUT_MULT = 2.0;   // improvising is wasteful
+const SUB_OUTPUT = 0.55;      // and it does not work as well
+
 // Everything that drains. Five pillars + the two substrates.
 const CONSUMED = ['food', 'art', 'clothes', 'tech', 'shelter', 'flora', 'mineral'];
 // What the HUD treats as the headline five.
@@ -1778,7 +1807,7 @@ const KTL = {
     { label: 'KTL University',         url: 'https://www.ktluniversity.com/' },
   ],
 };
-return { GRID, TILE_HW, TILE_HH, DAY_SECONDS, START_UNLOCKED, PAL, PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, CONSUMED, SCORED, DRAW_PER_HOUSEHOLD, HOUSEHOLD_UNITY, BASE_CAP, START, BUILDINGS, BUILD_ORDER, TAB_ORDER, CRISES, CRISIS_FIRST_DAY, CRISIS_GAP, JOIN_UNITY, KTL };
+return { GRID, TILE_HW, TILE_HH, DAY_SECONDS, START_UNLOCKED, PAL, PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, CONSUMED, SCORED, DRAW_PER_HOUSEHOLD, HOUSEHOLD_UNITY, BASE_CAP, START, BUILDINGS, BUILD_ORDER, TAB_ORDER, CRISES, CRISIS_FIRST_DAY, CRISIS_GAP, JOIN_UNITY, KTL, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT };
 })();
 
 /* ── art_craft.js ─────────────────────────────────────── */
@@ -3529,8 +3558,37 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
 const makeNeighbor = (def, day) => ({
-  ...def, id: def.name, since: day, helped: 0, declined: 0, standing: 0,
+  ...def, id: def.name, since: day, helped: 0, declined: 0, standing: 0, memory: [],
 });
+
+// ── relationship memory ───────────────────────────────────────────────────
+// standing is a number; what people actually remember is the ACT. "You gave
+// Ruthie 8 TECH on day 12" lands where "standing 0.34" does not, and it makes
+// the number legible instead of arbitrary.
+//
+// Capped hard: this rides inside cui_save_v2 in localStorage, and an uncapped
+// per-neighbour journal would grow without bound across a long block.
+const MEMORY_MAX = 8;
+
+/** Append one remembered act, newest first, oldest dropped past the cap. */
+function remember(n, day, kind, extra = {}) {
+  const entry = { day: Math.floor(day), kind, ...extra };
+  return { ...n, memory: [entry, ...(n.memory || [])].slice(0, MEMORY_MAX) };
+}
+
+/** Turn one entry into a line a person would actually say. */
+function memoryLine(e, pillarLabel) {
+  const d = `day ${e.day}`;
+  switch (e.kind) {
+    case 'gave':     return `you gave ${e.amount} ${pillarLabel(e.pillar)} — ${d}`;
+    case 'declined': return `you had none to spare — ${d}`;
+    case 'worked':   return `you worked their ${e.job || 'job'} — ${d}`;
+    case 'traded':   return `you traded — ${d}`;
+    case 'partied':  return `you threw the block a party — ${d}`;
+    case 'expired':  return `their ${e.job || 'job'} went unanswered — ${d}`;
+    default:         return d;
+  }
+}
 
 /** Seed the founding households: the real crew first, then fictional fill. */
 function seedNeighbors(count) {
@@ -3681,7 +3739,9 @@ function finishJob(state, gather) {
     stock: { ...state.stock, [j.pillar]: (state.stock[j.pillar] || 0) + j.payAmount },
     unity: state.unity + unity,
     neighbors: state.neighbors.map(n => n.name === j.who
-      ? { ...n, helped: n.helped + 1, standing: clamp01(n.standing + STANDING_PER_HELP) }
+      ? remember({ ...n, helped: n.helped + 1,
+                   standing: clamp01(n.standing + STANDING_PER_HELP) },
+                 state.day, 'worked', { job: j.job || j.label, pillar: j.pillar })
       : n),
   };
   return { state: next, done: { ...j, unityPaid: unity } };
@@ -3697,7 +3757,9 @@ function giveAid(state, need, gather) {
     stock: { ...state.stock, [need.pillar]: state.stock[need.pillar] - need.amount },
     unity: state.unity + aidUnity(need, gather),
     neighbors: state.neighbors.map(n => n.name === need.who
-      ? { ...n, helped: n.helped + 1, standing: clamp01(n.standing + STANDING_PER_HELP) }
+      ? remember({ ...n, helped: n.helped + 1,
+                   standing: clamp01(n.standing + STANDING_PER_HELP) },
+                 state.day, 'gave', { pillar: need.pillar, amount: need.amount })
       : n),
     pendingNeed: null,
   };
@@ -3708,8 +3770,9 @@ function declineAid(state, need) {
   return {
     ...state,
     neighbors: state.neighbors.map(n => n.name === need.who
-      ? { ...n, declined: n.declined + 1,
-          standing: clamp01(n.standing - STANDING_DECAY_PER_DECLINE) }
+      ? remember({ ...n, declined: n.declined + 1,
+                   standing: clamp01(n.standing - STANDING_DECAY_PER_DECLINE) },
+                 state.day, 'declined', { pillar: need.pillar })
       : n),
     pendingNeed: null,
   };
@@ -3755,7 +3818,9 @@ function executeTrade(state, name) {
       },
       unity: state.unity + offer.unity,
       neighbors: state.neighbors.map(x => x.name === name
-        ? { ...x, standing: clamp01(x.standing + 0.08) } : x),
+        ? remember({ ...x, standing: clamp01(x.standing + 0.08) },
+                   state.day, 'traded', { pillar: offer.givePillar })
+        : x),
     },
     offer,
   };
@@ -3823,7 +3888,8 @@ function throwParty(state, tileIndex) {
       partyUntil: state.day + PARTY_GLOW_DAYS,
       partyTile: tileIndex,
       neighbors: (state.neighbors || []).map(n =>
-        ({ ...n, standing: clamp01(n.standing + 0.15) })),
+        remember({ ...n, standing: clamp01(n.standing + 0.15) },
+                 state.day, 'partied')),
     },
     unity,
   };
@@ -3873,6 +3939,9 @@ function roster(state) {
             : n.helped > 0       ? 'warming up'
             : n.declined > 0     ? 'keeping distance'
                                  : 'new here',
+      // what this household actually remembers, newest first
+      memoryLines: (n.memory || [])
+        .map(e => memoryLine(e, k => (PILLARS[k] ? PILLARS[k].label : k))),
     }));
 }
 return { seedNeighbors, addCustomNeighbor, addNeighbor, raiseNeed, startJob, finishJob, giveAid, declineAid, tradeOffer, executeTrade, needsWorkOrder, answerWorkOrder, partyBlocker, throwParty, lendTools, neighborContribution, roster, UNITY_PER_UNIT, TRADES, gatheringLevel, needGap, aidMultiplier, aidUnity, canAfford, helperSpeed, PARTY_COST, PARTY_COOLDOWN_DAYS, PARTY_GLOW_DAYS };
@@ -4019,6 +4088,9 @@ function newGame() {
     badges: [],
     log: [],
     stats: { crisesFaced: 0, crisesHeld: 0, householdsLost: 0, peakReadiness: 0 },
+    // what each crisis did to this block, and how often. Held ones land
+    // softer next time; ones that broke you land harder. { id: {held,broke,lastDay} }
+    scars: {},
     savedAt: null,
     joined: [],              // KTL doors the player says they walked through
     pendingJoin: null,       // { label, at } — a door opened, answer not yet given
@@ -4036,6 +4108,9 @@ function newGame() {
     roofAt: null,            // once-a-day house upkeep
     guttersAt: null,
     hearthAt: null,
+    // MAKE DO: run shops on the other substrate when their input is dry, at
+    // twice the cost for half the yield. Off by default — it is a choice.
+    makeDo: false,
     activeJob: null,         // a labour need in progress: { ...need, startDay }
     lastNeedAt: undefined,
   };
@@ -4229,10 +4304,15 @@ function load() {
       savedAt: Number.isFinite(f.savedAt) ? f.savedAt : null,
       joined: Array.isArray(f.joined) ? f.joined : [],
       pendingJoin: f.pendingJoin && f.pendingJoin.label ? f.pendingJoin : null,
-      // pre-neighbour saves get faces for their existing household count
+      // pre-neighbour saves get faces for their existing household count.
+      // Saves from before the memory log have no `memory` array — seed it empty
+      // rather than leaving it undefined, or every read has to guard.
       neighbors: Array.isArray(f.neighbors) && f.neighbors.length
-        ? f.neighbors : seedNeighbors(f.households || START.households),
+        ? f.neighbors.map(n => ({ ...n, memory: Array.isArray(n.memory) ? n.memory : [] }))
+        : seedNeighbors(f.households || START.households),
       pendingNeed: f.pendingNeed && f.pendingNeed.who ? f.pendingNeed : null,
+      scars: (f.scars && typeof f.scars === 'object') ? f.scars : {},
+      makeDo: f.makeDo === true,
       activeJob: f.activeJob && f.activeJob.who ? f.activeJob : null,
       alarm: f.alarm && Number.isFinite(f.alarm.at) ? f.alarm : null,
       lastPartyAt: Number.isFinite(f.lastPartyAt) ? f.lastPartyAt : null,
@@ -4883,7 +4963,7 @@ __M['sim.js'] = (function () {
 // C.U.I. — simulation: day cycle, production/drain, readiness, crisis engine.
 // tick() returns a NEW state object; callers replace their reference.
 
-const { BUILDINGS, CONSUMED, SCORED, LAND_ORDER, DRAW_PER_HOUSEHOLD, CRISES, CRISIS_FIRST_DAY, DAY_SECONDS, HOUSEHOLD_UNITY } = __M['config.js'];
+const { BUILDINGS, CONSUMED, SCORED, LAND_ORDER, DRAW_PER_HOUSEHOLD, CRISES, CRISIS_FIRST_DAY, DAY_SECONDS, HOUSEHOLD_UNITY, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT } = __M['config.js'];
 const { activeBuildings, capacity, shelter, crisisGuard } = __M['state.js'];
 const { pickCrisis, crisisGap } = __M['worldsignal.js'];
 const { neighborContribution, gatheringLevel, needGap, raiseNeed, finishJob, helperSpeed } = __M['neighbors.js'];
@@ -4914,17 +4994,31 @@ const zero = () => ({ food:0, art:0, clothes:0, tech:0, shelter:0, flora:0, mine
  * Per-day production and drain for the whole block.
  * A workshop whose upkeep resource is exhausted goes OFFLINE — this is how the
  * land gates the five: no flora, no loom; no mineral, no kiln.
- * Returns { prod, draw, net, offline:Set<tileIndex>, powered:boolean }.
+ * Returns { prod, draw, net, offline:Set<tileIndex>, subs:Map<tileIndex,string[]>, powered:boolean }.
  */
 function computeRates(state) {
   const crisis = currentCrisis(state);
-  const pMult = (crisis && crisis.mult.prod) || {};
-  const dMult = (crisis && crisis.mult.draw) || {};
+  // A scar bends the multipliers, so history is felt in the numbers rather than
+  // announced in a banner. w<1 = the block has done this before and it lands
+  // softer; w>1 = this is the one that broke you, and it is worse this time.
+  const w = crisis ? scarWeight(state, crisis.id) : 1;
+  const bend = (m, isDraw) => {
+    if (!m) return {};
+    const out = {};
+    // a draw multiplier above 1 is the crisis biting; a prod multiplier below 1
+    // is the same bite from the other side. Scale the DISTANCE FROM 1 either way.
+    for (const k in m) out[k] = 1 + (m[k] - 1) * w;
+    void isDraw;
+    return out;
+  };
+  const pMult = bend((crisis && crisis.mult.prod) || {});
+  const dMult = bend((crisis && crisis.mult.draw) || {});
   const sun = sunAltitude(state.day);
   const raining = state.weather === 'rain' || state.weather === 'snow';
 
   const prod = zero();
   const offline = new Set();
+  const subs = new Map();   // tile -> substitutes it is running on
   const has = (k) => state.stock[k] > 0.05;
 
   // Mutual aid floor. Neighbours who know each other put in whether or not you
@@ -4941,10 +5035,22 @@ function computeRates(state) {
     if (!b.done) continue;
     const d = b.def;
 
-    // every upkeep input must be in stock or the shop stops
-    if (d.upkeep && Object.keys(d.upkeep).some(k => !has(k))) { offline.add(b.i); continue; }
+    // Every upkeep input must be in stock or the shop stops — unless the block
+    // is MAKING DO, in which case a dry input can be stood in for by the other
+    // substrate at twice the cost for half the yield. A shortage becomes a
+    // decision instead of a dead building.
+    let subbing = null;
+    if (d.upkeep) {
+      const dry = Object.keys(d.upkeep).filter(k => !has(k));
+      if (dry.length) {
+        const canSub = state.makeDo && dry.every(k => SUBSTITUTE[k] && has(SUBSTITUTE[k]));
+        if (!canSub) { offline.add(b.i); continue; }
+        subbing = dry;
+        subs.set(b.i, dry.map(k => SUBSTITUTE[k]));
+      }
+    }
 
-    let scale = 1;
+    let scale = subbing ? SUB_OUTPUT : 1;
     if (d.solar)   scale *= sun;                       // dead after sundown
     if (d.rainFed) scale *= raining ? 2.0 : 0.35;      // barrels need sky
     if (scale <= 0.001 && d.prod) offline.add(b.i);
@@ -4966,12 +5072,20 @@ function computeRates(state) {
   }
   for (const b of activeBuildings(state)) {
     if (!b.done || !b.def.upkeep || offline.has(b.i)) continue;
-    for (const k in b.def.upkeep) draw[k] += b.def.upkeep[k];
+    const sub = subs.get(b.i);
+    for (const k in b.def.upkeep) {
+      if (sub && !has(k)) {
+        // charged to the stand-in, at the improvising rate
+        draw[SUBSTITUTE[k]] = (draw[SUBSTITUTE[k]] || 0) + b.def.upkeep[k] * SUB_INPUT_MULT;
+      } else {
+        draw[k] += b.def.upkeep[k];
+      }
+    }
   }
 
   const net = {};
   for (const k of CONSUMED) net[k] = prod[k] - draw[k];
-  return { prod, draw, net, offline, powered: has('tech') };
+  return { prod, draw, net, offline, subs, powered: has('tech') };
 }
 
 const pillarScore = (state, r, k) => {
@@ -5030,6 +5144,73 @@ function crisisAnswers(state) {
   }
   buildable.sort((a, b) => a.cost - b.cost);
   return { squeezed: [...squeezed], built, buildable: buildable.slice(0, 4) };
+}
+
+// ── why is this pillar falling, and what fixes it ────────────────────────
+// crisisAnswers() does this for a crisis and it is the most-praised thing in
+// the game, because "the block is in trouble" is useless and "your Tool Shed is
+// fighting it, and it is OFFLINE" is actionable. The F.A.C.T.S. bars already
+// showed the NUMBER falling and the days left; they never said WHY, or what to
+// do. Same treatment, one pillar at a time.
+//
+// Returns null for a pillar that is fine — a diagnosis with nothing wrong is
+// noise, and the bars are read at a glance.
+
+/** healthy | recovering | strained | critical — a pillar's threshold state. */
+function pillarState(state, k, rates) {
+  const r = rates || computeRates(state);
+  const net = r.net[k];
+  const d = daysLeft(state, k, r);
+  if (state.stock[k] <= 0.05) return 'critical';
+  if (net >= 0) {
+    // climbing back out of a hole reads differently from never having been in one
+    return state.stock[k] < (capacity(state)[k] || 1) * 0.25 ? 'recovering' : 'healthy';
+  }
+  return d < 3 ? 'critical' : 'strained';
+}
+
+/**
+ * Name the cause and the cheapest fix for one pillar.
+ * @returns {null|{state, net, days, cause, offline, fix}}
+ */
+function pillarDiagnosis(state, k, rates) {
+  const r = rates || computeRates(state);
+  const st = pillarState(state, k, r);
+  if (st === 'healthy') return null;
+
+  // WHY. Ordered by how much a player can act on it.
+  const causes = [];
+  const offline = activeBuildings(state)
+    .filter(b => r.offline.has(b.i) && Object.keys(BUILDINGS[b.tile.b].prod || {}).includes(k))
+    .map(b => BUILDINGS[b.tile.b].name);
+  if (offline.length) {
+    causes.push(`${offline.length} ${offline.length === 1 ? 'building is' : 'buildings are'} offline`);
+  }
+  const def = currentCrisis(state);
+  if (def && ((def.mult.draw || {})[k] > 1 || (def.mult.prod || {})[k] < 1)) {
+    causes.push(`${def.name} is squeezing it`);
+  }
+  if (!r.prod[k]) causes.push('nothing on the block produces it');
+  if (r.draw[k] > 0 && !causes.length) {
+    causes.push(`${state.households} ${state.households === 1 ? 'household draws' : 'households draw'} on it daily`);
+  }
+
+  // THE FIX. Cheapest unbuilt thing that produces this pillar.
+  const placed = new Set(activeBuildings(state).map(b => b.tile.b));
+  const fix = Object.entries(BUILDINGS)
+    .filter(([id, d]) => !placed.has(id) && Object.keys(d.prod || {}).includes(k))
+    .map(([id, d]) => ({ id, name: d.name, cost: d.cost }))
+    .sort((a, b) => a.cost - b.cost)[0] || null;
+
+  return {
+    state: st,
+    net: r.net[k],
+    days: daysLeft(state, k, r),
+    cause: causes[0] || null,
+    offline,
+    // An offline building you already own beats building a second one.
+    fix: offline.length ? { id: null, name: `restart ${offline[0]}`, cost: 0 } : fix,
+  };
 }
 
 /** Per-pillar 0-1 breakdown (the five plus the land), for the HUD. */
@@ -5289,11 +5470,55 @@ function quickResponse(state) {
   };
 }
 
+// ── scars ────────────────────────────────────────────────────────────────
+// A crisis used to resolve and vanish: you paid the penalty, the weather went
+// clear, and the block was exactly what it had been. So nothing that happened
+// to you was ever HISTORY — the tenth grid failure landed on a block with no
+// memory of the first nine.
+//
+// A scar is that memory, and it cuts both ways. Hold a crisis and the block
+// learns it: the same crisis hits softer next time, because you have done this
+// before. Break on one and it leaves damage: it hits harder, because the thing
+// that failed never got properly fixed.
+const SCAR_HELD = -0.12;   // held it: this one lands 12% softer, per scar
+const SCAR_BROKE = 0.15;   // broke on it: 15% harder
+const SCAR_FLOOR = 0.55, SCAR_CEIL = 1.6;
+const SCAR_MAX = 4;        // a block cannot learn a crisis into nothing
+
+/** Severity multiplier this crisis carries from what happened before. */
+function scarWeight(state, id) {
+  const sc = (state.scars || {})[id];
+  if (!sc) return 1;
+  const n = Math.min(SCAR_MAX, sc.held) * SCAR_HELD
+          + Math.min(SCAR_MAX, sc.broke) * SCAR_BROKE;
+  return clamp(1 + n, SCAR_FLOOR, SCAR_CEIL);
+}
+
+/** Human line for the crisis banner: what this block remembers about this one. */
+function scarNote(state, id) {
+  const sc = (state.scars || {})[id];
+  if (!sc || (!sc.held && !sc.broke)) return null;
+  const w = scarWeight(state, id);
+  if (w < 0.98) return `the block has held this ${sc.held}x before — it lands softer`;
+  if (w > 1.02) return `this one broke the block ${sc.broke}x — it lands harder`;
+  return null;
+}
+
 function endCrisis(state) {
   const def = CRISES.find(c => c.id === state.crisis.id);
   const held = !state.crisis.broke;
   const events = [];
-  const s = { ...state, crisis: null, weather: 'clear',
+  // The scar is written whichever way it went — surviving is also history.
+  const prev = (state.scars || {})[def.id] || { held: 0, broke: 0, lastDay: null };
+  const scars = {
+    ...(state.scars || {}),
+    [def.id]: {
+      held: prev.held + (held ? 1 : 0),
+      broke: prev.broke + (held ? 0 : 1),
+      lastDay: Math.floor(state.day),
+    },
+  };
+  const s = { ...state, crisis: null, weather: 'clear', scars,
               // gap flexed by average real-world risk (gentle: at most ±35%)
               nextCrisis: state.day + randIn(crisisGap()) };
 
@@ -5337,7 +5562,7 @@ function tryGrow(state) {
     log: logLine(state, 'grow', 'A household moved onto the block.'),
   };
 }
-return { sunAltitude, currentCrisis, computeRates, readiness, crisisAnswers, pillarScores, daysLeft, omen, soundAlarm, tick, quickResponse, tryGrow, clamp, isNight, ALARM_WINDOW_DAYS, OMEN_LEAD_DAYS, FALSE_ALARM_COST, RESPONSE_WINDOW_DAYS, RESPONSE_BONUS };
+return { sunAltitude, currentCrisis, scarWeight, scarNote, computeRates, readiness, crisisAnswers, pillarState, pillarDiagnosis, pillarScores, daysLeft, omen, soundAlarm, tick, quickResponse, tryGrow, clamp, isNight, ALARM_WINDOW_DAYS, OMEN_LEAD_DAYS, FALSE_ALARM_COST, RESPONSE_WINDOW_DAYS, RESPONSE_BONUS };
 })();
 
 /* ── peeps.js ─────────────────────────────────────── */
@@ -7448,7 +7673,7 @@ __M['ui.js'] = (function () {
 
 const { PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, BUILDINGS, BUILD_ORDER, TAB_ORDER, KTL, JOIN_UNITY } = __M['config.js'];
 const { capacity, shelter, expandCost, unitySources } = __M['state.js'];
-const { pillarScores, daysLeft, currentCrisis, crisisAnswers } = __M['sim.js'];
+const { pillarScores, daysLeft, currentCrisis, crisisAnswers, pillarDiagnosis, scarNote } = __M['sim.js'];
 const { roster, aidUnity, canAfford, aidMultiplier, TRADES, tradeOffer, partyBlocker, PARTY_COST } = __M['neighbors.js'];
 const { signalInfo } = __M['worldsignal.js'];
 const { MAX_OFFLINE_DAYS } = __M['offline.js'];
@@ -8018,7 +8243,14 @@ function showRosterPanel(state) {
     return `<div class="rrow${n.standing >= 0.3 ? ' solid' : ''}">` +
       `<div class="rname"><b>${n.name}${n.real ? ' <span class="realdot" title="real one">&#9679;</span>' : ''}</b><i>${n.trade} · ${n.pillarIcon} ${n.pillarLabel}</i>` +
       `<div class="rbar"><i style="width:${Math.round(n.standing * 100)}%"></i></div>` +
-      `<div class="troffer">${wm.icon}${o.wantAmt} → ${gm.icon}${o.giveAmt} · ✊${o.unity}</div></div>` +
+      `<div class="troffer">${wm.icon}${o.wantAmt} → ${gm.icon}${o.giveAmt} · ✊${o.unity}</div>` +
+      // What this household actually remembers. Standing is a bar; this is the
+      // reason the bar is where it is — the two most recent acts, in their words.
+      ((n.memoryLines || []).length
+        ? `<div class="rmem">${n.memoryLines.slice(0, 2)
+             .map(l => `<i>${l.replace(/</g, '&lt;')}</i>`).join('')}</div>`
+        : '') +
+      `</div>` +
       `<div class="rstat"><span class="st ${cls}">${n.status}</span>` +
       `<span class="give">${give}</span>` +
       `<button class="trbtn${afford ? '' : ' cant'}" data-trade="${n.name.replace(/"/g, '&quot;')}"` +
@@ -8072,6 +8304,22 @@ function paintMeter(state, rates, ps, k, cap) {
     : `<span class="dn">${sign(net)}/day${d < 99 ? ' · ' + d.toFixed(1) + 'd left' : ''}</span>`;
   row.classList.toggle('warn', net < 0 && d < 3);
   row.classList.toggle('crit', state.stock[k] <= 0.05);
+
+  // The bar already said the number was falling. It never said WHY, or what to
+  // do about it — so a player watching FOOD drop had a countdown and no verb.
+  const dx = pillarDiagnosis(state, k, rates);
+  let why = row.querySelector('.why');
+  if (!dx) { if (why) why.remove(); return; }
+  if (!why) {
+    why = document.createElement('div');
+    why.className = 'why';
+    row.appendChild(why);
+  }
+  row.dataset.state = dx.state;
+  const fix = dx.fix ? ` · ${dx.fix.cost ? 'build' : ''} ${dx.fix.name}`.toUpperCase() : '';
+  why.textContent = dx.state === 'recovering'
+    ? 'recovering'
+    : `${dx.cause || 'draining'}${fix}`;
 }
 
 function updateHUD(state, rates, score) {
@@ -8173,7 +8421,10 @@ function showCrisis(state) {
   b.classList.add('show');
   $('#crisis-icon').textContent = def.icon;
   $('#crisis-name').textContent = def.name;
-  $('#crisis-line').textContent = def.line;
+  // What this block remembers about THIS crisis. A tenth grid failure should
+  // not read like the first one — the scar is in the numbers, so say so.
+  const scar = scarNote(state, def.id);
+  $('#crisis-line').textContent = scar ? `${def.line} — ${scar}` : def.line;
   $('#crisis-bar').style.width = `${(1 - state.crisis.left / state.crisis.total) * 100}%`;
   $('#crisis-days').textContent = `${state.crisis.left.toFixed(1)} days left`;
 
@@ -8360,6 +8611,16 @@ function initUI(h) {
     $('#music-vol').value = Math.round(ms.volume * 100);
     paintMusic(ms.muted);
   }
+
+  // MAKE DO — the shortage becomes a decision instead of a dead building.
+  const paintMakeDo = (on) => {
+    $('#btn-makedo').textContent = on ? '🔧 MAKE DO ON' : '🔧 MAKE DO';
+    $('#btn-makedo').classList.toggle('on', !!on);
+  };
+  $('#btn-makedo').addEventListener('click', () => {
+    paintMakeDo(hooks.onMakeDo ? hooks.onMakeDo() : false);
+  });
+  if (hooks.makeDoState) paintMakeDo(hooks.makeDoState());
 
   $('#toggle-drawer').addEventListener('click', () => {
     const open = $('#drawer').classList.toggle('open');
@@ -8980,6 +9241,24 @@ initUI({
   // Sound and music mute SEPARATELY. Plenty of players want the hand drums and
   // the build clicks while their own playlist runs, or the reverse.
   onMute: () => { setMuted(!isMuted()); return isMuted(); },
+  // Making do is part of the block's state, not a client preference: it changes
+  // what the shops actually consume, so it saves and it survives a reload.
+  onMakeDo: () => {
+    state = {
+      ...state,
+      makeDo: !state.makeDo,
+      log: [...state.log, { day: Math.floor(state.day) + 1, kind: 'sys',
+        text: !state.makeDo
+          ? 'MAKING DO — a shop with a dry input burns the other substrate: twice the cost, half the yield.'
+          : 'No longer making do — a dry input stops the shop.' }],
+    };
+    toast(state.makeDo ? 'Making do: shops improvise when an input runs dry.'
+                       : 'Making do off.', state.makeDo ? 'good' : '');
+    pushLog(state);
+    save(state);
+    return state.makeDo;
+  },
+  makeDoState: () => state.makeDo,
   onMusicMute: () => toggleMusicMuted(),
   onMusicVolume: (v) => setMusicVolume(v),
   musicState: () => ({ muted: isMusicMuted(), volume: getMusicVolume() }),
