@@ -66,7 +66,9 @@ jobs:
             /leak-sheet/ \
             /articles/ \
             /articles/best-ai-tools-two-person-auto-detail-shop/ \
-            /articles/best-ai-tools-solo-mobile-mechanic-business/
+            /articles/best-ai-tools-solo-mobile-mechanic-business/ \
+            /soundtrack/ \
+            /melanin-key/
 
       # Uploaded even when the gate fails — the screenshots are how you see WHAT broke.
       - name: Upload screenshots
