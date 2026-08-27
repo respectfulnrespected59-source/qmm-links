@@ -1765,6 +1765,11 @@ const KTL = {
   initiative: 'COMMON UNITY INITIATIVE — PHASE ONE',
   powered: 'powered by F.A.C.T.S.',
   credit: 'F.A.C.T.S. Initiative created by RED PILLAR.',
+  // Music credit is not decoration: cui-party.mp3 is not ours. Ether Bara
+  // (Andre Houser El) gave it to the block for this, and the record credits
+  // three people. If the party cue is ever swapped, this line changes with it.
+  musicCredit: 'Music by Quantum Melanin Media · "I’m Proud Of Me" by '
+    + 'Ether Bara & Ka-shen Sekhem, feat. Dr. Frances Cress Welsing.',
   links: [
     { label: '72 K.L.A.W.S Community', url: 'https://www.skool.com/72klaws-5176/about' },
     { label: 'IMAGINARIUM Community',  url: 'https://www.skool.com/imaginarium/about' },
@@ -6590,8 +6595,8 @@ return { initSfx, setMuted, sfx, isMuted };
 __M['music.js'] = (function () {
 // C.U.I. — the soundtrack. Island jazz over hip-hop drums: flute, piano, bongos.
 //
-// Three cues, because the game already has three emotional states and the music
-// should answer to them rather than loop indifferently underneath:
+// Four cues, because the game already has these states and the music should
+// answer to them rather than loop indifferently underneath:
 //
 //   day     the block working. Warm, grooving, unhurried.
 //   night   the city skyline goes dark and your block does not. Sparser,
@@ -6599,6 +6604,10 @@ __M['music.js'] = (function () {
 //           the night cue must feel WARM, never spooky.
 //   crisis  production craters and you live on what you stored. Stripped down:
 //           drums and low piano, the flute gone.
+//   party   a BLOCK PARTY is glowing. The only cue that is not ambient weather —
+//           you spent surplus on purpose and the block is in the street for it,
+//           so the music is the one thing in the game that celebrates back.
+//           Outranks night and day; a crisis landing still cuts through it.
 //
 // NOT SYNTHESIZED. sfx.js generates every one-shot with WebAudio precisely
 // because an Artifact's CSP blocks external hosts and synthesis costs zero
@@ -6620,6 +6629,7 @@ const CUES = {
   day: 'cui-day.mp3',
   night: 'cui-night.mp3',
   crisis: 'cui-crisis.mp3',
+  party: 'cui-party.mp3',
 };
 
 // Long enough that a cue change reads as a mood shift rather than a channel
@@ -6754,11 +6764,18 @@ const isMusicMuted = () => muted;
  * Pick the cue for the world right now. Called every frame — cheap, because
  * play() returns immediately once the cue is already current.
  *
- * @param {{crisis: boolean, night: boolean}} world
+ * Priority is deliberate: a crisis outranks a party, because a block that
+ * throws a party and then loses the grid should hear the grid. Everything
+ * else is weather.
+ *
+ * @param {{crisis: boolean, party: boolean, night: boolean}} world
  */
 function updateMusic(world) {
   if (failed || muted || !started) return;
-  play(world.crisis ? 'crisis' : world.night ? 'night' : 'day');
+  play(world.crisis ? 'crisis'
+     : world.party ? 'party'
+     : world.night ? 'night'
+     : 'day');
 }
 
 /** For the SOUND panel: which cue is up, and did any track actually load. */
@@ -8256,6 +8273,14 @@ function initUI(h) {
   // the join panel — the game is the doorway, the initiative is the room
   $('#join-title').textContent = KTL.initiative;
   $('#join-credit').textContent = KTL.credit;
+  // The soundtrack is credited where people actually look, not only in a repo
+  // file — one of the cues was given to us by its maker and carries a feature.
+  if (KTL.musicCredit) {
+    const mc = document.createElement('div');
+    mc.className = 'jcredit';   // same treatment as the F.A.C.T.S. credit above it
+    mc.textContent = KTL.musicCredit;
+    $('#join-credit').insertAdjacentElement('afterend', mc);
+  }
   renderJoinLinks([]);
   $('#btn-join').addEventListener('click', () => $('#join').classList.add('show'));
   $('#join-close').addEventListener('click', () => $('#join').classList.remove('show'));
@@ -8698,7 +8723,12 @@ function frame(now) {
 
     // Music answers to the world, not to a playlist: the block working, the
     // block lit while the city is dark, and the block living on its reserves.
-    updateMusic({ crisis: !!state.crisis, night: isNight(state.day) });
+    updateMusic({
+      crisis: !!state.crisis,
+      // same condition render.js and peeps.js use for the glow and the ring
+      party: state.partyUntil > state.day && state.partyTile !== null,
+      night: isNight(state.day),
+    });
 
     sinceGrow += dt;
     if (sinceGrow > 6) {
