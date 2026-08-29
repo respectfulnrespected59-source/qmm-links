@@ -36,6 +36,15 @@
     <priority>0.9</priority>
   </url>
 
+  <!-- Same three leaks, per-trade vocabulary. Built from the one source by
+       qmm-ai-gps/leak-sheet/build_hosted.py, so the versions cannot drift. -->
+  <url>
+    <loc>https://quantummelaninmedia.com/leak-sheet/martial-arts/</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- The two playable games. They are real pages on this domain, not outbound links, and
        "play free in browser" is the query that brings people here. -->
   <url>
