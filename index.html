@@ -1293,5 +1293,22 @@ document.querySelectorAll('.ytf').forEach(el => {
   });
 });
 </script>
+<script>
+// PHONE ROUTING for Quantum Motors 3D (2026-09-04). The desktop build is 47 MB and mobile
+// browsers hold the whole payload in memory, so phones get the light build
+// (/quantummotors3dracing-mobile/, 29 MB: simplified car meshes, plus the engine samples
+// the running game never fetches removed). This only REWRITES the link - the desktop build
+// stays byte-identical, and with JS off everyone still gets it.
+(function () {
+  try {
+    var small = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+    var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (!(small && touch)) return;
+    document.querySelectorAll('a[href="/quantummotors3dracing/"]').forEach(function (a) {
+      a.href = '/quantummotors3dracing-mobile/';
+    });
+  } catch (e) { /* leave the desktop link alone */ }
+})();
+</script>
 </body>
 </html>
