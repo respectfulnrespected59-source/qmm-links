@@ -1,0 +1,27 @@
+QUANTUM MOTORS — ENGINE & TIRE RECORDING CREDITS
+================================================
+
+The engine and tire loops are cut from real recordings sourced on
+freesound.org. Two are Creative Commons Attribution — that credit is a
+binding licence condition: keep this file in the build, keep the in-game
+CREDITS rows, and keep these credits on any store page.
+
+CC BY (attribution REQUIRED):
+  blower_idle.wav ......... "Hot-Rod-AngryV8-supercharged-1500HP-Burnout-Demo"
+                            by Ears68 — freesound.org/s/144456/ — CC BY 3.0
+  blower_mid.wav .......... "Race Car Jalopy Muscle Car Dragster Hot Rod Supercharger"
+  blower_high.wav          by fudgealtoid — freesound.org/s/750729/ — CC BY 4.0
+
+CC0 / public domain (credited for provenance):
+  v8_idle / v8_low / v8_mid / v8_high ... Shelby GT500 recordings by VacekH,
+                                          freesound.org/s/205503/ 205505 205510 205511
+  v10_idle / v10_low / v10_mid / v10_high Lamborghini LP-670, freesound.org/s/112075/
+  i6t_idle / i6t_low / i6t_mid / i6t_high Toyota Supra dyno pull w/ turbo,
+                                          by editboy23, freesound.org/s/496171/
+  skid_squeal.wav ....................... tire squeal, freesound.org/s/71736/
+  skid_burnout.wav ...................... burnout, freesound.org/s/71740/
+  idle.wav .............................. legacy loop from the original build (unused
+                                          by the sampled engine; kept for the synth-era
+                                          record)
+
+All loops were re-cut, loop-crossfaded, and level-normalized for the game.
