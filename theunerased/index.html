@@ -1789,7 +1789,7 @@
   function drawHUD(){
     const tms=performance.now(), pul=0.5+0.5*Math.sin(tms/220);
     // COMPACT: on a phone the left column has to clear the thumb pad and the score has to clear the rail
-    const CMP=(W<820||H<470), LY=CMP?[22,38,58,76,92,110]:[30,56,84,106,124,146], RW=CMP?116:210, RX=CMP?W-134:W-332;
+    const CMP=(W<820||H<470), LY=CMP?[22,38,58,76,92,110]:[30,56,84,106,124,146], RW=CMP?116:210, RX=CMP?W-232:W-332;
     // LIVES — glowing gold orbs
     ctx.textAlign='left'; ctx.font='800 16px Trebuchet MS';
     ctx.font=(CMP?'800 13px':'800 16px')+' Trebuchet MS';
