@@ -44,10 +44,23 @@
     color:var(--gold);user-select:none;font-weight:900;backdrop-filter:blur(4px);width:62px;height:62px;font-size:1.4rem;}
   .tbtn:active{background:rgba(201,168,76,.3);}
   #touch>*{ margin-left:env(safe-area-inset-left,0px); margin-right:env(safe-area-inset-right,0px); }
-  #tL{left:16px;bottom:88px;} #tR{left:84px;bottom:88px;} #tU{left:50px;bottom:154px;} #tD{left:50px;bottom:22px;}
+  /* ANALOG STICK — a fixed base the thumb rests on; the knob follows inside the radius. */
+  #stick{position:absolute;pointer-events:auto;touch-action:none;
+    left:calc(18px + env(safe-area-inset-left,0px));
+    bottom:calc(20px + env(safe-area-inset-bottom,0px));
+    width:138px;height:138px;border-radius:50%;
+    border:2px solid rgba(201,168,76,.40);
+    background:radial-gradient(circle,rgba(45,27,78,.50),rgba(11,7,19,.30));backdrop-filter:blur(2px);}
+  #stick:after{content:'';position:absolute;inset:26%;border-radius:50%;border:1px dashed rgba(201,168,76,.22);}
+  #knob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;
+    pointer-events:none;border:2px solid rgba(201,168,76,.85);
+    background:radial-gradient(circle at 38% 32%,rgba(76,224,224,.34),rgba(11,7,19,.9));
+    box-shadow:0 0 18px rgba(0,0,0,.5);transition:background .08s,border-color .08s;}
+  #stick.hit #knob{border-color:var(--cyan);background:radial-gradient(circle at 38% 32%,rgba(76,224,224,.62),rgba(11,7,19,.94));}
   #tJump{right:20px;bottom:88px;width:76px;height:76px;background:rgba(76,224,224,.12);border-color:rgba(76,224,224,.4);color:var(--cyan);font-size:.75rem;}
   #tFire{right:98px;bottom:36px;width:76px;height:76px;background:rgba(196,59,59,.14);border-color:rgba(196,59,59,.45);color:#ff9a9a;font-size:.75rem;}
   #tSwap{right:22px;bottom:172px;width:56px;height:56px;font-size:.62rem;letter-spacing:.03em;}
+  #tSlash{right:104px;bottom:190px;width:66px;height:66px;background:rgba(155,108,255,.16);border-color:rgba(201,168,76,.6);color:var(--gold);font-size:.62rem;letter-spacing:.03em;}
   #tShield{right:104px;bottom:122px;width:58px;height:58px;background:rgba(76,224,224,.12);border-color:rgba(76,224,224,.45);color:var(--cyan);font-size:.6rem;letter-spacing:.03em;}
   #tDash{right:184px;bottom:40px;width:56px;height:56px;background:rgba(155,108,255,.12);border-color:rgba(155,108,255,.45);color:#c9b3ff;font-size:.62rem;letter-spacing:.03em;}
   /* character select */
@@ -117,12 +130,14 @@
   /* short screens: shrink the pads so they stop eating a 375px-tall phone */
   @media (max-height:430px){
     .tbtn{width:52px;height:52px;font-size:1.15rem;}
-    #tL{left:12px;bottom:70px;} #tR{left:70px;bottom:70px;} #tU{left:41px;bottom:126px;} #tD{left:41px;bottom:16px;}
-    #tJump{right:16px;bottom:70px;width:64px;height:64px;font-size:.66rem;}
-    #tFire{right:84px;bottom:26px;width:64px;height:64px;font-size:.66rem;}
-    #tSwap{right:18px;bottom:142px;width:48px;height:48px;font-size:.56rem;}
-    #tShield{right:88px;bottom:98px;width:50px;height:50px;font-size:.54rem;}
-    #tDash{right:156px;bottom:30px;width:48px;height:48px;font-size:.56rem;}
+    #stick{width:112px;height:112px;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+    #knob{width:50px;height:50px;margin:-25px 0 0 -25px;}
+    #tJump{right:16px;bottom:66px;width:62px;height:62px;font-size:.64rem;}
+    #tFire{right:84px;bottom:22px;width:62px;height:62px;font-size:.64rem;}
+    #tSlash{right:88px;bottom:150px;width:56px;height:56px;font-size:.56rem;}
+    #tSwap{right:18px;bottom:138px;width:46px;height:46px;font-size:.54rem;}
+    #tShield{right:20px;bottom:196px;width:48px;height:48px;font-size:.52rem;}
+    #tDash{right:152px;bottom:26px;width:46px;height:46px;font-size:.54rem;}
   }
   /* ROTATE PROMPT — only while actually playing in portrait on a touch device.
      The orientation lock is ATTEMPTED, never assumed: iOS Safari supports neither fullscreen
@@ -155,9 +170,9 @@
   <div id="muteBtn" class="topbtn hidden">🔊</div>
 
   <div id="touch">
-    <div class="tbtn" id="tL">◄</div><div class="tbtn" id="tR">►</div>
-    <div class="tbtn" id="tU">▲</div><div class="tbtn" id="tD">▼</div>
+    <div id="stick"><div id="knob"></div></div>
     <div class="tbtn" id="tJump">JUMP</div><div class="tbtn" id="tFire">FIRE</div>
+    <div class="tbtn" id="tSlash">BLADE</div>
     <div class="tbtn" id="tSwap">SWAP</div>
     <div class="tbtn" id="tShield">WARD</div><div class="tbtn" id="tDash">DASH</div>
   </div>
@@ -176,13 +191,15 @@
       raise the <b style="color:var(--cyan)">Girih Ward</b> when the engine's maw lights up,
       and break the book-burning engine at the gate. Die and you lose your weapon.</p>
     <div class="keys touchkeys">
-      <b>◄ ►</b> run &nbsp;·&nbsp; <b>▲</b> aim up &nbsp;·&nbsp; <b>▼</b> duck (tap while running = <b>SLIDE</b>, i-frames) &nbsp;·&nbsp; <b>JUMP</b> (tap twice = air-jump)<br>
-      <b>WARD</b> hold = the Girih shield — raise it right before a hit for a <b>PARRY</b> that reflects the shot &nbsp;·&nbsp; <b>DASH</b> &nbsp;·&nbsp; <b>▼ + JUMP</b> drops through a block &nbsp;·&nbsp; <b>SWAP</b> blaster<br>
+      <b>STICK</b> to run — push <b>up</b> to aim up, <b>down</b> to duck (flick it down while running = <b>SLIDE</b>, i-frames) &nbsp;·&nbsp; <b>JUMP</b> (tap twice = air-jump)<br>
+      <b>BLADE</b> = a 3-hit plasma combo (the third launches) — hold the stick <b>down</b> in the air and it becomes a diving stab; <b>DASH</b> then <b>BLADE</b> is a lunge. The blade cuts enemy shots out of the air.<br>
+      <b>WARD</b> hold = the Girih shield — raise it right before a hit for a <b>PARRY</b> that reflects the shot &nbsp;·&nbsp; <b>DASH</b> &nbsp;·&nbsp; stick <b>down</b> + <b>JUMP</b> drops through a block &nbsp;·&nbsp; <b>SWAP</b> blaster<br>
       <b>Hold FIRE</b> to charge while you keep shooting — let go at full for the <b>alt-fire</b><br>
       <span style="color:var(--cyan)">STYLE SCORE</span>: kills × a multiplier that grows with <b>parries</b>, <b>slide</b>, <b>dash</b> &amp; <b>air</b> kills — a hit halves it. Three parries in a row arm a <b>gold cannon</b> that <b>stuns the boss</b>. Rank at the end: <b>SCRIBE</b> · <b>SCHOLAR</b> · <b>SAGE</b> · <b>UNERASED</b> (no-hit boss)
     </div>
     <div class="keys keykeys">
       <b>◄ ►</b> run &nbsp;·&nbsp; <b>▲</b> aim up &nbsp;·&nbsp; <b>▼</b> duck (tap while running = <b>SLIDE</b>, i-frames) &nbsp;·&nbsp; <b>Z</b> jump (<b>double-tap</b>=air-jump · slide-jump keeps speed) &nbsp;·&nbsp; <b>X</b> fire<br>
+      <b>F</b> = <b>PLASMA BLADE</b> — a 3-hit combo (the third launches), <b>▼+F</b> in the air is a diving stab that bounces off a kill, and <b>DASH+F</b> is a lunge. The blade cuts enemy shots out of the air.<br>
       <b>V</b> hold = <b>GIRIH WARD</b> shield (raise it right before a hit = <b>PARRY</b>, reflects the shot · braced = strafe) &nbsp;·&nbsp; <b>SHIFT</b> / double-tap <b>◄►</b> = <b>DASH</b> (one air dash per jump) &nbsp;·&nbsp; <b>▼+Z</b> drop through a block &nbsp;·&nbsp; <b>C</b> swap &nbsp;·&nbsp; <b>P</b> pause<br>
       <b>Hold X</b> to charge the blaster while you keep firing — release at full for its <b>alt-fire</b> (lance · ring · homing swarm · sweep · bloom)<br>
       <span style="color:var(--cyan)">STYLE SCORE</span>: kills × a multiplier that grows with <b>parries</b>, <b>slide</b>, <b>dash</b> &amp; <b>air</b> kills — a hit halves it. Three parries in a row arm a <b>gold cannon</b> that <b>stuns the boss</b>. Rank at the end: <b>SCRIBE</b> · <b>SCHOLAR</b> · <b>SAGE</b> · <b>UNERASED</b> (no-hit boss)
@@ -313,6 +330,10 @@
   const GRUNT_KNOCK=280, BOSS_TELEGRAPH=0.45;                               // boss maw charges visibly before every volley
   const CHARGE_T=1.15, CHARGE_HOLD=0.22;      // hold FIRE this long past the first shot and the blaster charges; release at full = alt-fire
   const PARRY_CHAIN=3, BOSS_STUN=1.15;        // parries in a row without taking a hit; the chain shot stuns a boss for this long
+  // ---- PLASMA BLADE: old-school 3-hit rhythm, modern impact ----
+  const BL_DUR=[0.20,0.19,0.30], BL_ACT=[0.05,0.15], BL_CD=0.10, BL_CHAIN=0.42;   // swing length, active window, recovery, combo window
+  const BL_DMG=[3,3,6], BL_REACH=[50,50,62], BL_ARC=1.15;                          // the third hit is the launcher
+  const BL_LUNGE=520, BL_PLUNGE=980, BL_BOUNCE=560, HITSTOP=0.075;                 // dash-lunge, dive speed, bounce off a dived kill, impact freeze
 
   // ============ RECOVERED PAGES — real records, given back one at a time ============
   // Each line is a checkable historical fact, not flavour. Order is fixed, so a run always recovers a world's set in the same sequence.
@@ -469,7 +490,8 @@
     dashT:0,dashCd:0,dashDir:1,airDash:true,pDash:false,tapT:{'-1':-9,'1':-9},pL:false,pR:false,   // dash + double-tap clock
     slideT:0,slideDir:1,pDown:false,dropT:0,                                                       // slide + drop-through
     shield:SHIELD_MAX,shieldOn:false,shieldT:0,shieldBroken:false,brokenT:0,regenDelay:0,        // Girih Ward
-    charge:0,holdT:0,pFire:false};                                                                // charge shot
+    charge:0,holdT:0,pFire:false,                                                                 // charge shot
+    atkT:0,atkCd:0,atkStep:0,comboT:0,atkKind:'',atkHit:new Set(),pSlash:false,plunge:false};      // plasma blade
   function resetPlayer(keepX){
     if(!keepX) player.x=120;
     player.y=groundY()-player.h; player.vx=0; player.vy=0; player.alive=true; player.invuln=1.2;
@@ -478,6 +500,7 @@
     player.dashT=0; player.dashCd=0; player.airDash=true; player.slideT=0; player.dropT=0;
     player.shield=SHIELD_MAX; player.shieldOn=false; player.shieldT=0; player.shieldBroken=false; player.brokenT=0; player.regenDelay=0;
     player.charge=0; player.holdT=0; player.pFire=false;
+    player.atkT=0; player.atkCd=0; player.atkStep=0; player.comboT=0; player.atkKind=''; player.atkHit=new Set(); player.pSlash=false; player.plunge=false;
   }
 
   let bullets=[], ebullets=[], enemies=[], crates=[], pickups=[], fx=[];
@@ -518,7 +541,8 @@
   window.addEventListener('orientationchange',()=>setTimeout(syncRotate,120));
   try{ if(window.screen&&screen.orientation) screen.orientation.addEventListener('change',()=>setTimeout(syncRotate,120)); }catch(e){}
 
-  const keys={}, T={l:false,r:false,u:false,d:false,j:false,f:false,swap:false,sh:false,dash:false};
+  const keys={}, T={l:false,r:false,u:false,d:false,j:false,f:false,swap:false,sh:false,dash:false,slash:false};
+  const ST={on:false,x:0,y:0,id:null};   // analog stick vector
   window.addEventListener('keydown',e=>{ keys[e.code]=true;
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyZ','KeyX'].includes(e.code))e.preventDefault();
     // character-select navigation (menu flow only — game not running)
@@ -538,7 +562,32 @@
   function bindT(id,p){ const el=document.getElementById(id); const on=e=>{e.preventDefault();T[p]=true;}, off=e=>{e.preventDefault();T[p]=false;};
     el.addEventListener('touchstart',on,{passive:false}); el.addEventListener('touchend',off,{passive:false}); el.addEventListener('touchcancel',off,{passive:false});
     el.addEventListener('mousedown',on); el.addEventListener('mouseup',off); el.addEventListener('mouseleave',off); }
-  bindT('tL','l');bindT('tR','r');bindT('tU','u');bindT('tD','d');bindT('tJump','j');bindT('tFire','f');bindT('tSwap','swap');bindT('tShield','sh');bindT('tDash','dash');
+  bindT('tJump','j');bindT('tFire','f');bindT('tSwap','swap');bindT('tShield','sh');bindT('tDash','dash');bindT('tSlash','slash');
+  // ---- ANALOG STICK (pointer events + capture, like the racer's approved stick) ----
+  (function(){ const st=document.getElementById('stick'), kn=document.getElementById('knob'), DEAD=0.16;
+    if(!st) return;
+    const setKnob=(dx,dy,r)=>{ kn.style.transform='translate('+(dx*r*0.60).toFixed(1)+'px,'+(dy*r*0.60).toFixed(1)+'px)'; };
+    const move=e=>{ if(ST.id!==e.pointerId)return;
+      const b=st.getBoundingClientRect(), r=b.width/2;
+      let dx=(e.clientX-(b.left+r))/r, dy=(e.clientY-(b.top+r))/r;
+      const len=Math.hypot(dx,dy); if(len>1){dx/=len;dy/=len;}
+      // the deadzone is RESCALED, not subtracted — otherwise the stick jumps from 0 straight to DEAD
+      const rescale=v=>{ const a=Math.abs(v); return a<DEAD?0:Math.sign(v)*((a-DEAD)/(1-DEAD)); };
+      ST.x=rescale(dx); ST.y=rescale(dy); ST.on=true; setKnob(dx,dy,r); };
+    const down=e=>{ e.preventDefault(); if(ST.id!==null)return; ST.id=e.pointerId;
+      try{ st.setPointerCapture(e.pointerId); }catch(err){}
+      st.classList.add('hit'); move(e); };
+    const up=e=>{ if(ST.id!==e.pointerId)return; e.preventDefault(); ST.id=null; ST.on=false; ST.x=0; ST.y=0;
+      st.classList.remove('hit'); kn.style.transform=''; };
+    st.addEventListener('pointerdown',down); st.addEventListener('pointermove',move);
+    st.addEventListener('pointerup',up); st.addEventListener('pointercancel',up);
+    st.addEventListener('contextmenu',e=>e.preventDefault());
+    // a pointer lost to a backgrounded tab must never weld an input on
+    const release=()=>{ ST.id=null; ST.on=false; ST.x=0; ST.y=0; st.classList.remove('hit'); kn.style.transform='';
+      for(const k in T) T[k]=false; };
+    window.addEventListener('blur',release);
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden) release(); });
+  })();
   const IN={};
   function readInput(){
     IN.left=keys['ArrowLeft']||keys['KeyA']||T.l; IN.right=keys['ArrowRight']||keys['KeyD']||T.r;
@@ -546,6 +595,10 @@
     IN.jump=keys['KeyZ']||keys['Space']||T.j;    IN.fire=keys['KeyX']||keys['KeyJ']||T.f;
     IN.swap=keys['KeyC']||T.swap;
     IN.shield=keys['KeyV']||keys['KeyK']||T.sh;   IN.dash=keys['ShiftLeft']||keys['ShiftRight']||keys['KeyL']||T.dash;
+    IN.slash=keys['KeyF']||keys['KeyB']||T.slash;
+    // the analog stick speaks the SAME booleans as the keyboard, so slide / duck / drop-through are untouched
+    if(ST.on){ if(ST.x<-0.34)IN.left=true; else if(ST.x>0.34)IN.right=true;
+      if(ST.y<-0.52)IN.up=true; else if(ST.y>0.52)IN.down=true; }
   }
   function aimVec(){
     if(player.crouch) return {x:player.facing,y:0};
@@ -592,6 +645,72 @@
     shake=Math.max(shake,5); flash('▸ '+ALT[player.weapon].name, w.col);
     fx.push({x:bx,y:by,a:1,r:14,type:'ring',c:w.col}); burst(bx,by,w.col,16);
     beep(240,0.22,'sawtooth',0.22,900); beep(1200,0.16,'sine',0.16,420); noise(0.16,0.16,600,2200); }
+
+  // ---- PLASMA BLADE: swing, resolve, and the feel that sells it ----
+  let hitStop=0;                                  // frames of freeze on a connect — the whole "new school" punch
+  const slashFx=[];                               // fading ribbons left by finished swings
+  function bladeColor(){ const C=HEROES[player.char]||HEROES.melvinci; return C.queen?'#3ce08f':COL.cyan; }
+  function startSlash(){
+    const air=!player.onGround;
+    // a dive is a deliberate choice: hold DOWN in the air and the blade goes down with you
+    if(air&&IN.down){ player.atkKind='plunge'; player.plunge=true; player.atkT=0.42; player.vy=BL_PLUNGE; player.atkStep=1; }
+    else if(player.dashT>0){ player.atkKind='lunge'; player.atkT=BL_DUR[0]; player.atkStep=1; player.vx=player.facing*BL_LUNGE; player.dashT=Math.max(player.dashT,0.10); }
+    else { const nxt=(player.comboT>0)?Math.min(3,player.atkStep+1):1; player.atkStep=nxt;
+      player.atkKind=air?'air':('c'+nxt); player.atkT=BL_DUR[nxt-1];
+      if(!air&&nxt===3){ player.vx=player.facing*260; }                       // the launcher steps in
+    }
+    player.atkHit=new Set(); player.comboT=0; player.atkCd=BL_CD;
+    auraT=Math.max(auraT,0.5);
+    const step=Math.max(1,player.atkStep);
+    beep(2100+step*260,0.07,'sawtooth',0.13,520); noise(0.06,0.10,3200,900);
+    slashFx.push({x:player.x+player.w/2,y:player.y+(player.crouch?34:26),face:player.facing,a:1,t:0,
+      kind:player.atkKind,col:bladeColor()});
+  }
+  function bladeOrigin(){ return {x:player.x+player.w/2, y:player.y+(player.crouch?34:26)}; }
+  // rect-clamped distance: accurate enough for an arc and far cheaper than a real sector test
+  function bladeHits(bx,by,bw,bh){
+    const o=bladeOrigin(), idx=Math.max(0,Math.min(2,player.atkStep-1)), reach=BL_REACH[idx];
+    const cx=Math.max(bx,Math.min(o.x,bx+bw)), cy=Math.max(by,Math.min(o.y,by+bh));
+    const dx=cx-o.x, dy=cy-o.y, d=Math.hypot(dx,dy);
+    if(d>reach) return false;
+    if(player.atkKind==='plunge') return dy>-10;                       // a dive sweeps below the hero
+    if(dx*player.facing < -12) return false;                           // never behind the shoulder
+    return Math.abs(Math.atan2(dy, Math.abs(dx)||0.001)) < BL_ARC;
+  }
+  function bladeConnect(x,y){ hitStop=Math.max(hitStop,HITSTOP); shake=Math.max(shake,6);
+    burst(x,y,bladeColor(),14); fx.push({x,y,a:1,r:9,type:'ring',c:bladeColor()});
+    beep(160,0.10,'square',0.18,70); noise(0.09,0.18,700,240); }
+  function resolveBlade(dt){
+    if(player.atkT<=0) return;
+    if(!player.atkHit) player.atkHit=new Set();      // a swing always owns its hit-set; step() is not inside a try/catch
+
+    const idx=Math.max(0,Math.min(2,player.atkStep-1)), dur=(player.atkKind==='plunge')?0.42:BL_DUR[idx];
+    const t=dur-player.atkT, active=(player.atkKind==='plunge')?(t>0.04):(t>=BL_ACT[0]&&t<=BL_ACT[1]);
+    if(!active) return;
+    const dmg=BL_DMG[idx];
+    for(const e of enemies){ if(!e.alive||player.atkHit.has(e))continue;
+      if(bladeHits(e.x,e.y,e.w,e.h)){ player.atkHit.add(e); e.hp-=dmg; e.hurtT=0.12;
+        e.knock=player.facing*(player.atkStep===3?420:200); e.knockT=0.3;
+        bladeConnect(e.x+e.w/2,e.y+e.h/2);
+        if(e.hp<=0){ killGrunt(e,null,'BLADE KILL');
+          if(player.atkKind==='plunge'){ player.vy=-BL_BOUNCE; player.plunge=false; player.atkT=Math.min(player.atkT,0.08); } }   // dive-kill kicks you back up
+      } }
+    for(const c of crates){ if(c.broken||player.atkHit.has(c))continue;
+      if(bladeHits(c.x,c.y,c.w,c.h)){ player.atkHit.add(c); c.hp-=dmg; burst(c.x+16,c.y+16,COL.gold,10);
+        if(c.hp<=0){ c.broken=true; addScore(SCORE.crate,'CRATE',c.x+16,c.y-4,false); recoverPage(c.x+16,c.y-26);
+          burst(c.x+16,c.y+16,COL.gold,20); shake=Math.max(shake,5); noise(0.22,0.24,500,1600);
+          pickups.push({x:c.x+2,y:c.y+2,w:28,h:28,vy:0,type:c.type,bob:0}); } } }
+    // the blade CUTS shots out of the air — it destroys them, it does not send them back. Reflecting is the ward's job.
+    for(let i=ebullets.length-1;i>=0;i--){ const b=ebullets[i];
+      if(bladeHits(b.x-3,b.y-3,6,6)){ burst(b.x,b.y,bladeColor(),8); beep(1500,0.05,'square',0.10,900); ebullets.splice(i,1); } }
+    if(boss&&boss.active&&boss.alive&&!player.atkHit.has(boss)&&bladeHits(boss.x,boss.y,boss.w,boss.h)){
+      player.atkHit.add(boss);
+      const fake={x:boss.x+boss.w/2,y:boss.y+boss.h/2,dmg,melee:true};
+      if(boss.stunT>0||BOSSES[boss.type].hit(fake)){ boss.hp-=dmg; boss.hurtT=0.12; addScore(SCORE.bossDmg*dmg,null);
+        bladeConnect(fake.x,fake.y); if(boss.hp<=0){ boss.alive=false; killBoss(); } }
+      else { burst(fake.x,fake.y,'#dfe8ff',7); beep(1200,0.05,'square',0.08,900); }   // armour clang — the sword reads the same rules
+    }
+  }
 
   function collect(type){
     const boon=codexComplete(world.key)?1:0;   // the world's full record recovered = its crates come through one tier stronger
@@ -672,6 +791,17 @@
       const top=landOn(player);
       if(player.y+player.h>=top){ player.y=top-player.h; player.vy=0; player.onGround=true; } else player.onGround=false;
       if(player.invuln>0)player.invuln-=dt;
+
+      // ---- BLADE: trigger, timers, resolve ----
+      if(player.atkCd>0) player.atkCd-=dt;
+      if(player.comboT>0) player.comboT-=dt; else if(player.atkT<=0) player.atkStep=0;
+      const slashEdge=IN.slash&&!player.pSlash; player.pSlash=IN.slash;
+      if(slashEdge&&player.atkT<=0&&player.atkCd<=0&&!player.shieldOn&&player.slideT<=0) startSlash();
+      if(player.atkT>0){ resolveBlade(dt); player.atkT-=dt;
+        if(player.atkT<=0){ player.comboT=(player.atkStep>=3||player.atkKind==='plunge')?0:BL_CHAIN; player.plunge=false; player.atkKind=''; } }
+      if(player.plunge&&player.onGround){ player.plunge=false; player.atkT=Math.min(player.atkT,0.06);
+        shake=Math.max(shake,7); burst(player.x+player.w/2,player.y+player.h,bladeColor(),16);
+        fx.push({x:player.x+player.w/2,y:player.y+player.h,a:.9,r:12,type:'ring',c:bladeColor()}); noise(0.16,0.2,420,120); }
 
       player.fireCd-=dt;
       if(IN.fire && player.fireCd<=0 && !player.shieldOn) fire();   // blaster is holstered while braced
@@ -755,6 +885,7 @@
       else { if(p.vx!==undefined){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=1200*dt;} p.a-=dt*(p.type==='ring'?2.4:1.8); if(p.type==='ring')p.r+=dt*80; }
       if(p.a<=0)fx.splice(i,1); }
     if(shake>0)shake-=dt*24; if(muzzle>0)muzzle-=dt; if(flashT>0)flashT-=dt; if(pageCardT>0)pageCardT-=dt;
+    for(let i=slashFx.length-1;i>=0;i--){ const f=slashFx[i]; f.t+=dt; f.a-=dt*3.4; if(f.a<=0)slashFx.splice(i,1); }
   }
 
   function burst(x,y,c,n){ n=n||8; if(fx.length>240)n=Math.min(n,3);   // particle-cap keeps low-end phones at 60fps
@@ -894,6 +1025,7 @@
       for(let k=0;k<6;k++){ const a=nowMs/(full?260:520)+k*Math.PI/3, px=cx+Math.cos(a)*rr, py=cy+Math.sin(a)*rr;
         ctx.beginPath(); ctx.arc(px,py,full?3:2,0,7); ctx.fillStyle=wc; ctx.fill(); }
       ctx.globalAlpha=1; }
+    drawBlade();
     drawWard();
 
     // ---- particle bloom pass (one 'lighter' batch) then crisp cores ----
@@ -1502,6 +1634,44 @@
     ctx.restore(); ctx.restore(); }
 
   // ============ GIRIH WARD — the shield, drawn in world space around the hero's chest ============
+  // the blade is an ENERGY blade: it ignites for the swing and vanishes, so there is nothing to hold idle
+  function drawBlade(){
+    const p=player;
+    if(p.alive&&p.atkT>0){
+      const idx=Math.max(0,Math.min(2,p.atkStep-1)), dur=(p.atkKind==='plunge')?0.42:BL_DUR[idx];
+      const t=Math.max(0,Math.min(1,(dur-p.atkT)/dur)), reach=BL_REACH[idx], col=bladeColor();
+      const o={x:p.x+p.w/2,y:p.y+(p.crouch?34:26)};
+      ctx.save(); ctx.translate(o.x,o.y); ctx.scale(p.facing,1);
+      let a0,a1;
+      if(p.atkKind==='plunge'){ a0=Math.PI*0.18; a1=Math.PI*0.52; }
+      else if(p.atkStep===2){ a0=0.95; a1=-0.95; }                    // the second hit sweeps back the other way
+      else if(p.atkStep===3){ a0=0.75; a1=-1.35; }                    // the launcher finishes high
+      else { a0=-0.85; a1=0.85; }
+      const ang=a0+(a1-a0)*t, sweep=1.35, vr=reach*1.26;   // the drawn blade overhangs the hitbox: readable melee, honest hits
+      ctx.globalCompositeOperation='lighter';
+      for(const L of [[vr*1.10,26,0.16,col],[vr*1.02,14,0.30,col],[vr*0.96,5,0.9,'#ffffff']]){
+        ctx.globalAlpha=L[2]*Math.min(1,1.3-t*0.45); ctx.strokeStyle=L[3];
+        ctx.lineWidth=L[1]; ctx.lineCap='round'; ctx.beginPath();
+        ctx.arc(0,0,L[0],ang-sweep*0.62,ang+sweep*0.12); ctx.stroke(); }
+      // a second echo of the arc, dragging behind the leading edge
+      ctx.globalAlpha=0.22*Math.min(1,1.3-t*0.45); ctx.strokeStyle=col; ctx.lineWidth=34; ctx.lineCap='butt';
+      ctx.beginPath(); ctx.arc(0,0,vr*0.80,ang-sweep*0.70,ang-sweep*0.10); ctx.stroke();
+      ctx.globalAlpha=0.98; ctx.strokeStyle=col; ctx.lineWidth=9; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(Math.cos(ang)*9,Math.sin(ang)*9); ctx.lineTo(Math.cos(ang)*vr,Math.sin(ang)*vr); ctx.stroke();
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=3.4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(ang)*9,Math.sin(ang)*9); ctx.lineTo(Math.cos(ang)*(vr-3),Math.sin(ang)*(vr-3)); ctx.stroke();
+      drawGlow(Math.cos(ang)*vr,Math.sin(ang)*vr,26,col,0.85);
+      drawGlow(Math.cos(ang)*vr*0.6,Math.sin(ang)*vr*0.6,18,col,0.45);
+      drawGlow(Math.cos(ang)*9,Math.sin(ang)*9,13,COL.gold,0.6);
+      ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.lineCap='butt';
+      ctx.restore();
+    }
+    if(slashFx.length){ ctx.globalCompositeOperation='lighter';
+      for(const f of slashFx){ ctx.save(); ctx.translate(f.x,f.y); ctx.scale(f.face,1);
+        ctx.globalAlpha=Math.max(0,f.a)*0.5; ctx.strokeStyle=f.col; ctx.lineWidth=14-f.t*22; ctx.lineCap='round';
+        if(ctx.lineWidth>0.5){ ctx.beginPath(); ctx.arc(0,0,52+f.t*46,-0.95,0.75); ctx.stroke(); } ctx.restore(); }
+      ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.lineCap='butt'; }
+  }
   let wardVis=0;   // draw-side fade so the barrier blooms in and dissolves out
   function drawWard(){
     const target=(player.alive&&player.shieldOn)?1:0; wardVis+=(target-wardVis)*Math.min(1,dtv*14); if(wardVis<0.02){ wardVis=0; return; }
@@ -1846,6 +2016,17 @@
         ctx.textAlign='center'; ctx.font='900 10px Trebuchet MS'; ctx.fillStyle=full?COL.gold:'rgba(244,236,216,.75)';
         if(full){ ctx.shadowColor=COL.gold; ctx.shadowBlur=8; }
         ctx.fillText(full?'RELEASE':'CHARGE', x, y+r+13); ctx.shadowBlur=0; ctx.textAlign='left'; } }
+    // BLADE COMBO — shows how much of the chain window is left
+    if(player.atkStep>0&&(player.atkT>0||player.comboT>0)){
+      const bx=CMP?W-118:W-150, by=CMP?H-30:H-34, col=bladeColor();
+      ctx.textAlign='right'; ctx.font=(CMP?'900 11px':'900 13px')+' Trebuchet MS';
+      ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
+      ctx.fillText(player.atkStep>=3?'BLADE  FINISH':'BLADE  '+player.atkStep+'/3', bx, by); ctx.shadowBlur=0;
+      if(player.comboT>0){ const w2=CMP?58:72, f=player.comboT/BL_CHAIN;
+        ctx.fillStyle='rgba(0,0,0,.45)'; roundRect(bx-w2,by+5,w2,3,2); ctx.fill();
+        ctx.fillStyle=col; roundRect(bx-w2,by+5,Math.max(2,w2*f),3,2); ctx.fill(); }
+      ctx.textAlign='left'; }
+
     // PARRY STREAK — lights up as the chain shot arms
     if(RUN.pStreak>0){ ctx.textAlign='left'; ctx.font=(CMP?'900 10px':'900 11px')+' Trebuchet MS';
       const armed=RUN.pStreak>=PARRY_CHAIN, c2=armed?COL.gold:COL.cyan;
@@ -1979,12 +2160,14 @@
   function startGame(){ initAudio(); resumeAudio(); document.body.classList.add('playing'); resetRun(); runPagesFound=[]; pageCard=null; pageCardT=0; player.charge=0; player.holdT=0; player.pFire=false; player.lives=3; paused=false; pausePop.classList.add('hidden'); pauseBtn.classList.remove('hidden'); document.getElementById('muteBtn').classList.remove('hidden'); buildLevel(); resetPlayer(false); camX=0; flashT=0; shake=0; wardVis=0; running=true; syncRotate(); last=performance.now(); loop(); }
 
   let last=0;
-  function loop(now){ if(!running)return; now=now||performance.now(); let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; if(!paused)step(dt);
+  function loop(now){ if(!running)return; now=now||performance.now(); let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05;
+    if(hitStop>0){ hitStop-=dt; }        // impact freeze: the world holds still for a beat, the frame still draws
+    else if(!paused) step(dt);
     try{ draw(); }catch(err){ console.error('draw',err); ctx.setTransform(DPR,0,0,DPR,0,0); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; }   // a render hiccup must never freeze the run
     requestAnimationFrame(loop); }
 
   buildLevel(); resetPlayer(false); draw();
-  if(location.hash==='#dbg') window.__dbg=()=>({player,boss,enemies,ebullets,bullets,fx:fx.length,camX,running,paused,W,H,world:world.key,RUN,rankFor,loadLB,endGame,PAGES,loadCodex,codexComplete,recoverPage,openCodex,crates,fireCharged,ALT,absorb,IS_TOUCH,isPortrait,syncRotate,setWorld:(k)=>{world=WORLDS[k];},WORLDS,BOSSES,draw,step,props});   // test hook, inert in play
+  if(location.hash==='#dbg') window.__dbg=()=>({player,boss,enemies,ebullets,bullets,fx:fx.length,camX,running,paused,W,H,world:world.key,RUN,rankFor,loadLB,endGame,PAGES,loadCodex,codexComplete,recoverPage,openCodex,crates,fireCharged,ALT,absorb,IS_TOUCH,isPortrait,syncRotate,ST,T,startSlash,bladeHits,getHitStop:()=>hitStop,IN,setWorld:(k)=>{world=WORLDS[k];},WORLDS,BOSSES,draw,step,props});   // test hook, inert in play
 })();
 </script>
 </body>
