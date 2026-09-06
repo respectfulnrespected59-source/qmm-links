@@ -42,7 +42,7 @@
   .tbtn{position:absolute;pointer-events:auto;border-radius:50%;background:rgba(201,168,76,.10);
     border:2px solid rgba(201,168,76,.35);display:flex;align-items:center;justify-content:center;
     color:var(--gold);user-select:none;font-weight:900;backdrop-filter:blur(4px);width:62px;height:62px;font-size:1.4rem;}
-  .tbtn:active{background:rgba(201,168,76,.3);}
+  .tbtn:active,.tbtn.hit{background:rgba(201,168,76,.3);transform:scale(.94);}
   #touch>*{ margin-left:env(safe-area-inset-left,0px); margin-right:env(safe-area-inset-right,0px); }
   /* ANALOG STICK — a fixed base the thumb rests on; the knob follows inside the radius. */
   #stick{position:absolute;pointer-events:auto;touch-action:none;
@@ -134,9 +134,9 @@
     #knob{width:50px;height:50px;margin:-25px 0 0 -25px;}
     #tJump{right:16px;bottom:66px;width:62px;height:62px;font-size:.64rem;}
     #tFire{right:84px;bottom:22px;width:62px;height:62px;font-size:.64rem;}
-    #tSlash{right:88px;bottom:150px;width:56px;height:56px;font-size:.56rem;}
-    #tSwap{right:18px;bottom:138px;width:46px;height:46px;font-size:.54rem;}
-    #tShield{right:20px;bottom:196px;width:48px;height:48px;font-size:.52rem;}
+    #tSlash{right:82px;bottom:96px;width:62px;height:62px;font-size:.58rem;}
+    #tSwap{right:22px;bottom:214px;width:44px;height:44px;font-size:.52rem;}
+    #tShield{right:18px;bottom:150px;width:50px;height:50px;font-size:.52rem;}
     #tDash{right:152px;bottom:26px;width:46px;height:46px;font-size:.54rem;}
   }
   /* ROTATE PROMPT — only while actually playing in portrait on a touch device.
@@ -559,9 +559,13 @@
       return; }
     if(e.code==='KeyP') togglePause(); if(e.code==='KeyM') toggleMute(); });
   window.addEventListener('keyup',e=>{ keys[e.code]=false; });
-  function bindT(id,p){ const el=document.getElementById(id); const on=e=>{e.preventDefault();T[p]=true;}, off=e=>{e.preventDefault();T[p]=false;};
+  const TL={};   // press latch: a tap shorter than one frame must still be seen exactly once
+  function bindT(id,p){ const el=document.getElementById(id);
+    const on=e=>{e.preventDefault(); T[p]=true; TL[p]=true; el.classList.add('hit');},
+          off=e=>{e.preventDefault(); T[p]=false; el.classList.remove('hit');};
     el.addEventListener('touchstart',on,{passive:false}); el.addEventListener('touchend',off,{passive:false}); el.addEventListener('touchcancel',off,{passive:false});
     el.addEventListener('mousedown',on); el.addEventListener('mouseup',off); el.addEventListener('mouseleave',off); }
+  function tHeld(p){ if(T[p])return true; if(TL[p]){ TL[p]=false; return true; } return false; }
   bindT('tJump','j');bindT('tFire','f');bindT('tSwap','swap');bindT('tShield','sh');bindT('tDash','dash');bindT('tSlash','slash');
   // ---- ANALOG STICK (pointer events + capture, like the racer's approved stick) ----
   (function(){ const st=document.getElementById('stick'), kn=document.getElementById('knob'), DEAD=0.16;
@@ -584,7 +588,7 @@
     st.addEventListener('contextmenu',e=>e.preventDefault());
     // a pointer lost to a backgrounded tab must never weld an input on
     const release=()=>{ ST.id=null; ST.on=false; ST.x=0; ST.y=0; st.classList.remove('hit'); kn.style.transform='';
-      for(const k in T) T[k]=false; };
+      for(const k in T) T[k]=false; for(const k in TL) TL[k]=false; };
     window.addEventListener('blur',release);
     document.addEventListener('visibilitychange',()=>{ if(document.hidden) release(); });
   })();
@@ -592,10 +596,10 @@
   function readInput(){
     IN.left=keys['ArrowLeft']||keys['KeyA']||T.l; IN.right=keys['ArrowRight']||keys['KeyD']||T.r;
     IN.up=keys['ArrowUp']||keys['KeyW']||T.u;    IN.down=keys['ArrowDown']||keys['KeyS']||T.d;
-    IN.jump=keys['KeyZ']||keys['Space']||T.j;    IN.fire=keys['KeyX']||keys['KeyJ']||T.f;
-    IN.swap=keys['KeyC']||T.swap;
-    IN.shield=keys['KeyV']||keys['KeyK']||T.sh;   IN.dash=keys['ShiftLeft']||keys['ShiftRight']||keys['KeyL']||T.dash;
-    IN.slash=keys['KeyF']||keys['KeyB']||T.slash;
+    IN.jump=keys['KeyZ']||keys['Space']||tHeld('j');    IN.fire=keys['KeyX']||keys['KeyJ']||tHeld('f');
+    IN.swap=keys['KeyC']||tHeld('swap');
+    IN.shield=keys['KeyV']||keys['KeyK']||T.sh;   IN.dash=keys['ShiftLeft']||keys['ShiftRight']||keys['KeyL']||tHeld('dash');
+    IN.slash=keys['KeyF']||keys['KeyB']||tHeld('slash');
     // the analog stick speaks the SAME booleans as the keyboard, so slide / duck / drop-through are untouched
     if(ST.on){ if(ST.x<-0.34)IN.left=true; else if(ST.x>0.34)IN.right=true;
       if(ST.y<-0.52)IN.up=true; else if(ST.y>0.52)IN.down=true; }
@@ -2018,14 +2022,24 @@
         ctx.fillText(full?'RELEASE':'CHARGE', x, y+r+13); ctx.shadowBlur=0; ctx.textAlign='left'; } }
     // BLADE COMBO — shows how much of the chain window is left
     if(player.atkStep>0&&(player.atkT>0||player.comboT>0)){
-      const bx=CMP?W-118:W-150, by=CMP?H-30:H-34, col=bladeColor();
-      ctx.textAlign='right'; ctx.font=(CMP?'900 11px':'900 13px')+' Trebuchet MS';
-      ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
-      ctx.fillText(player.atkStep>=3?'BLADE  FINISH':'BLADE  '+player.atkStep+'/3', bx, by); ctx.shadowBlur=0;
-      if(player.comboT>0){ const w2=CMP?58:72, f=player.comboT/BL_CHAIN;
-        ctx.fillStyle='rgba(0,0,0,.45)'; roundRect(bx-w2,by+5,w2,3,2); ctx.fill();
-        ctx.fillStyle=col; roundRect(bx-w2,by+5,Math.max(2,w2*f),3,2); ctx.fill(); }
-      ctx.textAlign='left'; }
+      const col=bladeColor();
+      if(CMP){   // phones: the bottom-right corner belongs to the thumb cluster, so keep this in the left column
+        const bx=22, by=LY[5]+26;
+        ctx.textAlign='left'; ctx.font='900 11px Trebuchet MS';
+        ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
+        ctx.fillText(player.atkStep>=3?'BLADE FINISH':'BLADE '+player.atkStep+'/3', bx, by); ctx.shadowBlur=0;
+        if(player.comboT>0){ const w2=58, f=player.comboT/BL_CHAIN;
+          ctx.fillStyle='rgba(0,0,0,.45)'; roundRect(bx,by+5,w2,3,2); ctx.fill();
+          ctx.fillStyle=col; roundRect(bx,by+5,Math.max(2,w2*f),3,2); ctx.fill(); }
+      } else {
+        const bx=W-150, by=H-34;
+        ctx.textAlign='right'; ctx.font='900 13px Trebuchet MS';
+        ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=10;
+        ctx.fillText(player.atkStep>=3?'BLADE  FINISH':'BLADE  '+player.atkStep+'/3', bx, by); ctx.shadowBlur=0;
+        if(player.comboT>0){ const w2=72, f=player.comboT/BL_CHAIN;
+          ctx.fillStyle='rgba(0,0,0,.45)'; roundRect(bx-w2,by+5,w2,3,2); ctx.fill();
+          ctx.fillStyle=col; roundRect(bx-w2,by+5,Math.max(2,w2*f),3,2); ctx.fill(); }
+        ctx.textAlign='left'; } }
 
     // PARRY STREAK — lights up as the chain shot arms
     if(RUN.pStreak>0){ ctx.textAlign='left'; ctx.font=(CMP?'900 10px':'900 11px')+' Trebuchet MS';
