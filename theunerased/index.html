@@ -267,7 +267,12 @@
 (() => {
   const cv=document.getElementById('c'), ctx=cv.getContext('2d');
   let W,H,DPR;
-  function resize(){ DPR=Math.min(window.devicePixelRatio||1,2); W=window.innerWidth; H=window.innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+  function resize(){ DPR=Math.min(window.devicePixelRatio||1,2);
+    // the canvas's own box is the honest measure of what gets painted; window.innerHeight and the
+    // visible viewport disagree on phones whenever a toolbar collapses or the app goes fullscreen
+    const r=cv.getBoundingClientRect();
+    W=Math.round(r.width)||window.innerWidth; H=Math.round(r.height)||window.innerHeight;
+    cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
   window.addEventListener('resize',resize); resize();   // the rotate prompt subscribes to resize itself, below, once its own state exists
 
   const COL={purple:'#2D1B4E',gold:'#C9A84C',orange:'#E8843C',ink:'#0B0713',cyan:'#4CE0E0',red:'#C43B3B',char:'#B6D02E'};
@@ -510,6 +515,7 @@
   let props=[];   // cosmetic ground props per world (urns, scrolls, crates, candles…)
   function spawnFoe(f,gy){ const fly=f.t==='flyer';
     return {x:f.x,y:fly?gy-(f.y||200):gy-46,w:fly?30:34,h:fly?26:46,vx:0,hp:f.t==='shooter'?3:2,type:f.t,fly,shootT:1+Math.random()*2,alive:true,anim:Math.random()*6,knock:0,knockT:0}; }
+  let levelGy=0;   // the ground line this level was laid out against; everything below is measured from it
   function buildLevel(){
     const gy=groundY(), L=LAYOUTS[world.key];
     platforms=L.plats.map((p,i)=>({x:p[0],y:gy-p[1],w:p[2],h:22,lantern:i%2===1}));   // lantern = cosmetic only
@@ -519,6 +525,7 @@
     // deterministic cosmetic props along the ground (seeded by x so every run looks the same)
     props=[]; for(let x=380;x<LEVEL_LEN-520;x+=190){ const s=Math.abs(Math.sin(x*12.9898))*43758.5453, r=s-Math.floor(s); if(r<0.55) props.push({x:x+r*120,k:Math.floor(r*100)%3,s:0.8+r*0.5}); }
     boss=makeBoss(world.boss,gy);
+    levelGy=gy;
   }
 
   // ---- TOUCH: gate on the pointer, not the viewport width ----
@@ -537,9 +544,35 @@
     return Promise.resolve(fs).then(()=>{ try{ if(window.screen&&screen.orientation&&screen.orientation.lock)
         return screen.orientation.lock('landscape').then(()=>true,()=>false); }catch(e){} return false; })
       .then(ok=>{ syncRotate(); return ok; }).catch(()=>{ syncRotate(); return false; }); }
-  window.addEventListener('resize',syncRotate);
-  window.addEventListener('orientationchange',()=>setTimeout(syncRotate,120));
-  try{ if(window.screen&&screen.orientation) screen.orientation.addEventListener('change',()=>setTimeout(syncRotate,120)); }catch(e){}
+  // A phone reports its new size in stages: resize can fire mid-rotation with the old height, so
+  // re-measure again after it settles rather than trusting the first number.
+  function settle(){ resize(); reanchor(); syncRotate(); }
+  window.addEventListener('resize',settle);
+  window.addEventListener('orientationchange',()=>{ settle(); setTimeout(settle,120); setTimeout(settle,400); });
+  document.addEventListener('fullscreenchange',()=>{ settle(); setTimeout(settle,160); });
+  try{ if(window.visualViewport) window.visualViewport.addEventListener('resize',settle); }catch(e){}
+  try{ if(window.screen&&screen.orientation) screen.orientation.addEventListener('change',()=>{ settle(); setTimeout(settle,200); }); }catch(e){}
+
+  // When the viewport height changes, groundY() moves but everything buildLevel() placed against it does
+  // not. Shifting by the delta keeps a run in progress intact instead of rebuilding the level under the player.
+  function reanchor(){
+    const gy=groundY();
+    if(!levelGy){ levelGy=gy; return 0; }
+    const dy=gy-levelGy;
+    if(!dy) return 0;
+    for(const p of platforms) p.y+=dy;
+    for(const e of enemies)   e.y+=dy;
+    for(const c of crates)    c.y+=dy;
+    for(const d of pickups)   d.y+=dy;
+    for(const b of ebullets)  b.y+=dy;
+    for(const b of bullets)   b.y+=dy;
+    for(const f of fx)        f.y+=dy;
+    player.y+=dy;
+    if(boss){ boss.y+=dy;
+      for(const k of ['homeY','topY','botY','gantryY']) if(typeof boss[k]==='number') boss[k]+=dy; }
+    levelGy=gy;
+    return dy;
+  }
 
   const keys={}, T={l:false,r:false,u:false,d:false,j:false,f:false,swap:false,sh:false,dash:false,slash:false};
   const ST={on:false,x:0,y:0,id:null};   // analog stick vector
@@ -2181,7 +2214,7 @@
     requestAnimationFrame(loop); }
 
   buildLevel(); resetPlayer(false); draw();
-  if(location.hash==='#dbg') window.__dbg=()=>({player,boss,enemies,ebullets,bullets,fx:fx.length,camX,running,paused,W,H,world:world.key,RUN,rankFor,loadLB,endGame,PAGES,loadCodex,codexComplete,recoverPage,openCodex,crates,fireCharged,ALT,absorb,IS_TOUCH,isPortrait,syncRotate,ST,T,startSlash,bladeHits,getHitStop:()=>hitStop,IN,setWorld:(k)=>{world=WORLDS[k];},WORLDS,BOSSES,draw,step,props});   // test hook, inert in play
+  if(location.hash==='#dbg') window.__dbg=()=>({player,boss,enemies,ebullets,bullets,fx:fx.length,camX,running,paused,W,H,world:world.key,RUN,rankFor,loadLB,endGame,PAGES,loadCodex,codexComplete,recoverPage,openCodex,crates,fireCharged,ALT,absorb,IS_TOUCH,isPortrait,syncRotate,ST,T,startSlash,bladeHits,getHitStop:()=>hitStop,IN,platforms,reanchor,getLevelGy:()=>levelGy,groundY,resize,setWorld:(k)=>{world=WORLDS[k];},WORLDS,BOSSES,draw,step,props});   // test hook, inert in play
 })();
 </script>
 </body>
