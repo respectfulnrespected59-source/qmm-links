@@ -398,6 +398,10 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 @media (prefers-reduced-motion: reduce) {
   #hud-crisis { transition:none; }
 }
+/* shown only when the device cannot draw WebGL — see the gate script below */
+#nogl{position:fixed;inset:0;z-index:99;display:grid;place-items:center;padding:24px;
+  background:#0A0714;color:#F4ECD8;font:600 18px/1.5 system-ui,-apple-system,sans-serif;text-align:center}
+#nogl b{display:block;color:#E3B23C;font-size:1.3em;margin-bottom:.4em}
 </style>
 </head>
 <body>
@@ -442,7 +446,30 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
   </div>
 </div>
 
-<script>window.CUI_AUDIO_BASE='../audio/'</script>
-<script src="./bundle.js?v=1789581540570"></script>
+<script>window.CUI_AUDIO_BASE='../audio/';window.CUI_CLASSIC_URL='../'</script>
+<script>
+// WebGL gate. Without it a phone or browser that cannot draw WebGL gets a black
+// canvas and a three.js exception — never a word of explanation. The site deploy
+// sets window.CUI_CLASSIC_URL (the 2D block: same save, same brain) and we go
+// there; a dev build leaves it unset and just says so. `?nogl=1` forces the
+// no-WebGL path so the fallback can be TESTED — a check nobody has seen fail is
+// a rumour.
+(function () {
+  var forced = /[?&]nogl=1(&|$)/.test(location.search);
+  var gl = null;
+  if (!forced) {
+    try { var c = document.createElement('canvas'); gl = c.getContext('webgl2') || c.getContext('webgl'); } catch (e) { gl = null; }
+  }
+  if (gl) return;
+  var classic = window.CUI_CLASSIC_URL;
+  var note = document.createElement('div');
+  note.id = 'nogl';
+  note.innerHTML = '<div><b>This device can’t draw the 3D world.</b>' +
+    (classic ? 'Taking you to the Classic 2D block — same save, same rules.' : 'No WebGL here — try another browser or device.') + '</div>';
+  document.body.appendChild(note);
+  if (classic) setTimeout(function () { location.replace(classic); }, 1800);
+})();
+</script>
+<script src="./bundle.js?v=1789582396434"></script>
 </body>
 </html>
