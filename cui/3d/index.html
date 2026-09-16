@@ -54,6 +54,11 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 #hud-clock { font-family:'Bangers', Impact, sans-serif; font-size:15px; color:#9E93B8;
              letter-spacing:.09em; }
 
+/* the switch back to the Classic 2D block — the HUD is pointer-events:none, so opt in */
+.switch2d { pointer-events:auto; display:inline-block; margin-top:8px; font-family:'Bangers', Impact, sans-serif;
+  font-size:12px; letter-spacing:.14em; color:var(--gold); text-decoration:none;
+  border:1px solid rgba(227,178,60,.45); padding:3px 9px; border-radius:3px; background:rgba(10,7,20,.55); }
+.switch2d:hover { background:rgba(227,178,60,.18); border-color:var(--gold); }
 #hud-pillars { display:flex; gap:8px; }
 .chip { display:flex; align-items:center; gap:5px; padding:6px 10px 6px 8px;
         background:linear-gradient(160deg, rgba(16,19,46,.92), rgba(10,7,20,.95));
@@ -416,6 +421,8 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
         <span><b>T</b>ECH</span><span><b>S</b>HELTER</span>
       </div>
       <div class="kente"></div>
+      <a class="switch2d" href="https://quantummelaninmedia.com/cui/"
+         title="The same block, top-down — the original">CLASSIC 2D ↗</a>
     </div>
     <div id="hud-pillars"></div>
   </div>
@@ -470,6 +477,6 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
   if (classic) setTimeout(function () { location.replace(classic); }, 1800);
 })();
 </script>
-<script src="./bundle.js?v=1789582396434"></script>
+<script src="./bundle.js?v=1789582974185"></script>
 </body>
 </html>

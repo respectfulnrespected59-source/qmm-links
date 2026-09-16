@@ -277,6 +277,12 @@ body.drawer-open #rail{max-height:calc(100vh - 512px);}
   transition:transform .16s,box-shadow .16s;}
 #start-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(227,178,60,.36);}
 .motto{margin-top:20px;font-size:.72rem;letter-spacing:.14em;color:var(--ember);font-style:italic;}
+/* the switch to the 3D world — same block, other renderer */
+.intro-switch{display:inline-block;margin-top:14px;font-size:.66rem;letter-spacing:.18em;
+  color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(227,178,60,.35);padding-bottom:2px;}
+.intro-switch:hover{border-bottom-color:var(--gold);color:#F0D68A;}
+a.abtn{text-decoration:none;text-align:center;display:inline-block;}
+a.abtn.switch{color:var(--gold);}
 
 
 /* ── the land panel ────────────────────────────────────────────────────── */
@@ -1153,6 +1159,8 @@ body.drawer-open #tutorial{bottom:462px;}
         <button class="abtn" id="btn-more" aria-haspopup="true" aria-expanded="false">☰ MORE</button>
         <div id="more-pop">
           <button class="abtn" id="btn-myland">🚶 WALK MY LAND</button>
+          <a class="abtn switch" id="btn-3d" href="https://quantummelaninmedia.com/cui/3d/"
+             title="The same block as a walkable 3D world">🧊 WALK IT IN 3D ↗</a>
           <button class="abtn join" id="btn-join">JOIN C.U.I.</button>
           <button class="abtn" id="btn-signal" title="Real prediction-market odds behind the crisis clock">📡 SIGNAL</button>
           <button class="abtn" id="btn-mute" title="Hand drums, build clicks, alarms">🔊 SOUND</button>
@@ -1205,214 +1213,13 @@ body.drawer-open #tutorial{bottom:462px;}
     <div class="fnote">F.A.C.T.S. Initiative created by RED PILLAR · KNOW THE LEDGE</div>
 
     <button id="start-btn">BUILD THE BLOCK</button>
+    <a class="intro-switch" href="https://quantummelaninmedia.com/cui/3d/">or walk the block in 3D ↗</a>
     <div class="motto">"We stay ready so we ain't gotta get ready."</div>
   </div>
 </div>
 
 <script type="module">
 const __M = {};
-
-/* ── art.js ─────────────────────────────────────── */
-__M['art.js'] = (function () {
-// C.U.I. — isometric drawing primitives.
-// All art is authored in UNIT TILE SPACE: the tile diamond is centred on (0,0)
-// with half-width 32 and half-height 16. render.js handles camera + zoom.
-
-const HW = 32, HH = 16;
-
-/** Lighten (amt > 0) or darken (amt < 0) a #rrggbb colour. */
-function shade(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
-  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  if (amt >= 0) {
-    r += (255 - r) * amt; g += (255 - g) * amt; b += (255 - b) * amt;
-  } else {
-    const k = 1 + amt; r *= k; g *= k; b *= k;
-  }
-  const h = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
-  return `#${h(r)}${h(g)}${h(b)}`;
-}
-
-function rgba(hex, a) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
-/** Path a diamond of half-size (hw,hh) centred at (0, dy). Does not fill. */
-function diamondPath(ctx, hw, hh, dy = 0) {
-  ctx.beginPath();
-  ctx.moveTo(0, dy - hh);
-  ctx.lineTo(hw, dy);
-  ctx.lineTo(0, dy + hh);
-  ctx.lineTo(-hw, dy);
-  ctx.closePath();
-}
-
-/**
- * An isometric box standing on the tile.
- * f      footprint as a fraction of the tile (1 = full tile)
- * h      height in px
- * col    base colour — top/left/right faces are derived from it
- * o.rise vertical offset (stacking)
- */
-function box(ctx, f, h, col, o = {}) {
-  const hw = HW * f, hh = HH * f;
-  const y = -(o.rise || 0);
-  const top = o.top || shade(col, 0.22);
-  const left = o.left || shade(col, -0.18);
-  const right = o.right || shade(col, -0.42);
-
-  ctx.fillStyle = left;
-  ctx.beginPath();
-  ctx.moveTo(-hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, y + hh - h); ctx.lineTo(-hw, y - h);
-  ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle = right;
-  ctx.beginPath();
-  ctx.moveTo(hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, y + hh - h); ctx.lineTo(hw, y - h);
-  ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle = top;
-  diamondPath(ctx, hw, hh, y - h);
-  ctx.fill();
-
-  // rim light along the sun-facing top edge
-  if (o.rim !== false) {
-    ctx.strokeStyle = rgba(shade(col, 0.6), 0.5);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-hw, y - h); ctx.lineTo(0, y - h - hh); ctx.lineTo(hw, y - h);
-    ctx.stroke();
-  }
-}
-
-/** A cylinder (barrel, silo, tank). rx/ry are the ellipse radii. */
-function cyl(ctx, rx, ry, h, col, o = {}) {
-  const y = -(o.rise || 0);
-  const g = ctx.createLinearGradient(-rx, 0, rx, 0);
-  g.addColorStop(0, shade(col, -0.30));
-  g.addColorStop(0.42, shade(col, 0.06));
-  g.addColorStop(1, shade(col, -0.48));
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.moveTo(-rx, y);
-  ctx.lineTo(-rx, y - h);
-  ctx.ellipse(0, y - h, rx, ry, 0, Math.PI, 0, true);
-  ctx.lineTo(rx, y);
-  ctx.ellipse(0, y, rx, ry, 0, 0, Math.PI, false);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = o.top || shade(col, 0.3);
-  ctx.beginPath();
-  ctx.ellipse(0, y - h, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-/** A gabled roof sitting on a box of footprint f at height `rise`. */
-function roof(ctx, f, h, col, rise) {
-  const hw = HW * f, hh = HH * f;
-  const y = -rise;
-  const peak = y - h;
-  ctx.fillStyle = shade(col, -0.10);
-  ctx.beginPath();
-  ctx.moveTo(-hw, y); ctx.lineTo(0, y - hh); ctx.lineTo(0, peak - hh); ctx.lineTo(-hw, peak);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = shade(col, 0.20);
-  ctx.beginPath();
-  ctx.moveTo(-hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, peak + hh); ctx.lineTo(-hw, peak);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = shade(col, -0.34);
-  ctx.beginPath();
-  ctx.moveTo(hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, peak + hh); ctx.lineTo(hw, peak);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = shade(col, 0.05);
-  ctx.beginPath();
-  ctx.moveTo(hw, y); ctx.lineTo(0, y - hh); ctx.lineTo(0, peak - hh); ctx.lineTo(hw, peak);
-  ctx.closePath(); ctx.fill();
-}
-
-/** Soft contact shadow so nothing looks pasted on. */
-function contactShadow(ctx, f = 0.8, a = 0.32) {
-  ctx.save();
-  ctx.fillStyle = `rgba(0,0,0,${a})`;
-  ctx.filter = 'blur(2px)';
-  ctx.beginPath();
-  ctx.ellipse(3, 3, HW * f * 0.92, HH * f * 0.92, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/** A thin post — legs, masts, poles. */
-function post(ctx, x, yBase, h, w, col) {
-  ctx.fillStyle = col;
-  ctx.fillRect(x - w / 2, yBase - h, w, h);
-  ctx.fillStyle = shade(col, -0.3);
-  ctx.fillRect(x + w / 2 - 1, yBase - h, 1, h);
-}
-
-/** A leafy clump — the base unit for every crop and herb. */
-function leafClump(ctx, x, y, r, col, sway = 0, n = 5) {
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + sway;
-    ctx.fillStyle = i % 2 ? shade(col, -0.16) : shade(col, 0.14);
-    ctx.beginPath();
-    ctx.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.3,
-                r * 0.62, r * 0.42, a * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-/** Tilled rows on the tile surface — reads instantly as "this is planted". */
-function furrows(ctx, col, rows = 4) {
-  ctx.strokeStyle = rgba(col, 0.55);
-  ctx.lineWidth = 1.4;
-  for (let i = 1; i < rows; i++) {
-    const k = i / rows;
-    ctx.beginPath();
-    ctx.moveTo(-HW + HW * k, HH - HH * k);
-    ctx.lineTo(HW * k, -HH + HH * k);
-    ctx.stroke();
-  }
-}
-
-/** Scaffolding shown while a build is in progress. */
-function scaffold(ctx, progress, col) {
-  const h = 20;
-  const legs = [[-HW * 0.55, 0], [HW * 0.55, 0], [0, -HH * 0.55], [0, HH * 0.55]];
-  for (const [x, y] of legs) post(ctx, x, y, h, 2, col);
-  ctx.strokeStyle = rgba(col, 0.85);
-  ctx.lineWidth = 1.6;
-  for (const yy of [-h, -h * 0.55]) {
-    ctx.beginPath();
-    ctx.moveTo(-HW * 0.55, yy); ctx.lineTo(0, yy - HH * 0.55);
-    ctx.lineTo(HW * 0.55, yy); ctx.lineTo(0, yy + HH * 0.55);
-    ctx.closePath(); ctx.stroke();
-  }
-  const w = 34, y0 = -h - 16;
-  ctx.fillStyle = 'rgba(0,0,0,.55)';
-  ctx.fillRect(-w / 2 - 1, y0 - 1, w + 2, 6);
-  ctx.fillStyle = '#E3B23C';
-  ctx.fillRect(-w / 2, y0, w * progress, 4);
-}
-
-/** Small warning glyph for a building with no power to run on. */
-function offlineMark(ctx, t) {
-  ctx.save();
-  ctx.translate(0, -34);
-  ctx.globalAlpha = 0.55 + Math.sin(t * 4) * 0.35;
-  ctx.fillStyle = '#C43B3B';
-  ctx.beginPath();
-  ctx.moveTo(0, -7); ctx.lineTo(7, 5); ctx.lineTo(-7, 5);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#0A0714';
-  ctx.font = 'bold 8px system-ui';
-  ctx.textAlign = 'center';
-  ctx.fillText('!', 0, 4);
-  ctx.restore();
-}
-return { shade, rgba, diamondPath, box, cyl, roof, contactShadow, post, leafClump, furrows, scaffold, offlineMark, HW, HH };
-})();
 
 /* ── config.js ─────────────────────────────────────── */
 __M['config.js'] = (function () {
@@ -1640,6 +1447,15 @@ const BUILDINGS = {
     rock:'Copper coil · iron',
     desc:'Slower than sun, but it does not clock out at sundown.',
     real:'A car alternator, a mast and carved blades. The copper coil is the whole trick.' },
+  // The spring's outflow, turning a wheel. The strongest source on the block
+  // and the only one with no weather in it: falling water does not clock out
+  // at sundown and it does not wait for wind. It costs the most because it is
+  // the one that never stops.
+  micro_hydro: { name:'Micro-Hydro Wheel', pillar:'tech', cost:160, build:1.8,
+    prod:{tech:5.0}, upkeep:{mineral:0.3},
+    rock:'Cast iron · copper coil',
+    desc:'Water never sleeps. The only power here that does not care about the sky.',
+    real:'A 2m head and 10 litres a second runs a household. Screen the intake or you rebuild it every spring.' },
   battery_wall: { name:'Battery Wall', pillar:'tech', cost:100, build:1.1,
     cap:{tech:42}, upkeep:{mineral:0.2},
     rock:'Lithium · lead · copper',
@@ -1807,7 +1623,1432 @@ const KTL = {
     { label: 'KTL University',         url: 'https://www.ktluniversity.com/' },
   ],
 };
-return { GRID, TILE_HW, TILE_HH, DAY_SECONDS, START_UNLOCKED, PAL, PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, CONSUMED, SCORED, DRAW_PER_HOUSEHOLD, HOUSEHOLD_UNITY, BASE_CAP, START, BUILDINGS, BUILD_ORDER, TAB_ORDER, CRISES, CRISIS_FIRST_DAY, CRISIS_GAP, JOIN_UNITY, KTL, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT };
+
+// QMM is OURS, and it is kept in its own const on purpose. Folding our site
+// into KTL.links would print it under "F.A.C.T.S. Initiative created by RED
+// PILLAR" and quietly attribute our house to somebody else's. Two brands, two
+// lists, one panel.
+const QMM = {
+  name: 'QUANTUM MELANIN MEDIA',
+  blurb: 'The studio that built this. Games, books, and the Bloodline Saga.',
+  links: [
+    { label: 'Quantum Melanin Media', url: 'https://quantummelaninmedia.com/' },
+  ],
+};
+return { GRID, TILE_HW, TILE_HH, DAY_SECONDS, START_UNLOCKED, PAL, PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, CONSUMED, SCORED, DRAW_PER_HOUSEHOLD, HOUSEHOLD_UNITY, BASE_CAP, START, BUILDINGS, BUILD_ORDER, TAB_ORDER, CRISES, CRISIS_FIRST_DAY, CRISIS_GAP, JOIN_UNITY, KTL, QMM, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT };
+})();
+
+/* ── neighbors.js ─────────────────────────────────────── */
+__M['neighbors.js'] = (function () {
+// C.U.I. — the neighbours.
+//
+// The block used to hold an integer called `households`. Nobody lived here.
+// Unity — "community labour" — was minted by BUILDINGS, which meant a player
+// could max it out having never given anything to anyone. The mechanic
+// contradicted the message, and as an organizing tool it taught the wrong
+// lesson: build infrastructure and community appears.
+//
+// It is the other way round. You know your neighbours, or you do not have any.
+//
+// So: buildings no longer mint Unity. They create the OCCASION — a fire circle
+// is where people gather, a freedom school is where somebody teaches somebody.
+// Unity is minted the moment you spend your own reserve on a person who asked.
+
+const { SCORED, PILLARS } = __M['config.js'];
+
+/** Unity per unit of stock given away. 6 SHELTER given => 18 Unity. */
+const UNITY_PER_UNIT = 3;
+const NEED_MIN = 3, NEED_MAX = 8;
+const BASE_NEED_GAP = 4.0;        // days between asks with nowhere to gather
+const MIN_NEED_GAP = 1.4;
+const STANDING_PER_HELP = 0.34;   // three real favours and they are all in
+const STANDING_DECAY_PER_DECLINE = 0.18;
+
+/**
+ * The roster. Each trade maps to something the block actually needs, so
+ * carrying a person is an investment in the pillar they know.
+ */
+// The real ones. GitMoney crew goes on the block by NAME — but only opt-in:
+// these two are the known anchors of the stack this game rides on. Everyone
+// else joins through the ADD YOUR CREW editor when they raise a hand in
+// #general. Never scrape a member list into a game; ask.
+const REAL_CREW = [
+  { name: 'Red Pillar',  trade: 'herbalist',  pillar: 'food', prod: 0.9, guard: 0.10,
+    real: true },   // A GAME Herbal Remedies — the actual trade
+  { name: 'Hits',        trade: 'engineer',   pillar: 'tech', prod: 1.0, guard: 0.05,
+    real: true },   // Hitsuyo Aku — the stack plug
+];
+
+const ROSTER = [
+  { name: 'Ruthie Mbeki',     trade: 'herbalist',   pillar: 'food',    prod: 0.5, guard: 0.10 },
+  { name: 'The Okonkwos',     trade: 'welder',      pillar: 'tech',    prod: 0.9, guard: 0.02 },
+  { name: 'Dev & Marisol',    trade: 'seamstress',  pillar: 'clothes', prod: 0.8, guard: 0 },
+  { name: 'Miss Alma',        trade: 'griot',       pillar: 'art',     prod: 1.0, guard: 0.04 },
+  { name: 'Baba Yusuf',       trade: 'mason',       pillar: 'shelter', prod: 0.9, guard: 0.03 },
+  { name: 'Tunde & Nia',      trade: 'growers',     pillar: 'food',    prod: 1.1, guard: 0 },
+  { name: 'Auntie Winsome',   trade: 'baker',       pillar: 'food',    prod: 0.8, guard: 0.02 },
+  { name: 'Marcus & Tasha',   trade: 'electrician', pillar: 'tech',    prod: 1.0, guard: 0.03 },
+  { name: 'Elder June',       trade: 'midwife',     pillar: 'shelter', prod: 0.3, guard: 0.14 },
+  { name: 'The Kamaus',       trade: 'carpenter',   pillar: 'shelter', prod: 1.0, guard: 0.02 },
+  { name: 'Cheryl Dawson',    trade: 'cook',        pillar: 'food',    prod: 0.9, guard: 0 },
+  { name: 'The Reyes family', trade: 'mechanic',    pillar: 'tech',    prod: 0.8, guard: 0.03 },
+];
+
+/** How a shortage gets phrased. Specific beats generic. */
+const ASKS = {
+  food: [
+    '{n} is out of food before payday.',
+    '{n} fed three kids on one pot last night.',
+    'The pantry at {n} is down to salt and pride.',
+  ],
+  art: [
+    '{n} wants to teach the young ones and has nothing to teach with.',
+    'The drum at {n} split. There is no circle without it.',
+    '{n} has been quiet a week. That is not like them.',
+  ],
+  clothes: [
+    '{n} has kids growing out of everything at once.',
+    'The work coat at {n} finally gave out.',
+    '{n} needs cloth to make the block a banner.',
+  ],
+  tech: [
+    '{n} has no power to run the freezer.',
+    'The radio at {n} is dead and the weather is turning.',
+    '{n} can fix half the block if somebody spots the parts.',
+  ],
+  shelter: [
+    '{n} has a roof going before the rain.',
+    '{n} is patching a wall with cardboard.',
+    'The pipes at {n} froze and nobody is coming.',
+  ],
+};
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+const makeNeighbor = (def, day) => ({
+  ...def, id: def.name, since: day, helped: 0, declined: 0, standing: 0, memory: [],
+});
+
+// ── relationship memory ───────────────────────────────────────────────────
+// standing is a number; what people actually remember is the ACT. "You gave
+// Ruthie 8 TECH on day 12" lands where "standing 0.34" does not, and it makes
+// the number legible instead of arbitrary.
+//
+// Capped hard: this rides inside cui_save_v2 in localStorage, and an uncapped
+// per-neighbour journal would grow without bound across a long block.
+const MEMORY_MAX = 8;
+
+/** Append one remembered act, newest first, oldest dropped past the cap. */
+function remember(n, day, kind, extra = {}) {
+  const entry = { day: Math.floor(day), kind, ...extra };
+  return { ...n, memory: [entry, ...(n.memory || [])].slice(0, MEMORY_MAX) };
+}
+
+/** Turn one entry into a line a person would actually say. */
+function memoryLine(e, pillarLabel) {
+  const d = `day ${e.day}`;
+  switch (e.kind) {
+    case 'gave':     return `you gave ${e.amount} ${pillarLabel(e.pillar)} — ${d}`;
+    case 'declined': return `you had none to spare — ${d}`;
+    case 'worked':   return `you worked their ${e.job || 'job'} — ${d}`;
+    case 'traded':   return `you traded — ${d}`;
+    case 'partied':  return `you threw the block a party — ${d}`;
+    case 'expired':  return `their ${e.job || 'job'} went unanswered — ${d}`;
+    default:         return d;
+  }
+}
+
+/** Seed the founding households: the real crew first, then fictional fill. */
+function seedNeighbors(count) {
+  const out = [];
+  for (const d of REAL_CREW.slice(0, count)) out.push(makeNeighbor(d, 0));
+  const pool = [...ROSTER];
+  while (out.length < count && pool.length) {
+    out.push(makeNeighbor(pool.splice(Math.floor(Math.random() * pool.length), 1)[0], 0));
+  }
+  return out;
+}
+
+/** Trades the ADD YOUR CREW editor can hand out, with their pillar. */
+const TRADES = [
+  { trade: 'grower',      pillar: 'food',    prod: 1.0, guard: 0 },
+  { trade: 'cook',        pillar: 'food',    prod: 0.9, guard: 0 },
+  { trade: 'herbalist',   pillar: 'food',    prod: 0.6, guard: 0.08 },
+  { trade: 'griot',       pillar: 'art',     prod: 1.0, guard: 0.04 },
+  { trade: 'artist',      pillar: 'art',     prod: 0.9, guard: 0 },
+  { trade: 'seamstress',  pillar: 'clothes', prod: 0.8, guard: 0 },
+  { trade: 'cobbler',     pillar: 'clothes', prod: 0.7, guard: 0 },
+  { trade: 'engineer',    pillar: 'tech',    prod: 1.0, guard: 0.05 },
+  { trade: 'electrician', pillar: 'tech',    prod: 1.0, guard: 0.03 },
+  { trade: 'mechanic',    pillar: 'tech',    prod: 0.8, guard: 0.03 },
+  { trade: 'mason',       pillar: 'shelter', prod: 0.9, guard: 0.03 },
+  { trade: 'carpenter',   pillar: 'shelter', prod: 1.0, guard: 0.02 },
+  { trade: 'medic',       pillar: 'shelter', prod: 0.3, guard: 0.14 },
+];
+
+/** A member said yes in the chat — put them on the block. */
+function addCustomNeighbor(state, name, tradeKey) {
+  const clean = String(name || '').trim().slice(0, 24);
+  if (!clean) return null;
+  const taken = new Set((state.neighbors || []).map(n => n.name.toLowerCase()));
+  if (taken.has(clean.toLowerCase())) return null;
+  const t = TRADES.find(x => x.trade === tradeKey) || TRADES[0];
+  return { name: clean, trade: t.trade, pillar: t.pillar, prod: t.prod,
+           guard: t.guard, real: true, id: clean, since: state.day,
+           helped: 0, declined: 0, standing: 0 };
+}
+
+/** A household moving in takes a face nobody on the block is already using. */
+function addNeighbor(state) {
+  const taken = new Set((state.neighbors || []).map(n => n.name));
+  const free = ROSTER.filter(d => !taken.has(d.name));
+  return free.length ? makeNeighbor(pick(free), state.day) : null;
+}
+
+/** How much gathering space is built. Drives how often anybody asks. */
+const gatheringLevel = (defs) => defs.reduce((a, d) => a + (d.gather || 0), 0);
+
+/** Days between asks. A block with nowhere to gather barely hears anybody. */
+const needGap = (gather) =>
+  Math.max(MIN_NEED_GAP, BASE_NEED_GAP - gather * 0.30);
+
+/** Gathering space makes an act of help go further. */
+const aidMultiplier = (gather) => 1 + gather * 0.12;
+
+/** Unity earned for covering a need. */
+const aidUnity = (need, gather) =>
+  Math.round(need.amount * UNITY_PER_UNIT * aidMultiplier(gather));
+
+/** Can the block actually cover this ask right now? */
+const canAfford = (state, need) =>
+  !!need && (state.stock[need.pillar] || 0) >= need.amount;
+
+// ── labour: the other half of mutual aid ─────────────────────────────────
+// Giving goods is one verb. The older verb is showing up with your hands —
+// plow the field, patch the roof before the rain comes — and being paid in
+// kind: food from the harvest, a rebuilt tool, a book. No money anywhere.
+// Labour asks nothing from your stock, which makes it the income of last
+// resort: when you have nothing to give, you give hands.
+
+const JOBS = {
+  food: [
+    { verb: 'help plow the field for the garden at {n}',   payLine: 'a share of the first harvest' },
+    { verb: 'haul water for the beds at {n} through the dry spell', payLine: 'a basket from the yield' },
+  ],
+  art: [
+    { verb: 'help {n} record the elders before the stories walk off', payLine: 'a book from their shelf' },
+    { verb: 'stretch and prime a wall so {n} can paint it', payLine: 'a print of the finished mural' },
+  ],
+  clothes: [
+    { verb: 'help {n} cut and pin a winter run of coats',  payLine: 'a coat off that same table' },
+  ],
+  tech: [
+    { verb: 'crawl the attic and run new wire with {n}',   payLine: 'a rebuilt power tool' },
+    { verb: 'help {n} pull and rebuild a seized motor',    payLine: 'parts and a working charger' },
+  ],
+  shelter: [
+    { verb: 'help patch the hole in the roof at {n} before the rain comes',
+      payLine: 'a crate from their cellar', rainDeadline: true },
+    { verb: 'dig the drainage ditch at {n} before the ground freezes', payLine: 'a cord of split wood' },
+  ],
+};
+const JOB_DURATION_MIN = 0.35, JOB_DURATION_MAX = 0.7;   // in-game days of work
+const JOB_PAY_MIN = 4, JOB_PAY_MAX = 9;
+const JOB_UNITY_MIN = 14, JOB_UNITY_MAX = 26;
+
+/** Somebody raises a need — goods or labour. Roughly half and half. */
+function raiseNeed(state) {
+  const ns = state.neighbors || [];
+  if (!ns.length) return null;
+  const who = pick(ns);
+
+  if (Math.random() < 0.5) {
+    // A job. Pays in kind from THEIR trade — the seamstress pays in cloth.
+    const jobPillar = Math.random() < 0.6 ? who.pillar : pick(SCORED);
+    const job = pick(JOBS[jobPillar] || JOBS.food);
+    return {
+      type: 'labor', who: who.name, trade: who.trade, at: state.day,
+      pillar: who.pillar,                       // what they pay you IN
+      verb: job.verb.replace(/\{n\}/g, who.name),
+      payLine: job.payLine,
+      payAmount: Math.round(JOB_PAY_MIN + Math.random() * (JOB_PAY_MAX - JOB_PAY_MIN)),
+      unity: Math.round(JOB_UNITY_MIN + Math.random() * (JOB_UNITY_MAX - JOB_UNITY_MIN)),
+      duration: JOB_DURATION_MIN + Math.random() * (JOB_DURATION_MAX - JOB_DURATION_MIN),
+      rainDeadline: !!job.rainDeadline,
+      line: job.verb.replace(/\{n\}/g, who.name),
+    };
+  }
+
+  const pillar = Math.random() < 0.45 ? who.pillar : pick(SCORED);
+  const amount = Math.round(NEED_MIN + Math.random() * (NEED_MAX - NEED_MIN));
+  return {
+    type: 'give', who: who.name, trade: who.trade, pillar, amount, at: state.day,
+    line: pick(ASKS[pillar] || ASKS.food).replace(/\{n\}/g, who.name),
+  };
+}
+
+/**
+ * Roll up your sleeves. The job goes active.
+ *
+ * `opts.hands` — the 3D game sets this, and it changes what "done" means.
+ * Without it (the 2D game, and every save from before this existed) time does
+ * the rest, exactly as before. With it the job ALSO needs labour: you go to
+ * the neighbour's place and work, and `worked` counts the real seconds you
+ * stood there doing it. The owner's ask, 2026-09-09: "we should have to go use
+ * our avatar to simulate whatever kind of assistance the person asks for."
+ *
+ * ONE rule, carried as data on the job, both renderers obey it — the same
+ * shape as `hint` / `hint3d` on the tutorial. A second completion rule living
+ * in a renderer is how the two versions start disagreeing about whether a
+ * neighbour has been helped.
+ */
+function startJob(state, need, opts = {}) {
+  return {
+    ...state,
+    pendingNeed: null,
+    activeJob: { ...need, startDay: state.day, hands: !!opts.hands, worked: 0 },
+  };
+}
+
+/**
+ * Real seconds of labour a job wants, per in-game day of its duration.
+ * A 1.5-day job is ~18 seconds at the neighbour's place across several
+ * bouts — enough that you have to actually go, not so much that it is a
+ * chore. Tune HERE, never in a renderer.
+ */
+const WORK_SECONDS_PER_DAY = 12;
+
+function labourNeeded(job) {
+  return Math.max(1, (job.duration || 1) * WORK_SECONDS_PER_DAY);
+}
+
+/** Has the labour been done? Always true for a job that never asked for it. */
+function labourDone(job) {
+  if (!job || !job.hands) return true;
+  return (job.worked || 0) >= labourNeeded(job);
+}
+
+/**
+ * A slice of labour: `seconds` of real time spent working at the site.
+ * Immutable, like everything else; returns the same state when there is no
+ * job to work, so a per-frame caller does not churn.
+ */
+function workJob(state, seconds) {
+  const j = state.activeJob;
+  if (!j || !j.hands || seconds <= 0) return state;
+  return { ...state, activeJob: { ...j, worked: (j.worked || 0) + seconds } };
+}
+// NO `export` here. This file is bundled by build.mjs, which rewrites exactly
+// ONE trailing `export { ... };` into a `return` — a second export block mid-
+// file became a `return` in the middle of the module and left the real one
+// as a raw `export`, and the 2D game died with "Unexpected token 'export'"
+// while the 3D build (esbuild) passed. Everything exports from the bottom.
+
+/** Called from the tick when the work is done. Payment in kind + unity. */
+function finishJob(state, gather) {
+  const j = state.activeJob;
+  if (!j) return { state, done: null };
+  const unity = Math.round(j.unity * aidMultiplier(gather));
+  const next = {
+    ...state,
+    activeJob: null,
+    stock: { ...state.stock, [j.pillar]: (state.stock[j.pillar] || 0) + j.payAmount },
+    unity: state.unity + unity,
+    neighbors: state.neighbors.map(n => n.name === j.who
+      ? remember({ ...n, helped: n.helped + 1,
+                   standing: clamp01(n.standing + STANDING_PER_HELP) },
+                 state.day, 'worked', { job: j.job || j.label, pillar: j.pillar })
+      : n),
+  };
+  return { state: next, done: { ...j, unityPaid: unity } };
+}
+
+/**
+ * Give. Costs the stock, mints the Unity, raises their standing.
+ * This is the only large source of Unity in the game now.
+ */
+function giveAid(state, need, gather) {
+  return {
+    ...state,
+    stock: { ...state.stock, [need.pillar]: state.stock[need.pillar] - need.amount },
+    unity: state.unity + aidUnity(need, gather),
+    neighbors: state.neighbors.map(n => n.name === need.who
+      ? remember({ ...n, helped: n.helped + 1,
+                   standing: clamp01(n.standing + STANDING_PER_HELP) },
+                 state.day, 'gave', { pillar: need.pillar, amount: need.amount })
+      : n),
+    pendingNeed: null,
+  };
+}
+
+/** Decline. Costs nothing but a little of the relationship. */
+function declineAid(state, need) {
+  return {
+    ...state,
+    neighbors: state.neighbors.map(n => n.name === need.who
+      ? remember({ ...n, declined: n.declined + 1,
+                   standing: clamp01(n.standing - STANDING_DECAY_PER_DECLINE) },
+                 state.day, 'declined', { pillar: need.pillar })
+      : n),
+    pendingNeed: null,
+  };
+}
+
+// ── barter: trade goods for goods, no money anywhere ─────────────────────
+// Aid is one-directional; TRADE is the mutual half of the same economy. Each
+// neighbour posts a daily offer out of their trade: bring what they are short
+// of, take what they make. Standing moves the rate — people deal better with
+// people who showed up — and every completed swap mints a little Unity,
+// because a block that trades with itself is a block that talks.
+const TRADE_UNITY_PER_UNIT = 1.2;
+
+/** Deterministic per neighbour per day, so an offer holds until tomorrow. */
+function tradeOffer(n, day) {
+  const d = Math.floor(day);
+  let h = 0;
+  const key = n.name + ':' + d;
+  for (let i = 0; i < key.length; i++) h = ((h << 5) - h + key.charCodeAt(i)) | 0;
+  const r = (m) => { h = (h * 1103515245 + 12345) | 0; return Math.abs(h) % m; };
+  const wants = SCORED.filter(k => k !== n.pillar);
+  const wantPillar = wants[r(wants.length)];
+  const wantAmt = 3 + r(4);                                   // 3..6
+  // rate: cold neighbours deal thin, solid neighbours deal generous
+  const giveAmt = Math.max(2, Math.round(wantAmt * (0.7 + n.standing * 0.6)));
+  return { who: n.name, wantPillar, wantAmt, givePillar: n.pillar, giveAmt,
+           unity: Math.round(wantAmt * TRADE_UNITY_PER_UNIT) };
+}
+
+/** Swap the goods, mint the Unity, warm the relationship a notch. */
+function executeTrade(state, name) {
+  const n = (state.neighbors || []).find(x => x.name === name);
+  if (!n) return null;
+  const offer = tradeOffer(n, state.day);
+  if ((state.stock[offer.wantPillar] || 0) < offer.wantAmt) return null;
+  return {
+    state: {
+      ...state,
+      stock: {
+        ...state.stock,
+        [offer.wantPillar]: state.stock[offer.wantPillar] - offer.wantAmt,
+        [offer.givePillar]: (state.stock[offer.givePillar] || 0) + offer.giveAmt,
+      },
+      unity: state.unity + offer.unity,
+      neighbors: state.neighbors.map(x => x.name === name
+        ? remember({ ...x, standing: clamp01(x.standing + 0.08) },
+                   state.day, 'traded', { pillar: offer.givePillar })
+        : x),
+    },
+    offer,
+  };
+}
+
+// ── work orders: the block raises its own infrastructure ─────────────────
+// Place something big and a work order goes out. Neighbours who rate you
+// answer it — everyone is going to need that solar array eventually, and a
+// barn-raising is what a block IS. Helpers speed the build and come out more
+// invested than they went in.
+const WORK_ORDER_MIN_BUILD = 0.8;    // days of build that justify a call-out
+const MAX_HELPERS = 3;
+
+function needsWorkOrder(def) {
+  return (def.build || 0) >= WORK_ORDER_MIN_BUILD;
+}
+
+/** Who answers the call. Standing is the whole probability. */
+function answerWorkOrder(state) {
+  const out = [];
+  for (const n of state.neighbors || []) {
+    if (out.length >= MAX_HELPERS) break;
+    if (n.standing >= 0.25 && Math.random() < 0.25 + n.standing * 0.55) out.push(n.name);
+  }
+  return out;
+}
+
+/** Each pair of hands cuts real time off the raise. */
+const helperSpeed = (helpers) => 1 + 0.4 * (helpers ? helpers.length : 0);
+
+// ── the block party: abundance turned into community, on purpose ─────────
+// Hella food and the lights on is not a win condition, it is an OCCASION.
+// A party burns real surplus and pays in the only currency this game has:
+// everybody's standing rises, Unity lands big, and word gets out.
+const PARTY_COST = { food: 10, art: 6, tech: 5 };
+const PARTY_COOLDOWN_DAYS = 2;
+const PARTY_GLOW_DAYS = 0.5;
+
+/** Why you can't throw one right now — or null if you can. */
+function partyBlocker(state) {
+  if (state.lastPartyAt !== null && state.lastPartyAt !== undefined
+      && state.day - state.lastPartyAt < PARTY_COOLDOWN_DAYS) {
+    return 'The last party is still the talk of the block. Give it a day.';
+  }
+  for (const k in PARTY_COST) {
+    if ((state.stock[k] || 0) < PARTY_COST[k]) {
+      return `A party takes ${PARTY_COST.food} food, ${PARTY_COST.art} art and ${PARTY_COST.tech} tech — you are short on ${k}.`;
+    }
+  }
+  return null;
+}
+
+/** Throw it. Costs the spread, pays everybody. */
+function throwParty(state, tileIndex) {
+  if (partyBlocker(state)) return null;
+  const stock = { ...state.stock };
+  for (const k in PARTY_COST) stock[k] -= PARTY_COST[k];
+  const unity = 30 + state.households * 10;
+  return {
+    state: {
+      ...state,
+      stock,
+      unity: state.unity + unity,
+      lastPartyAt: state.day,
+      partyUntil: state.day + PARTY_GLOW_DAYS,
+      partyTile: tileIndex,
+      neighbors: (state.neighbors || []).map(n =>
+        remember({ ...n, standing: clamp01(n.standing + 0.15) },
+                 state.day, 'partied')),
+    },
+    unity,
+  };
+}
+
+// ── lend the tools: the shed is a thing you USE, not a lawn ornament ─────
+/** Halve the remaining work on the active job, once per job. */
+function lendTools(state) {
+  const j = state.activeJob;
+  if (!j || j.tooled) return null;
+  const elapsed = state.day - j.startDay;
+  const remaining = Math.max(0, j.duration - elapsed);
+  return {
+    ...state,
+    activeJob: { ...j, tooled: true, duration: elapsed + remaining / 2 },
+  };
+}
+
+/**
+ * What the neighbours give back, scaled by standing. The loop closing: the
+ * people you carried are the people who carry you.
+ */
+function neighborContribution(state) {
+  const prod = {};
+  let guard = 0;
+  const showing = [];
+  for (const n of state.neighbors || []) {
+    if (n.standing <= 0.01) continue;
+    prod[n.pillar] = (prod[n.pillar] || 0) + n.prod * n.standing;
+    guard += (n.guard || 0) * n.standing;
+    if (n.standing >= 0.3) showing.push(n);
+  }
+  return { prod, guard: Math.min(0.45, guard), showing };
+}
+
+/** For the roster panel: everyone, sorted by how solid they are with you. */
+function roster(state) {
+  return [...(state.neighbors || [])]
+    .sort((a, b) => b.standing - a.standing)
+    .map(n => ({
+      ...n,
+      pillarLabel: PILLARS[n.pillar] ? PILLARS[n.pillar].label : n.pillar,
+      pillarIcon: PILLARS[n.pillar] ? PILLARS[n.pillar].icon : '.',
+      contributes: n.prod * n.standing,
+      status: n.standing >= 0.66 ? 'all in'
+            : n.standing >= 0.30 ? 'showing up'
+            : n.helped > 0       ? 'warming up'
+            : n.declined > 0     ? 'keeping distance'
+                                 : 'new here',
+      // what this household actually remembers, newest first
+      memoryLines: (n.memory || [])
+        .map(e => memoryLine(e, k => (PILLARS[k] ? PILLARS[k].label : k))),
+    }));
+}
+return { seedNeighbors, addCustomNeighbor, addNeighbor, raiseNeed, startJob, finishJob, giveAid, declineAid, tradeOffer, executeTrade, needsWorkOrder, answerWorkOrder, partyBlocker, throwParty, lendTools, neighborContribution, roster, UNITY_PER_UNIT, TRADES, gatheringLevel, needGap, aidMultiplier, aidUnity, canAfford, helperSpeed, PARTY_COST, PARTY_COOLDOWN_DAYS, PARTY_GLOW_DAYS, workJob, labourNeeded, labourDone, WORK_SECONDS_PER_DAY,
+// The relationship primitives. `delivery.js` credits a favour too, and it
+// must do it with THESE — a second module with its own idea of what a favour
+// is worth to a neighbour is two games disagreeing about the same person.
+remember, clamp01, STANDING_PER_HELP };
+})();
+
+/* ── tutorial.js ─────────────────────────────────────── */
+__M['tutorial.js'] = (function () {
+// C.U.I. — THE FIRST WEEK: the built-in tutorial.
+//
+// Not a popup lecture — a quest line. Seven small objectives that watch the
+// game and tick themselves off when the player actually DOES the thing:
+// walk, work, help, gather, claim, build, hold the line. Each step teaches
+// one loop of the game by making the player live it once. Finishing pays.
+//
+// Pure data + checks. main.js owns the flags and the advancing; ui.js draws
+// the card. main3d.js/tutor3d.js do the same for the 3D world.
+//
+// Each step carries TWO hints. The check is shared and must stay shared — it
+// is the definition of the objective. The wording is not: "click your ground"
+// is a lie in a game you walk around in, and "press F" is a lie in a game you
+// click. One hint per renderer, one check for both.
+
+const TUTORIAL_DONE = 8;   // must equal STEPS.length
+const TUTORIAL_SKIPPED = 99;
+const TUTORIAL_REWARD = 25;
+
+// THREE HINTS PER STEP, not two. `hint` is the 2D game, `hint3d` the walked
+// world on a keyboard, and `hintTouch` the same world under a thumb. The rule
+// is the one `hint3d` already established: the CHECK never forks, only the
+// wording — "WASD to walk, drag the mouse" is exactly as wrong on a phone as
+// "click your ground" was in a game you walk through, and a phone player told
+// to press a key they do not have concludes the game is broken.
+const STEPS = [
+  {
+    icon: '🚶', title: 'WALK YOUR LAND',
+    hint: 'WASD or arrows. You are the one in the hood — take a lap around the homestead.',
+    hint3d: 'WASD to walk, SHIFT to run, drag the mouse to look. Take a lap around the homestead.',
+    hintTouch: 'Push the stick (bottom-left) to walk, drag the screen to look. Take a lap around the homestead.',
+    check: (state, base, flags) => flags.walked >= 4,
+  },
+  {
+    icon: '🔨', title: 'RAISE A BUILDING',
+    hint: 'Open BUILD (bottom-left), pick something, click your ground. A Fire Circle (SHELTER tab, ✊30) is the classic first raise.',
+    hint3d: 'Press B for the build drawer and pick something. Then stand on your own ground and press F. A Fire Circle (SHELTER, ✊30) is the classic first raise.',
+    hintTouch: 'Tap B for the build drawer, stand on your own ground, and tap a card — that raises it. A Fire Circle (SHELTER, ✊30) is the classic first raise.',
+    check: (state, base) => {
+      let n = 0;
+      for (const t of state.tiles) if (t && t.b) n++;
+      return n > base.buildings;
+    },
+  },
+  {
+    icon: '🧺', title: 'WORK SOMETHING',
+    hint: 'Click a building you own — or walk up and press E — and put an hour in. (New builds take a moment to finish.)',
+    hint3d: 'Walk up to a building you own and press E, then PUT AN HOUR IN. (New builds take a moment to finish.)',
+    hintTouch: 'Walk up to a building you own and tap E, then PUT AN HOUR IN. (New builds take a moment to finish.)',
+    check: (state, base, flags) => !!flags.worked,
+  },
+  {
+    icon: '✊', title: 'HELP WHO ASKS',
+    hint: 'A neighbor will ask for something (top-right). GIVE goods or ROLL UP SLEEVES — helping is how Unity is made.',
+    hint3d: 'A neighbour will come to your gate. Press R to answer — GIVE goods or ROLL UP SLEEVES. Helping is how Unity is made.',
+    hintTouch: 'A neighbour will come to your gate. Tap R to answer — GIVE goods or ROLL UP SLEEVES. Helping is how Unity is made.',
+    check: (state, base, flags) => !!flags.helped,
+  },
+  {
+    icon: '🏛', title: 'VISIT THE TOWN HALL',
+    hint: 'The building on the square. Walk up and press E — parties, the world signal, the doors.',
+    hint3d: 'The building on the square. Walk up and press E — parties, the world signal, the doors.',
+    hintTouch: 'The building on the square. Walk up and tap E — parties, the world signal, the doors.',
+    check: (state, base, flags) => !!flags.hall,
+  },
+  {
+    icon: '🚧', title: 'CLAIM OPEN RANGE',
+    hint: 'Click a dashed tile at your fence line (or CLAIM PLOT in the toolbar). The land grows plot by plot.',
+    hint3d: 'Press B and clear your selection, then walk to a dashed tile at your fence line and press F. The land grows plot by plot.',
+    hintTouch: 'Tap B and clear your selection, then walk to a dashed tile at your fence line and tap F. The land grows plot by plot.',
+    check: (state, base) => state.unlocked.size > base.unlocked,
+  },
+  {
+    icon: '🎉', title: 'THROW OR TRADE',
+    hint: 'Open the roster (HOUSEHOLDS chip) and TRADE with a neighbor — or click a gathering place for a block party.',
+    hint3d: 'Walk up to a neighbour and press E to trade — or throw a block party from the Town Hall.',
+    hintTouch: 'Walk up to a neighbour and tap E to trade — or throw a block party from the Town Hall.',
+    check: (state, base, flags) => !!flags.traded,
+  },
+  {
+    icon: '🛡', title: 'HOLD THE LINE',
+    hint: 'A crisis is coming — the clock runs on real-world odds. Keep every pillar above zero until it passes.',
+    hint3d: 'A crisis is coming — the clock runs on real-world odds. Keep every pillar above zero until it passes.',
+    check: (state, base) => (state.stats.crisesHeld || 0) > base.held,
+  },
+];
+
+/** Snapshot the counters the checks compare against. */
+function tutorialBase(state) {
+  let buildings = 0;
+  for (const t of state.tiles) if (t && t.b) buildings++;
+  return {
+    unlocked: state.unlocked.size,
+    buildings,
+    held: state.stats.crisesHeld || 0,
+  };
+}
+
+const tutorialActive = (state) =>
+  Number.isFinite(state.tutorialStep) && state.tutorialStep < TUTORIAL_DONE;
+
+/**
+ * Advance if the current step's condition is met.
+ * Returns { state, advanced, completed } — completed fires exactly once.
+ */
+function tutorialTick(state, flags) {
+  if (!tutorialActive(state)) return { state, advanced: false, completed: false };
+  const step = STEPS[state.tutorialStep];
+  if (!step || !step.check(state, state.tutBase, flags)) {
+    return { state, advanced: false, completed: false };
+  }
+  const next = state.tutorialStep + 1;
+  const completed = next >= TUTORIAL_DONE;
+  return {
+    state: {
+      ...state,
+      tutorialStep: next,
+      // re-baseline so later steps count from NOW, not from game start
+      tutBase: tutorialBase(state),
+      unity: completed ? state.unity + TUTORIAL_REWARD : state.unity,
+    },
+    advanced: true,
+    completed,
+  };
+}
+return { tutorialBase, tutorialTick, TUTORIAL_DONE, TUTORIAL_SKIPPED, TUTORIAL_REWARD, STEPS, tutorialActive };
+})();
+
+/* ── lots.js ─────────────────────────────────────── */
+__M['lots.js'] = (function () {
+// C.U.I. — the compound: whose land is whose.
+//
+// Mahal's reframe, and she was right: the board read as a chess board — an
+// abstract grid you colonize. A block is not that. A block is a COMPOUND:
+// your family's homestead in the middle, and every member holding their own
+// lot with their shelter on it, building their land out from there.
+//
+// The 9×9 splits into nine 3×3 parcels. The centre one is YOURS — that is the
+// spot you build on. The eight around it are MEMBER LOTS, assigned to
+// neighbours in the order they joined the block. A lot that belongs to
+// somebody is not yours to claim — you expand into the land nobody holds yet,
+// and when a new member moves in they take a free parcel and make it theirs.
+//
+// Pure functions over state. Imports config only, so peeps/state/render can
+// all lean on it without the linear bundler choking on a cycle.
+
+const { GRID } = __M['config.js'];
+
+/**
+ * The view can be ROTATED in quarter turns — free the board. Lives here (an
+ * object, not a bare let: the bundler snapshots module exports once) so both
+ * the renderer and the avatar's key mapping can share it without a cycle.
+ */
+const VIEW = { rot: 0 };
+const rotateView = () => { VIEW.rot = (VIEW.rot + 1) % 4; return VIEW.rot; };
+
+const P = 3;                       // parcel edge — 3×3 lots on the 15×15 overworld
+
+/**
+ * MONOPOLY MEETS ZELDA: the lots ring the board, and the CENTRE is the
+ * TOWN SQUARE — common ground nobody owns, with the Town Hall on it. The
+ * middle of the block belongs to everybody; that is the whole initiative
+ * drawn as a map. Your family lot sits on the ring with everyone else's.
+ */
+const SQUARE = { x0: 6, y0: 6 };            // the commons
+const HALL = { x: 7, y: 7 };                // the Town Hall itself
+const HOME_PARCEL = { x0: 6, y0: 10 };      // the family lot — south gate
+const HOME_HOUSE = { x: 7, y: 12 };         // the family cabin itself
+
+/** Is this tile on the common ground? */
+const inSquare = (x, y) =>
+  x >= SQUARE.x0 && x < SQUARE.x0 + P && y >= SQUARE.y0 && y < SQUARE.y0 + P;
+
+/** Member parcels ring the square; join order fills them. */
+const MEMBER_PARCELS = [
+  { x0: 6, y0: 2 },    // N  — first neighbours face you across the square
+  { x0: 2, y0: 6 },    // W
+  { x0: 10, y0: 6 },   // E
+  { x0: 2, y0: 2 },    // NW
+  { x0: 10, y0: 2 },   // NE
+  { x0: 2, y0: 10 },   // SW
+  { x0: 10, y0: 10 },  // SE
+];
+
+/** A lane tile: the walked ground between parcels. Drawn as packed earth. */
+function onLane(x, y) {
+  const laneBand = (v) => v === 5 || v === 9;
+  const inParcelBand = (v) => (v >= 2 && v <= 4) || (v >= 6 && v <= 8) || (v >= 10 && v <= 12);
+  return (laneBand(x) && inParcelBand(y)) || (laneBand(y) && inParcelBand(x))
+      || (laneBand(x) && laneBand(y));
+}
+
+const inParcel = (p, x, y) =>
+  x >= p.x0 && x < p.x0 + P && y >= p.y0 && y < p.y0 + P;
+
+/** Neighbours in the order they joined — parcel assignment is by seniority. */
+function ordered(state) {
+  return [...(state.neighbors || [])].sort((a, b) =>
+    (a.since - b.since) || a.name.localeCompare(b.name));
+}
+
+/**
+ * The lot map: one entry per ASSIGNED member parcel, with the member on it.
+ * house = the parcel's centre tile, where their shelter stands.
+ */
+function assignments(state) {
+  const ns = ordered(state);
+  const out = [];
+  for (let k = 0; k < ns.length && k < MEMBER_PARCELS.length; k++) {
+    const p = MEMBER_PARCELS[k];
+    out.push({
+      name: ns[k].name, trade: ns[k].trade, standing: ns[k].standing,
+      real: !!ns[k].real,
+      x0: p.x0, y0: p.y0, size: P,
+      house: { x: p.x0 + 1, y: p.y0 + 1 },
+    });
+  }
+  return out;
+}
+
+/** Does (x,y) sit on a lot some MEMBER holds? (Their land, not yours.) */
+function foreignLot(state, x, y) {
+  const ns = ordered(state);
+  for (let k = 0; k < ns.length && k < MEMBER_PARCELS.length; k++) {
+    if (inParcel(MEMBER_PARCELS[k], x, y)) return ns[k].name;
+  }
+  return null;
+}
+
+/** The member's home tile, for walkers heading in at night. */
+function homeTileOf(state, index) {
+  const a = assignments(state)[index];
+  return a ? [a.house.x, a.house.y] : null;
+}
+
+/**
+ * Stable per-tile ground variation — the anti-chessboard. A cheap hash gives
+ * every tile its own earth tone that never flickers between frames.
+ */
+function groundNoise(x, y) {
+  let h = (x * 374761393 + y * 668265263) | 0;
+  h = ((h ^ (h >> 13)) * 1274126177) | 0;
+  return ((h >>> 8) % 1000) / 1000;
+}
+return { onLane, assignments, foreignLot, homeTileOf, groundNoise, VIEW, rotateView, SQUARE, HALL, HOME_PARCEL, HOME_HOUSE, inSquare };
+})();
+
+/* ── state.js ─────────────────────────────────────── */
+__M['state.js'] = (function () {
+// C.U.I. — game state: creation, derived totals, persistence.
+
+const { GRID, BUILDINGS, BASE_CAP, START, START_UNLOCKED, HOUSEHOLD_UNITY } = __M['config.js'];
+const { seedNeighbors } = __M['neighbors.js'];
+const { tutorialBase } = __M['tutorial.js'];
+const { foreignLot, inSquare, HOME_PARCEL } = __M['lots.js'];
+
+// v2: the F.A.C.T.S. rework changed the whole resource model, so v1 saves
+// are not migratable and are simply ignored.
+const SAVE_KEY = 'cui_save_v2';
+
+/** A tile that has never been claimed. */
+const emptyTile = () => ({ b: null, built: 0, age: 0 });
+
+function newGame() {
+  const tiles = [];
+  for (let y = 0; y < GRID; y++) {
+    for (let x = 0; x < GRID; x++) tiles.push(emptyTile());
+  }
+  return {
+    v: 2,
+    day: 0,                       // elapsed in-game days (float)
+    unity: START.unity,
+    households: START.households,
+    stock: { ...START.stock },
+    tiles,
+    unlocked: unlockedSet(START_UNLOCKED),
+    crisis: null,                 // { id, left, total }
+    nextCrisis: null,             // day number of next hit (set by sim)
+    weather: 'clear',
+    dryFor: 0,               // days a reserve has sat at zero
+    paused: false,           // the block keeps its own clock stopped
+    badges: [],
+    log: [],
+    stats: { crisesFaced: 0, crisesHeld: 0, householdsLost: 0, peakReadiness: 0 },
+    // what each crisis did to this block, and how often. Held ones land
+    // softer next time; ones that broke you land harder. { id: {held,broke,lastDay} }
+    scars: {},
+    savedAt: null,
+    joined: [],              // KTL doors the player says they walked through
+    pendingJoin: null,       // { label, at } — a door opened, answer not yet given
+    neighbors: seedNeighbors(START.households),
+    pendingNeed: null,       // { type:'give'|'labor', who, pillar, ... }
+    alarm: null,             // { at: day } — the block called a crisis early
+    lastPartyAt: null,       // block-party cooldown
+    partyUntil: 0,           // the glow window after one
+    partyTile: null,
+    avatar: { x: 7, y: 11 },
+    avatarChar: 'quantus',
+    identity: null,          // who's on this block (see identity.js)
+    tutorialStep: 0,         // THE FIRST WEEK quest line
+    tutBase: null,           // filled on first tick
+    roofAt: null,            // once-a-day house upkeep
+    guttersAt: null,
+    hearthAt: null,
+    // MAKE DO: run shops on the other substrate when their input is dry, at
+    // twice the cost for half the yield. Off by default — it is a choice.
+    makeDo: false,
+    activeJob: null,         // a labour need in progress: { ...need, startDay }
+    lastNeedAt: undefined,
+  };
+}
+
+/** The family lot: START_UNLOCKED² tiles anchored on the home parcel. */
+function unlockedSet(n) {
+  const set = new Set();
+  for (let y = HOME_PARCEL.y0; y < HOME_PARCEL.y0 + n; y++) {
+    for (let x = HOME_PARCEL.x0; x < HOME_PARCEL.x0 + n; x++) set.add(y * GRID + x);
+  }
+  return set;
+}
+
+const idx = (x, y) => y * GRID + x;
+const inBounds = (x, y) => x >= 0 && y >= 0 && x < GRID && y < GRID;
+
+/**
+ * Cost in Unity to unlock one more tile — rises as the block grows.
+ * Priced off plots you have CLAIMED, never off the starting block: an `owned`
+ * term put the very first plot at 115 Unity against a 95 Unity opening purse,
+ * so no opening move could ever afford one. The first plot has to be within
+ * reach on day one or the expansion loop never starts turning.
+ */
+function expandCost(state) {
+  const owned = state.unlocked.size;
+  const claimed = Math.max(0, owned - START_UNLOCKED * START_UNLOCKED);
+  return Math.round(32 + Math.pow(claimed, 1.35) * 9);
+}
+
+/**
+ * Where Unity comes from under the aid economy: giving to neighbours who ask.
+ * Gathering places no longer pay by themselves — they raise how often needs
+ * reach you and how far each act of help goes.
+ */
+function unitySources(state) {
+  const gatherPlaces = [];
+  for (const b of activeBuildings(state)) {
+    if (b.def.gather) gatherPlaces.push({ id: b.tile.b, name: b.def.name,
+                                          gather: b.def.gather, done: b.done });
+  }
+  gatherPlaces.sort((a, c) => c.gather - a.gather);
+  const built = new Set(gatherPlaces.map(g => g.id));
+  const available = Object.entries(BUILDINGS)
+    .filter(([id, def]) => def.gather && !built.has(id))
+    .map(([id, def]) => ({ id, name: def.name, pillar: def.pillar,
+                           gather: def.gather, cost: def.cost,
+                           afford: def.cost <= state.unity }))
+    .sort((a, c) => (a.cost / a.gather) - (c.cost / c.gather));
+  return { gatherPlaces, available, household: HOUSEHOLD_UNITY * state.households };
+}
+
+/** A locked tile may only be claimed if it touches an unlocked one —
+ *  and never off somebody's LOT. Their land is theirs. */
+function canExpandTo(state, x, y) {
+  if (!inBounds(x, y) || state.unlocked.has(idx(x, y))) return false;
+  if (foreignLot(state, x, y)) return false;
+  if (inSquare(x, y)) return false;          // the square belongs to everybody
+  const n = [[1,0],[-1,0],[0,1],[0,-1]];
+  return n.some(([dx, dy]) => inBounds(x+dx, y+dy) && state.unlocked.has(idx(x+dx, y+dy)));
+}
+
+/** Every placed building on the board, with its def and tile position. */
+function activeBuildings(state) {
+  const out = [];
+  for (let i = 0; i < state.tiles.length; i++) {
+    const t = state.tiles[i];
+    if (!t.b) continue;
+    out.push({ i, x: i % GRID, y: Math.floor(i / GRID), tile: t,
+               def: BUILDINGS[t.b], done: t.built >= 1 });
+  }
+  return out;
+}
+
+/** Storage ceilings: base + every finished capacity building. */
+function capacity(state) {
+  const cap = { ...BASE_CAP };
+  for (const b of activeBuildings(state)) {
+    if (!b.done || !b.def.cap) continue;
+    for (const k in b.def.cap) cap[k] = (cap[k] || 0) + b.def.cap[k];
+  }
+  return cap;
+}
+
+/** Shelter: households the block can actually house. */
+function shelter(state) {
+  let homes = 2; // the two founding households always have a roof
+  for (const b of activeBuildings(state)) {
+    if (b.done && b.def.homes) homes += b.def.homes;
+  }
+  return homes;
+}
+
+/** Crisis damage reduction (0..0.6): guard buildings + neighbours who show up. */
+function crisisGuard(state) {
+  let g = 0;
+  for (const b of activeBuildings(state)) {
+    if (b.done && b.def.crisisGuard) g += b.def.crisisGuard;
+  }
+  // Elder June knowing your name is worth as much as a radio tower.
+  for (const n of state.neighbors || []) g += (n.guard || 0) * n.standing;
+  // A block that sounded the alarm in time meets the crisis staged and taped.
+  if (state.crisis && state.crisis.prepared) g += 0.12;
+  return Math.min(0.6, g);
+}
+
+// ── Persistence ───────────────────────────────────────────────────────────
+
+function save(state) {
+  try {
+    const flat = {
+      ...state,
+      // Wall-clock stamp: without it the block freezes the moment the tab
+      // closes and nothing is ever at stake between sessions. offline.js
+      // replays the gap from this. See [[project_cui]] notes.
+      savedAt: Date.now(),
+      unlocked: [...state.unlocked],
+      tiles: state.tiles.map(t => (t.b
+        ? { b: t.b, built: t.built, age: t.age,
+            ...(t.helpers && t.helpers.length ? { helpers: t.helpers } : {}),
+            ...(t.tended ? { tended: t.tended } : {}) }
+        : 0)),
+      log: state.log.slice(-40),
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(flat));
+    return true;
+  } catch (err) {
+    console.warn('[cui] save failed:', err);
+    return false;
+  }
+}
+
+function load() {
+  let raw;
+  try {
+    raw = localStorage.getItem(SAVE_KEY);
+  } catch (err) {
+    console.warn('[cui] localStorage unreadable:', err);
+    return null;
+  }
+  if (!raw) return null;
+  try {
+    const f = JSON.parse(raw);
+    if (!f || f.v !== 2 || !Array.isArray(f.tiles)) return null;
+
+    // ── world migration: a 9×9 save wakes up in the middle of the 15×15 ──
+    // Everything the player built shifts by (+3,+3) into the new homestead
+    // area. Their world got BIGGER, not replaced.
+    if (f.tiles.length === 81 && GRID === 15) {
+      const remap = (i) => ((Math.floor(i / 9) + 3) * 15) + ((i % 9) + 3);
+      const tiles = new Array(225).fill(0);
+      f.tiles.forEach((t, i) => { if (t) tiles[remap(i)] = t; });
+      f.tiles = tiles;
+      f.unlocked = (f.unlocked || []).map(remap);
+      if (Number.isFinite(f.partyTile)) f.partyTile = remap(f.partyTile);
+      if (f.avatar && Number.isFinite(f.avatar.x)) { f.avatar.x += 3; f.avatar.y += 3; }
+    }
+
+    // ── town-square migration: the centre became the commons, so anything a
+    // save holds there moves four tiles south onto the family lot ──
+    {
+      const G = 15, cIdx = [];
+      for (let y = 6; y <= 8; y++) for (let x = 6; x <= 8; x++) cIdx.push(y * G + x);
+      const hasCentre = (f.unlocked || []).some(i => cIdx.includes(i));
+      if (hasCentre && Array.isArray(f.tiles) && f.tiles.length === 225) {
+        const shift = (i) => i + 4 * G;
+        for (const i of cIdx) {
+          if (f.tiles[i]) { if (!f.tiles[shift(i)]) f.tiles[shift(i)] = f.tiles[i]; f.tiles[i] = 0; }
+        }
+        f.unlocked = [...new Set(f.unlocked.map(i => (cIdx.includes(i) ? shift(i) : i)))];
+        if (Number.isFinite(f.partyTile) && cIdx.includes(f.partyTile)) f.partyTile = shift(f.partyTile);
+        if (f.avatar && f.avatar.x >= 5.5 && f.avatar.x <= 8.5
+            && f.avatar.y >= 5.5 && f.avatar.y <= 8.5) f.avatar.y += 4;
+      }
+    }
+
+    const base = newGame();
+    return {
+      ...base,
+      ...f,
+      unlocked: new Set(f.unlocked || []),
+      // Drop any tile naming a building this build no longer defines — an
+      // unknown id reaches the sim as `undefined` and takes the whole game down.
+      tiles: f.tiles.map(t => (t && t.b && BUILDINGS[t.b]
+        ? { b: t.b, built: t.built, age: t.age || 0,
+            ...(Array.isArray(t.helpers) ? { helpers: t.helpers } : {}),
+            ...(Number.isFinite(t.tended) ? { tended: t.tended } : {}) }
+        : emptyTile())),
+      stock: { ...START.stock, ...(f.stock || {}) },
+      stats: { ...base.stats, ...(f.stats || {}) },
+      savedAt: Number.isFinite(f.savedAt) ? f.savedAt : null,
+      joined: Array.isArray(f.joined) ? f.joined : [],
+      pendingJoin: f.pendingJoin && f.pendingJoin.label ? f.pendingJoin : null,
+      // pre-neighbour saves get faces for their existing household count.
+      // Saves from before the memory log have no `memory` array — seed it empty
+      // rather than leaving it undefined, or every read has to guard.
+      neighbors: Array.isArray(f.neighbors) && f.neighbors.length
+        ? f.neighbors.map(n => ({ ...n, memory: Array.isArray(n.memory) ? n.memory : [] }))
+        : seedNeighbors(f.households || START.households),
+      pendingNeed: f.pendingNeed && f.pendingNeed.who ? f.pendingNeed : null,
+      scars: (f.scars && typeof f.scars === 'object') ? f.scars : {},
+      makeDo: f.makeDo === true,
+      activeJob: f.activeJob && f.activeJob.who ? f.activeJob : null,
+      alarm: f.alarm && Number.isFinite(f.alarm.at) ? f.alarm : null,
+      lastPartyAt: Number.isFinite(f.lastPartyAt) ? f.lastPartyAt : null,
+      partyUntil: Number.isFinite(f.partyUntil) ? f.partyUntil : 0,
+      partyTile: Number.isFinite(f.partyTile) ? f.partyTile : null,
+      avatar: f.avatar && Number.isFinite(f.avatar.x) ? f.avatar : { x: 7, y: 11 },
+      avatarChar: f.avatarChar === 'tess' ? 'tess' : 'quantus',
+      identity: f.identity && f.identity.asked ? f.identity : null,
+      tutorialStep: Number.isFinite(f.tutorialStep) ? f.tutorialStep : 0,
+      tutBase: f.tutBase && Number.isFinite(f.tutBase.unlocked) ? f.tutBase : null,
+      roofAt: Number.isFinite(f.roofAt) ? f.roofAt : null,
+      guttersAt: Number.isFinite(f.guttersAt) ? f.guttersAt : null,
+      hearthAt: Number.isFinite(f.hearthAt) ? f.hearthAt : null,
+    };
+  } catch (err) {
+    console.warn('[cui] save corrupt, starting fresh:', err);
+    return null;
+  }
+}
+
+function wipe() {
+  try { localStorage.removeItem(SAVE_KEY); }
+  catch (err) { console.warn('[cui] wipe failed:', err); }
+}
+return { newGame, expandCost, unitySources, canExpandTo, activeBuildings, capacity, shelter, crisisGuard, save, load, wipe, SAVE_KEY, idx, inBounds };
+})();
+
+/* ── actions.js ─────────────────────────────────────── */
+__M['actions.js'] = (function () {
+// C.U.I. — the ACTIONS. What it means to claim a plot and to raise a building,
+// in one place, for every renderer.
+//
+// This logic used to live inside main.js's DOM click handler, which meant the
+// 3D world could only get it by reimplementing it. Two copies of "what does
+// building cost and who is allowed to build where" is exactly the drift this
+// project has already been bitten by — a stale PAL.security and 38 mismatched
+// art pairings both passed review because nothing forced one source of truth.
+//
+// So: pure functions, no DOM, no toast, no sound. They take a state and return
+// a NEW state plus a message the caller renders however it likes. The 2D game
+// shows a toast; the 3D world shows a banner. Neither owns the rule.
+
+const { GRID, BUILDINGS } = __M['config.js'];
+const { idx, expandCost, canExpandTo, capacity } = __M['state.js'];
+const { needsWorkOrder, answerWorkOrder } = __M['neighbors.js'];
+const { foreignLot, inSquare, HOME_HOUSE } = __M['lots.js'];
+
+/** Uniform result shape so callers never have to guess. */
+const deny = (state, message) => ({ state, ok: false, message, tone: 'bad' });
+const allow = (state, message, extra = {}) => ({ state, ok: true, message, tone: 'good', ...extra });
+
+/**
+ * Claim a plot of open range. Land must touch land you already hold — the
+ * block grows outward from itself, it does not teleport.
+ */
+function claimPlot(state, x, y) {
+  if (x < 0 || y < 0 || x >= GRID || y >= GRID) return deny(state, 'Off the map.');
+  const i = idx(x, y);
+  if (state.unlocked.has(i)) return deny(state, 'You already hold that plot.');
+  if (!canExpandTo(state, x, y)) {
+    return deny(state, 'That plot does not touch your block. Claim your way out, plot by plot.');
+  }
+  const cost = expandCost(state);
+  if (state.unity < cost) {
+    return deny(state, `Not enough Unity — that plot costs ✊${cost}, you have ✊${Math.floor(state.unity)}.`);
+  }
+  const unlocked = new Set(state.unlocked);
+  unlocked.add(i);
+  return allow({ ...state, unlocked, unity: state.unity - cost },
+    'Plot claimed. The block grows.', { cost });
+}
+
+/**
+ * Raise a building on one of your plots. Every guard the 2D game enforces,
+ * enforced once: the square belongs to everybody, the family house is not a
+ * build site, a member's land is theirs, and you cannot build on open range
+ * you have not claimed.
+ */
+function placeBuilding(state, x, y, buildingId) {
+  if (x < 0 || y < 0 || x >= GRID || y >= GRID) return deny(state, 'Off the map.');
+  const def = BUILDINGS[buildingId];
+  if (!def) return deny(state, 'That is not something you can raise.');
+
+  const i = idx(x, y);
+  if (inSquare(x, y)) {
+    return deny(state, 'The square belongs to everybody — build on your own lot.');
+  }
+  if (x === HOME_HOUSE.x && y === HOME_HOUSE.y) {
+    return deny(state, 'That is the family house. Build around it.');
+  }
+  if (!state.unlocked.has(i)) {
+    const who = foreignLot(state, x, y);
+    if (who) return deny(state, `That is ${who}'s land. Build on your own plots.`);
+    if (canExpandTo(state, x, y)) {
+      return deny(state, `Open range — claim it (✊${expandCost(state)}) before you build here.`);
+    }
+    return deny(state, 'Claim your way there plot by plot — land must touch land you hold.');
+  }
+  if (state.tiles[i].b) return deny(state, 'That plot is already built on.');
+  if (state.unity < def.cost) {
+    return deny(state, `Not enough Unity — ${def.name} costs ✊${def.cost}, you have ✊${Math.floor(state.unity)}.`);
+  }
+
+  // A big raise posts a WORK ORDER — neighbours who rate you answer it, the
+  // build runs faster, and the ones who helped come out more invested. The
+  // block raises its own infrastructure; that is the whole point of a block.
+  const wo = needsWorkOrder(def);
+  const helpers = wo ? answerWorkOrder(state) : [];
+  const tiles = [...state.tiles];
+  tiles[i] = { b: buildingId, built: 0, age: 0, helpers };
+
+  const message = wo
+    ? (helpers.length
+        ? `Work order out — ${helpers.join(' and ')} answered. Build runs faster.`
+        : `Work order out for the ${def.name}. Nobody answered — help who asks, and they show up.`)
+    : `${def.name} — crew is on it.`;
+
+  return allow({ ...state, tiles, unity: state.unity - def.cost }, message,
+    { helpers, workOrder: wo, tone: wo && !helpers.length ? '' : 'good' });
+}
+
+/**
+ * Work one of your finished buildings for an instant handful of its output.
+ *
+ * This lived inside the 2D game's `tendTile()` — a DOM click handler — which
+ * is why the 3D world had no way to offer it at all: walking up to your own
+ * workshop and pressing E only ever LOOKED at it. The verb the tutorial's
+ * third objective asks for did not exist in 3D.
+ *
+ * Once per in-game day per building, and half a day's production for the
+ * hour you put in. The daily gate is what stops "work" degrading into a
+ * click-as-fast-as-you-can button — this block runs on labour, not on APM.
+ */
+function workBuilding(state, x, y) {
+  if (x < 0 || y < 0 || x >= GRID || y >= GRID) return deny(state, 'Off the map.');
+  const i = idx(x, y);
+  const t = state.tiles[i];
+  if (!t || !t.b) return deny(state, 'Nothing to work here.');
+  const def = BUILDINGS[t.b];
+  if (!def) return deny(state, 'Nothing to work here.');
+  if ((t.built ?? 1) < 1) return deny(state, `The ${def.name} is still going up.`);
+  if (t.tended && state.day - t.tended < 1) {
+    return deny(state, 'Already worked today — come back tomorrow.');
+  }
+
+  // Capacity still binds. Working a full store is honest labour into a barrel
+  // that is already brimming, and the game says so rather than silently
+  // discarding it.
+  const cap = capacity(state);
+  const stock = { ...state.stock };
+  const got = [];
+  for (const [k, v] of Object.entries(def.prod || {})) {
+    if (k === 'unity') continue;              // Unity is the block's, not a tap
+    const ceiling = cap[k] === undefined ? 999 : cap[k];
+    const before = stock[k] || 0;
+    stock[k] = Math.min(ceiling, before + v * 0.5);
+    const gained = stock[k] - before;
+    if (gained > 0.05) got.push(`+${gained.toFixed(1)} ${k.toUpperCase()}`);
+  }
+
+  const tiles = [...state.tiles];
+  tiles[i] = { ...t, tended: state.day };
+  return allow({ ...state, tiles, stock },
+    got.length ? `You worked the ${def.name}. ${got.join(' · ')}.` : `${def.name} tended — the stores are full.`,
+    { worked: true });
+}
+
+return { claimPlot, placeBuilding, workBuilding };
+})();
+
+/* ── art.js ─────────────────────────────────────── */
+__M['art.js'] = (function () {
+// C.U.I. — isometric drawing primitives.
+// All art is authored in UNIT TILE SPACE: the tile diamond is centred on (0,0)
+// with half-width 32 and half-height 16. render.js handles camera + zoom.
+
+const HW = 32, HH = 16;
+
+/** Lighten (amt > 0) or darken (amt < 0) a #rrggbb colour. */
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  if (amt >= 0) {
+    r += (255 - r) * amt; g += (255 - g) * amt; b += (255 - b) * amt;
+  } else {
+    const k = 1 + amt; r *= k; g *= k; b *= k;
+  }
+  const h = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  return `#${h(r)}${h(g)}${h(b)}`;
+}
+
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+/** Path a diamond of half-size (hw,hh) centred at (0, dy). Does not fill. */
+function diamondPath(ctx, hw, hh, dy = 0) {
+  ctx.beginPath();
+  ctx.moveTo(0, dy - hh);
+  ctx.lineTo(hw, dy);
+  ctx.lineTo(0, dy + hh);
+  ctx.lineTo(-hw, dy);
+  ctx.closePath();
+}
+
+/**
+ * An isometric box standing on the tile.
+ * f      footprint as a fraction of the tile (1 = full tile)
+ * h      height in px
+ * col    base colour — top/left/right faces are derived from it
+ * o.rise vertical offset (stacking)
+ */
+function box(ctx, f, h, col, o = {}) {
+  const hw = HW * f, hh = HH * f;
+  const y = -(o.rise || 0);
+  const top = o.top || shade(col, 0.22);
+  const left = o.left || shade(col, -0.18);
+  const right = o.right || shade(col, -0.42);
+
+  ctx.fillStyle = left;
+  ctx.beginPath();
+  ctx.moveTo(-hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, y + hh - h); ctx.lineTo(-hw, y - h);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = right;
+  ctx.beginPath();
+  ctx.moveTo(hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, y + hh - h); ctx.lineTo(hw, y - h);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = top;
+  diamondPath(ctx, hw, hh, y - h);
+  ctx.fill();
+
+  // rim light along the sun-facing top edge
+  if (o.rim !== false) {
+    ctx.strokeStyle = rgba(shade(col, 0.6), 0.5);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-hw, y - h); ctx.lineTo(0, y - h - hh); ctx.lineTo(hw, y - h);
+    ctx.stroke();
+  }
+}
+
+/** A cylinder (barrel, silo, tank). rx/ry are the ellipse radii. */
+function cyl(ctx, rx, ry, h, col, o = {}) {
+  const y = -(o.rise || 0);
+  const g = ctx.createLinearGradient(-rx, 0, rx, 0);
+  g.addColorStop(0, shade(col, -0.30));
+  g.addColorStop(0.42, shade(col, 0.06));
+  g.addColorStop(1, shade(col, -0.48));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-rx, y);
+  ctx.lineTo(-rx, y - h);
+  ctx.ellipse(0, y - h, rx, ry, 0, Math.PI, 0, true);
+  ctx.lineTo(rx, y);
+  ctx.ellipse(0, y, rx, ry, 0, 0, Math.PI, false);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = o.top || shade(col, 0.3);
+  ctx.beginPath();
+  ctx.ellipse(0, y - h, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** A gabled roof sitting on a box of footprint f at height `rise`. */
+function roof(ctx, f, h, col, rise) {
+  const hw = HW * f, hh = HH * f;
+  const y = -rise;
+  const peak = y - h;
+  ctx.fillStyle = shade(col, -0.10);
+  ctx.beginPath();
+  ctx.moveTo(-hw, y); ctx.lineTo(0, y - hh); ctx.lineTo(0, peak - hh); ctx.lineTo(-hw, peak);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = shade(col, 0.20);
+  ctx.beginPath();
+  ctx.moveTo(-hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, peak + hh); ctx.lineTo(-hw, peak);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = shade(col, -0.34);
+  ctx.beginPath();
+  ctx.moveTo(hw, y); ctx.lineTo(0, y + hh); ctx.lineTo(0, peak + hh); ctx.lineTo(hw, peak);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = shade(col, 0.05);
+  ctx.beginPath();
+  ctx.moveTo(hw, y); ctx.lineTo(0, y - hh); ctx.lineTo(0, peak - hh); ctx.lineTo(hw, peak);
+  ctx.closePath(); ctx.fill();
+}
+
+/** Soft contact shadow so nothing looks pasted on. */
+function contactShadow(ctx, f = 0.8, a = 0.32) {
+  ctx.save();
+  ctx.fillStyle = `rgba(0,0,0,${a})`;
+  ctx.filter = 'blur(2px)';
+  ctx.beginPath();
+  ctx.ellipse(3, 3, HW * f * 0.92, HH * f * 0.92, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** A thin post — legs, masts, poles. */
+function post(ctx, x, yBase, h, w, col) {
+  ctx.fillStyle = col;
+  ctx.fillRect(x - w / 2, yBase - h, w, h);
+  ctx.fillStyle = shade(col, -0.3);
+  ctx.fillRect(x + w / 2 - 1, yBase - h, 1, h);
+}
+
+/** A leafy clump — the base unit for every crop and herb. */
+function leafClump(ctx, x, y, r, col, sway = 0, n = 5) {
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + sway;
+    ctx.fillStyle = i % 2 ? shade(col, -0.16) : shade(col, 0.14);
+    ctx.beginPath();
+    ctx.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.3,
+                r * 0.62, r * 0.42, a * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Tilled rows on the tile surface — reads instantly as "this is planted". */
+function furrows(ctx, col, rows = 4) {
+  ctx.strokeStyle = rgba(col, 0.55);
+  ctx.lineWidth = 1.4;
+  for (let i = 1; i < rows; i++) {
+    const k = i / rows;
+    ctx.beginPath();
+    ctx.moveTo(-HW + HW * k, HH - HH * k);
+    ctx.lineTo(HW * k, -HH + HH * k);
+    ctx.stroke();
+  }
+}
+
+/** Scaffolding shown while a build is in progress. */
+function scaffold(ctx, progress, col) {
+  const h = 20;
+  const legs = [[-HW * 0.55, 0], [HW * 0.55, 0], [0, -HH * 0.55], [0, HH * 0.55]];
+  for (const [x, y] of legs) post(ctx, x, y, h, 2, col);
+  ctx.strokeStyle = rgba(col, 0.85);
+  ctx.lineWidth = 1.6;
+  for (const yy of [-h, -h * 0.55]) {
+    ctx.beginPath();
+    ctx.moveTo(-HW * 0.55, yy); ctx.lineTo(0, yy - HH * 0.55);
+    ctx.lineTo(HW * 0.55, yy); ctx.lineTo(0, yy + HH * 0.55);
+    ctx.closePath(); ctx.stroke();
+  }
+  const w = 34, y0 = -h - 16;
+  ctx.fillStyle = 'rgba(0,0,0,.55)';
+  ctx.fillRect(-w / 2 - 1, y0 - 1, w + 2, 6);
+  ctx.fillStyle = '#E3B23C';
+  ctx.fillRect(-w / 2, y0, w * progress, 4);
+}
+
+/** Small warning glyph for a building with no power to run on. */
+function offlineMark(ctx, t) {
+  ctx.save();
+  ctx.translate(0, -34);
+  ctx.globalAlpha = 0.55 + Math.sin(t * 4) * 0.35;
+  ctx.fillStyle = '#C43B3B';
+  ctx.beginPath();
+  ctx.moveTo(0, -7); ctx.lineTo(7, 5); ctx.lineTo(-7, 5);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#0A0714';
+  ctx.font = 'bold 8px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('!', 0, 4);
+  ctx.restore();
+}
+return { shade, rgba, diamondPath, box, cyl, roof, contactShadow, post, leafClump, furrows, scaffold, offlineMark, HW, HH };
 })();
 
 /* ── art_craft.js ─────────────────────────────────────── */
@@ -2903,125 +4144,6 @@ function drawBuilding(id, ctx, e) {
 return { drawBuilding, ART };
 })();
 
-/* ── lots.js ─────────────────────────────────────── */
-__M['lots.js'] = (function () {
-// C.U.I. — the compound: whose land is whose.
-//
-// Mahal's reframe, and she was right: the board read as a chess board — an
-// abstract grid you colonize. A block is not that. A block is a COMPOUND:
-// your family's homestead in the middle, and every member holding their own
-// lot with their shelter on it, building their land out from there.
-//
-// The 9×9 splits into nine 3×3 parcels. The centre one is YOURS — that is the
-// spot you build on. The eight around it are MEMBER LOTS, assigned to
-// neighbours in the order they joined the block. A lot that belongs to
-// somebody is not yours to claim — you expand into the land nobody holds yet,
-// and when a new member moves in they take a free parcel and make it theirs.
-//
-// Pure functions over state. Imports config only, so peeps/state/render can
-// all lean on it without the linear bundler choking on a cycle.
-
-const { GRID } = __M['config.js'];
-
-/**
- * The view can be ROTATED in quarter turns — free the board. Lives here (an
- * object, not a bare let: the bundler snapshots module exports once) so both
- * the renderer and the avatar's key mapping can share it without a cycle.
- */
-const VIEW = { rot: 0 };
-const rotateView = () => { VIEW.rot = (VIEW.rot + 1) % 4; return VIEW.rot; };
-
-const P = 3;                       // parcel edge — 3×3 lots on the 15×15 overworld
-
-/**
- * MONOPOLY MEETS ZELDA: the lots ring the board, and the CENTRE is the
- * TOWN SQUARE — common ground nobody owns, with the Town Hall on it. The
- * middle of the block belongs to everybody; that is the whole initiative
- * drawn as a map. Your family lot sits on the ring with everyone else's.
- */
-const SQUARE = { x0: 6, y0: 6 };            // the commons
-const HALL = { x: 7, y: 7 };                // the Town Hall itself
-const HOME_PARCEL = { x0: 6, y0: 10 };      // the family lot — south gate
-const HOME_HOUSE = { x: 7, y: 12 };         // the family cabin itself
-
-/** Is this tile on the common ground? */
-const inSquare = (x, y) =>
-  x >= SQUARE.x0 && x < SQUARE.x0 + P && y >= SQUARE.y0 && y < SQUARE.y0 + P;
-
-/** Member parcels ring the square; join order fills them. */
-const MEMBER_PARCELS = [
-  { x0: 6, y0: 2 },    // N  — first neighbours face you across the square
-  { x0: 2, y0: 6 },    // W
-  { x0: 10, y0: 6 },   // E
-  { x0: 2, y0: 2 },    // NW
-  { x0: 10, y0: 2 },   // NE
-  { x0: 2, y0: 10 },   // SW
-  { x0: 10, y0: 10 },  // SE
-];
-
-/** A lane tile: the walked ground between parcels. Drawn as packed earth. */
-function onLane(x, y) {
-  const laneBand = (v) => v === 5 || v === 9;
-  const inParcelBand = (v) => (v >= 2 && v <= 4) || (v >= 6 && v <= 8) || (v >= 10 && v <= 12);
-  return (laneBand(x) && inParcelBand(y)) || (laneBand(y) && inParcelBand(x))
-      || (laneBand(x) && laneBand(y));
-}
-
-const inParcel = (p, x, y) =>
-  x >= p.x0 && x < p.x0 + P && y >= p.y0 && y < p.y0 + P;
-
-/** Neighbours in the order they joined — parcel assignment is by seniority. */
-function ordered(state) {
-  return [...(state.neighbors || [])].sort((a, b) =>
-    (a.since - b.since) || a.name.localeCompare(b.name));
-}
-
-/**
- * The lot map: one entry per ASSIGNED member parcel, with the member on it.
- * house = the parcel's centre tile, where their shelter stands.
- */
-function assignments(state) {
-  const ns = ordered(state);
-  const out = [];
-  for (let k = 0; k < ns.length && k < MEMBER_PARCELS.length; k++) {
-    const p = MEMBER_PARCELS[k];
-    out.push({
-      name: ns[k].name, trade: ns[k].trade, standing: ns[k].standing,
-      real: !!ns[k].real,
-      x0: p.x0, y0: p.y0, size: P,
-      house: { x: p.x0 + 1, y: p.y0 + 1 },
-    });
-  }
-  return out;
-}
-
-/** Does (x,y) sit on a lot some MEMBER holds? (Their land, not yours.) */
-function foreignLot(state, x, y) {
-  const ns = ordered(state);
-  for (let k = 0; k < ns.length && k < MEMBER_PARCELS.length; k++) {
-    if (inParcel(MEMBER_PARCELS[k], x, y)) return ns[k].name;
-  }
-  return null;
-}
-
-/** The member's home tile, for walkers heading in at night. */
-function homeTileOf(state, index) {
-  const a = assignments(state)[index];
-  return a ? [a.house.x, a.house.y] : null;
-}
-
-/**
- * Stable per-tile ground variation — the anti-chessboard. A cheap hash gives
- * every tile its own earth tone that never flickers between frames.
- */
-function groundNoise(x, y) {
-  let h = (x * 374761393 + y * 668265263) | 0;
-  h = ((h ^ (h >> 13)) * 1274126177) | 0;
-  return ((h >>> 8) % 1000) / 1000;
-}
-return { onLane, assignments, foreignLot, homeTileOf, groundNoise, VIEW, rotateView, SQUARE, HALL, HOME_PARCEL, HOME_HOUSE, inSquare };
-})();
-
 /* ── avatar.js ─────────────────────────────────────── */
 __M['avatar.js'] = (function () {
 // C.U.I. — YOU, on the block. The Zelda turn.
@@ -3365,6 +4487,564 @@ function drawPartner(ctx, t) {
 return { setLook, togglePhoto, setChar, swapChar, initAvatar, updateAvatar, interactTarget, drawChar, drawAvatar, drawPartner, getLook, isPhotoMode, getChar, avatarPos, avatarOnTile, avatarOffset, partnerOnTile, partnerOffset };
 })();
 
+/* ── power.js ─────────────────────────────────────── */
+__M['power.js'] = (function () {
+// C.U.I. — GRID RESTORATION.
+//
+// Rob's call, and it is the best answer anyone has given to "what is the city
+// for": when the grid fails, the block does not just survive it — the block
+// PUTS THE LIGHTS BACK ON DOWN THE STREET. You built the power, so you carry
+// the power. That is the Common Unity Initiative stated as a mechanic instead
+// of as a slogan.
+//
+// Three real machines, and the difference between them is the lesson:
+//
+//   SOLAR ARRAY    generates hard, and stops dead at sundown.
+//   WIND TURBINE   less peak, but it runs all night.
+//   BATTERY WALL   makes no power at all. It is what lets the solar you made
+//                  at noon still be lighting a street at 2am.
+//
+// So a block with only panels goes dark at night in a blackout, exactly like
+// a real off-grid setup that skipped storage. That is not a difficulty knob,
+// it is the actual thing the initiative teaches people.
+
+/** Districts each source can carry when it is actually producing. */
+//   MICRO-HYDRO    the strongest, and the only one with no weather in it. A
+//                  stream runs at 3am in February. It carries more than solar
+//                  AND it carries at night, which is why it costs the most in
+//                  config.js and why it needs the spring to sit on — a block
+//                  cannot simply decide to have a river.
+const SOURCES = {
+  solar_array:  { districts: 3, night: false, label: 'Solar Array' },
+  wind_turbine: { districts: 2, night: true,  label: 'Wind Turbine' },
+  micro_hydro:  { districts: 4, night: true,  label: 'Micro-Hydro Wheel' },
+  battery_wall: { districts: 1, night: true,  label: 'Battery Wall', storage: true },
+};
+
+/**
+ * What your block can push to the street right now.
+ *
+ * @param {object} state
+ * @param {boolean} night  — from sim.isNight(state.day)
+ * @returns {{districts:number, capable:number, sources:string[],
+ *            storage:boolean, idle:string[]}}
+ *   districts — city districts you can relight THIS INSTANT
+ *   capable   — districts you could relight if the sun were up
+ *   idle      — sources sitting dark for want of storage
+ */
+function gridSupport(state, night) {
+  const sources = [];
+  let storage = false;
+  for (let i = 0; i < state.tiles.length; i++) {
+    const t = state.tiles[i];
+    if (!t || !t.b || (t.built ?? 1) < 1) continue;
+    const s = SOURCES[t.b];
+    if (!s) continue;
+    sources.push(t.b);
+    if (s.storage) storage = true;
+  }
+
+  let districts = 0, capable = 0;
+  const idle = [];
+  for (const id of sources) {
+    const s = SOURCES[id];
+    capable += s.districts;
+    // A battery does not make power, but it lets anything daylight-only keep
+    // delivering after dark. Without one, the panels are just roofing at night.
+    const live = s.night || !night || storage;
+    if (live) districts += s.districts;
+    else idle.push(s.label);
+  }
+
+  return { districts, capable, sources, storage, idle };
+}
+
+/**
+ * One line of plain English for the HUD. No jargon, no percentages.
+ * `carried` is how many substations the player has actually walked out and
+ * thrown — capacity is not the same thing as help delivered, and the line has
+ * to say which one it is talking about.
+ */
+function powerLine(support, night, carried = 0) {
+  if (!support.capable) return 'NO POWER OF YOUR OWN — THE BLOCK GOES DARK WITH THE CITY';
+  if (night && !support.districts && support.idle.length) {
+    return `${support.idle.join(' + ').toUpperCase()} ASLEEP — A BATTERY WALL WOULD HOLD THE NIGHT`;
+  }
+  if (!support.districts) return 'POWER IDLE';
+  const live = Math.min(carried, support.districts);
+  if (!live) return `POWER TO SPARE — WALK OUT AND THROW A SUBSTATION SWITCH`;
+  return `YOUR GRID IS CARRYING ${live} ${live === 1 ? 'BLOCK' : 'BLOCKS'}`
+       + (live < support.districts ? ` · ${support.districts - live} MORE TO GIVE` : '');
+}
+
+return { gridSupport, powerLine, SOURCES };
+})();
+
+/* ── charge.js ─────────────────────────────────────── */
+__M['charge.js'] = (function () {
+// C.U.I. — WHAT THE MACHINES RUN ON.
+//
+// The motor pool is electric, and this is the file that makes that mean
+// something instead of being a paint colour. A ride draws down a pack, the
+// pack only fills from what YOUR BLOCK ACTUALLY MADE, and a block that skipped
+// storage cannot charge anything after sundown.
+//
+// That is the same lesson `power.js` teaches about the street lights, told
+// again somewhere the player feels it immediately — which is the point. Being
+// stranded at the far fence at 2am because you have panels and no battery wall
+// teaches the battery wall better than any tooltip.
+//
+// THE RULE LIVES HERE, IN src/, NOT IN src3d/. The 2D game has no vehicles
+// today, but the moment a number like "how fast does an ATV drain" is typed
+// into a renderer, the two versions are free to disagree about it. Same
+// standing rule as every other number in this game.
+//
+// It reuses `gridSupport` rather than restating the solar/wind/battery logic.
+// If the bike charged off its own private idea of what the block produces, the
+// day someone fixes a bug in one is the day the other silently keeps it.
+
+const { gridSupport } = __M['power.js'];
+
+/**
+ * How long a full pack lasts UNDER THROTTLE, in real seconds of riding.
+ *
+ * Calibrated against the ring, not invented: substations stand 96–232 units
+ * out (`ring.js` NEAR/FAR) and the machines top out at 16.5 and 23 u/s. A full
+ * pack therefore covers the far fence and back with margin, and does not cover
+ * an evening of joyriding. The ATV carries the bigger pack because it is the
+ * work truck; the bike is quicker and thirstier, which is the trade.
+ *
+ * Coasting costs nothing. You only spend what you ask for.
+ */
+const PACK = {
+  atv:  { seconds: 105, label: 'ATV' },
+  bike: { seconds: 78,  label: 'DIRTBIKE' },
+  // The tractor carries the biggest pack and moves the slowest, so it lasts by
+  // far the longest in wall-clock terms — which is right: it is the machine
+  // you take out to work a field for an afternoon, not to cross the range.
+  // Without its own entry it silently fell through to the DIRTBIKE's pack and
+  // ran flat in 78 seconds, which is the kind of default that looks like a
+  // balance decision nobody made.
+  tractor: { seconds: 150, label: 'TRACTOR' },
+};
+
+const BOOST_DRAIN = 2.1;       // SHIFT costs more than it gives, as it should
+const RECHARGE_SECONDS = 22;   // empty -> full, docked, with the block producing
+const FLAT = 0.001;            // below this the pack is spent
+
+/**
+ * LIMP HOME. A spent machine is not a brick — it still rolls, at well under
+ * walking pace (WALK_SPEED is 8.4).
+ *
+ * This is deliberate and it is not softness. A machine that stopped dead would
+ * be permanently lost the first time somebody ran it flat at the far fence,
+ * and "your ATV is now scenery 200 units from home" is a bug report, not a
+ * lesson. Being slower than your own legs is the real punishment: you feel
+ * every second of the walk back, and nothing is unrecoverable.
+ */
+const LIMP_SPEED = 3.4;
+
+/**
+ * Charge 0..1. Absent on every save written before this file existed, and read
+ * as FULL — the same contract `state.energized` uses for its empty array.
+ */
+function chargeOf(state, id) {
+  const c = state.rideCharge;
+  if (!c || !(id in c)) return 1;
+  const v = c[id];
+  return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 1;
+}
+
+function isFlat(state, id) {
+  return chargeOf(state, id) <= FLAT;
+}
+
+/** Immutable write, matching `tick()` — nothing in this game mutates state. */
+function setCharge(state, id, v) {
+  return {
+    ...state,
+    rideCharge: { ...(state.rideCharge || {}), [id]: Math.max(0, Math.min(1, v)) },
+  };
+}
+
+/**
+ * Spend charge for `seconds` of THROTTLE. Coasting and standing still cost
+ * nothing, so this is only called when the rider actually asks for power.
+ *
+ * Returns the state untouched when there is nothing left to spend, so a
+ * caller's per-frame `state = drainRide(...)` does not churn a fresh object
+ * every frame for a machine that is already flat.
+ */
+function drainRide(state, id, kind, seconds, boosting) {
+  const pack = PACK[kind] || PACK.bike;
+  const have = chargeOf(state, id);
+  if (have <= 0) return state;
+  const spend = (seconds / pack.seconds) * (boosting ? BOOST_DRAIN : 1);
+  return setCharge(state, id, have - spend);
+}
+
+/**
+ * Fill the packs sitting on the rack.
+ *
+ * GATED ON THE BLOCK ACTUALLY PRODUCING. `gridSupport().districts` is already
+ * exactly "sources that are live at this hour" — solar in daylight, wind
+ * always, and solar after dark ONLY if a battery wall is holding it. So a
+ * block with panels and no storage watches its machines sit dead all night,
+ * which is the same sentence `power.js` writes about the street lights.
+ *
+ * `docked` is the ids currently on the rack. Anything parked out in the range
+ * charges from nothing, because there is nothing out there.
+ */
+function rechargeRides(state, docked, seconds, night) {
+  if (!docked || !docked.length) return state;
+  const sup = gridSupport(state, night);
+  if (!sup.districts) return state;              // nothing is generating right now
+
+  let next = state;
+  for (const id of docked) {
+    const have = chargeOf(next, id);
+    if (have >= 1) continue;
+    next = setCharge(next, id, have + seconds / RECHARGE_SECONDS);
+  }
+  return next;
+}
+
+/**
+ * One line of plain English, in the same voice as `powerLine` — no percentages
+ * in the prose, because "34%" tells a player nothing about whether they can
+ * get home. Returns null when there is plenty and nothing needs saying.
+ */
+function chargeLine(state, id, kind, night) {
+  const pct = chargeOf(state, id);
+  const label = (PACK[kind] || PACK.bike).label;
+  if (pct <= FLAT) return `${label} FLAT — IT WILL CRAWL YOU HOME, NO FASTER`;
+  if (pct < 0.25) {
+    const sup = gridSupport(state, night);
+    if (sup.districts) return `${label} LOW — PARK IT ON THE RACK`;
+    return (night && sup.idle.length)
+      ? `${label} LOW — AND YOUR PANELS ARE ASLEEP. A BATTERY WALL WOULD CHARGE IT`
+      : `${label} LOW — AND THE BLOCK HAS NO POWER TO GIVE IT`;
+  }
+  return null;
+}
+
+return {
+  chargeOf, isFlat, drainRide, rechargeRides, chargeLine,
+  PACK, LIMP_SPEED, RECHARGE_SECONDS, FLAT, BOOST_DRAIN,
+};
+})();
+
+/* ── coins.js ─────────────────────────────────────── */
+__M['coins.js'] = (function () {
+// C.U.I. COINS — the meta currency.
+//
+// UNITY is the block's labour, earned by helping the people around you, and it
+// is the only thing that builds. COINS are a different animal: they are what
+// the PLAYER earns for showing up — coming back day after day, walking through
+// a door into the real initiative, holding a crisis instead of quitting.
+//
+// Keeping them separate matters. If joining a Patreon bought you buildings,
+// the game would be selling advantage. It does not: coins never build
+// anything. They are a record of turning up.
+//
+// HONEST LIMIT, STATED UP FRONT: this is localStorage on one browser, and the
+// "did you join" step is the player's own word — the same honour system the 2D
+// game already uses, because Skool and Patreon never redirect back here and a
+// static page cannot verify a signup. Coins are real to the player and real in
+// the save. Making them redeemable for anything outside the game needs a
+// backend and an account, and that is a decision, not an oversight.
+
+const COIN = {
+  daily: 10,          // sitting down at your own fire, once a real day
+  door: 25,           // one time per door, ever
+  crisisHeld: 15,     // the block held when it counted
+  perDay: 1,          // one for each in-game day you keep it alive
+  streakBonus: 5,     // per consecutive real day, capped
+  streakCap: 7,
+};
+
+/** Local calendar date, absolute — never a relative offset. */
+function today(now = new Date()) {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Yesterday, for streak continuity. */
+function yesterday(now = new Date()) {
+  const d = new Date(now);
+  d.setDate(d.getDate() - 1);
+  return today(d);
+}
+
+const coinTotal = (state) => Math.floor(state.coins || 0);
+
+/** Has today's fire already been claimed? */
+const canClaimToday = (state, now = new Date()) => state.coinDaily !== today(now);
+
+function log(state, kind, amount, note, now) {
+  return [...(state.coinLog || []), { at: today(now), kind, amount, note }].slice(-60);
+}
+
+/**
+ * Sit down at your own hearth and take the day's coin. Once per real day.
+ * A streak pays more, up to a week — after that it stops climbing, because a
+ * reward that grows forever stops being a reward and becomes an obligation.
+ */
+function claimDaily(state, now = new Date()) {
+  if (!canClaimToday(state, now)) {
+    return { state, ok: false, amount: 0,
+      message: 'You already sat with it today. The fire keeps until tomorrow.' };
+  }
+  const continued = state.coinDaily === yesterday(now);
+  const streak = continued ? Math.min(COIN.streakCap, (state.coinStreak || 0) + 1) : 1;
+  const amount = COIN.daily + (streak - 1) * COIN.streakBonus;
+  return {
+    state: {
+      ...state,
+      coins: (state.coins || 0) + amount,
+      coinDaily: today(now),
+      coinStreak: streak,
+      coinLog: log(state, 'daily', amount, `day ${streak} at the fire`, now),
+    },
+    ok: true,
+    amount,
+    streak,
+    message: streak > 1
+      ? `+${amount} C.U.I. coins — ${streak} days running.`
+      : `+${amount} C.U.I. coins for sitting with your own fire.`,
+  };
+}
+
+/**
+ * A door walked through. One time each, ever — checked against state.joined so
+ * it can never be farmed by clicking the same link twice.
+ */
+function awardDoor(state, label, now = new Date()) {
+  if ((state.joined || []).includes(label)) {
+    return { state, ok: false, amount: 0, message: 'You already walked that one.' };
+  }
+  return {
+    state: {
+      ...state,
+      coins: (state.coins || 0) + COIN.door,
+      coinLog: log(state, 'door', COIN.door, label, now),
+    },
+    ok: true,
+    amount: COIN.door,
+    message: `+${COIN.door} C.U.I. coins — ${label}.`,
+  };
+}
+
+/** The block held a crisis. Paid once per crisis, by the sim, not the player. */
+function awardCrisisHeld(state, crisisName, now = new Date()) {
+  return {
+    state: {
+      ...state,
+      coins: (state.coins || 0) + COIN.crisisHeld,
+      coinLog: log(state, 'held', COIN.crisisHeld, crisisName, now),
+    },
+    ok: true,
+    amount: COIN.crisisHeld,
+    message: `+${COIN.crisisHeld} C.U.I. coins — you held ${crisisName}.`,
+  };
+}
+
+/**
+ * Coins for time survived. Called when the in-game day number rolls over, so
+ * it pays for keeping the block ALIVE rather than for leaving the tab open —
+ * a paused block earns nothing, and neither does a dead one.
+ */
+function awardDayPassed(state, now = new Date()) {
+  return {
+    ...state,
+    coins: (state.coins || 0) + COIN.perDay,
+    coinLog: log(state, 'day', COIN.perDay, `day ${Math.floor(state.day) + 1}`, now),
+  };
+}
+
+return {
+  COIN, claimDaily, awardDoor, awardCrisisHeld, awardDayPassed,
+  coinTotal, canClaimToday, today,
+};
+})();
+
+/* ── delivery.js ─────────────────────────────────────── */
+__M['delivery.js'] = (function () {
+// C.U.I. — THE DRONE RUN.
+//
+// The owner, 2026-09-09: "lets make the drones useful, where if someone needs
+// water or food, or supplies we can use the drones to deliver them."
+//
+// So the watch stops being only a pair of eyes. When a neighbour asks for
+// goods you can walk it over yourself, or you can put it on a drone.
+//
+// THE TRADE, AND WHY IT IS NOT FREE
+//
+// This block mints Unity for HELPING, and the whole game argues that help has
+// to be DELIVERED — the same sentence the ring makes about power and
+// `coins.js` makes about turning up. A drone that paid exactly what walking
+// pays would delete the walking game: nobody would cross their own block
+// again, and the answer to every ask would be a button.
+//
+// So a run pays LESS. Not because the goods are worth less — the neighbour
+// gets the same food — but because they did not see your face, and standing
+// on this block is built by being on it. `DRONE_SHARE` is that entire
+// decision, in one number, in one place. Set it to 1 and hand-delivery stops
+// mattering; that is the owner's call to make, not a thing to bury.
+//
+// What the drone genuinely buys is REACH: it flies at night, it flies during
+// a crisis, and it flies while you are busy somewhere else.
+//
+// The goods leave your stock at DISPATCH; the Unity lands on ARRIVAL. A run in
+// the air is goods you no longer have and a favour you have not yet done —
+// which is exactly what it is.
+
+const { UNITY_PER_UNIT, remember, clamp01, STANDING_PER_HELP } = __M['neighbors.js'];
+
+/** What a drone run pays, against carrying it yourself. The design call. */
+const DRONE_SHARE = 0.75;
+
+/** Game-days a run takes, there and back. Long enough to feel like a trip. */
+const RUN_DAYS = 0.16;
+
+// ── THE SPRING RUN ───────────────────────────────────────────────────────
+// The owner, 2026-09-09: "now lets make the drones deliver from the spring
+// too."
+//
+// This is the one source on the block that is not yours to run out of. The
+// water is the LAND'S — the spring gives it whether your reserve is full or
+// empty — so a spring run costs you NO STOCK, and that is the whole point of
+// it: you can answer somebody who needs water on a day you have nothing left.
+// A community with a clean spring never has to tell a neighbour no.
+//
+// It is not free of consequence, it is free of COST:
+//   · it pays the least of the three, because you gave the land's water and
+//     not your own reserve — the favour is real, but smaller;
+//   · it takes the longest, because the drone flies out to the spring, fills,
+//     and only then goes to the house.
+//
+// FOOD ONLY. Water is drinking water and irrigation — the pillar the well
+// already belongs to. A spring cannot deliver cloth or a radio, and pretending
+// it can would make the pillars mean nothing.
+const SPRING_SHARE = 0.5;
+const SPRING_RUN_DAYS = 0.26;
+
+/** Can the spring answer this ask? Water is food; it is not tech or cloth. */
+function canSpring(need) {
+  return canFly(need) && need.pillar === 'food';
+}
+
+/** What a spring run pays. The least of the three, and deliberately so. */
+function springUnity(need, gather = 0) {
+  const full = Math.round(need.amount * UNITY_PER_UNIT * (1 + gather * 0.12));
+  return Math.max(1, Math.round(full * SPRING_SHARE));
+}
+
+/**
+ * Fill at the spring and fly it out. Takes NOTHING from your stock — which is
+ * why, unlike the other two answers, this one is offered even when you cannot
+ * cover the ask yourself. That is the case it exists for.
+ */
+function dispatchSpringRun(state, need, gather = 0) {
+  if (!canSpring(need) || state.delivery) return state;
+  return {
+    ...state,
+    pendingNeed: null,
+    delivery: {
+      who: need.who,
+      pillar: need.pillar,
+      amount: need.amount,
+      unity: springUnity(need, gather),
+      sentAt: state.day,
+      arriveAt: state.day + SPRING_RUN_DAYS,
+      fromSpring: true,
+    },
+  };
+}
+
+/** Can this need go by air at all? Labour cannot: hands are not cargo. */
+function canFly(need) {
+  return !!need && need.type !== 'labor';
+}
+
+/** What the run pays when it lands. Mirrors aidUnity, then takes its cut. */
+function runUnity(need, gather = 0) {
+  const full = Math.round(need.amount * UNITY_PER_UNIT * (1 + gather * 0.12));
+  return Math.max(1, Math.round(full * DRONE_SHARE));
+}
+
+/**
+ * Send it. The stock goes NOW — it is on the drone — and the reward is booked
+ * for arrival. Returns the state UNCHANGED if the run cannot be made, so a
+ * caller never has to guess whether it worked.
+ */
+function dispatchDelivery(state, need, gather = 0) {
+  if (!canFly(need) || state.delivery) return state;
+  const have = state.stock[need.pillar] || 0;
+  if (have < need.amount) return state;
+  return {
+    ...state,
+    stock: { ...state.stock, [need.pillar]: have - need.amount },
+    pendingNeed: null,
+    delivery: {
+      who: need.who,
+      pillar: need.pillar,
+      amount: need.amount,
+      unity: runUnity(need, gather),
+      sentAt: state.day,
+      arriveAt: state.day + RUN_DAYS,
+    },
+  };
+}
+
+/** How far along the run is, 0..1 — for anything that wants to show it. */
+function runProgress(state) {
+  const d = state.delivery;
+  if (!d) return 0;
+  const span = Math.max(1e-6, d.arriveAt - d.sentAt);
+  return Math.max(0, Math.min(1, (state.day - d.sentAt) / span));
+}
+
+/**
+ * Land it, if it is time. Called from `tick`, which means an offline replay
+ * completes a run that was in the air when the tab closed — the block does
+ * not hold a drone in mid-flight for three days because nobody was watching.
+ *
+ * The standing maths comes from neighbors.js — the same `remember`,
+ * `clamp01` and `STANDING_PER_HELP` that `giveAid` uses. A second idea of
+ * what a favour is worth would be two games disagreeing about one person.
+ *
+ * Returns `{ state, landed }`; `landed` is null when nothing arrived.
+ */
+function landDelivery(state) {
+  const d = state.delivery;
+  if (!d || state.day < d.arriveAt) return { state, landed: null };
+  return {
+    state: {
+      ...state,
+      delivery: null,
+      unity: state.unity + d.unity,
+      neighbors: (state.neighbors || []).map((n) => (n.name === d.who
+        ? remember({ ...n, helped: n.helped + 1,
+                     // Standing takes the same cut as the Unity: the goods
+                     // arrived, but you did not — and a spring run took the
+                     // deeper cut, because the water was not yours either.
+                     standing: clamp01(n.standing
+                       + STANDING_PER_HELP * (d.fromSpring ? SPRING_SHARE : DRONE_SHARE)) },
+                   state.day, d.fromSpring ? 'spring' : 'flown',
+                   { pillar: d.pillar, amount: d.amount })
+        : n)),
+    },
+    landed: d,
+  };
+}
+
+return { canFly, runUnity, dispatchDelivery, runProgress, landDelivery, DRONE_SHARE, RUN_DAYS,
+         canSpring, springUnity, dispatchSpringRun, SPRING_SHARE, SPRING_RUN_DAYS };
+})();
+
 /* ── identity.js ─────────────────────────────────────── */
 __M['identity.js'] = (function () {
 // C.U.I. — WHO'S ON THIS BLOCK: the player's own identity.
@@ -3421,6 +5101,41 @@ const PLAYER_TRADES = [
   { trade: 'medic',       pillar: 'shelter' },
 ];
 
+/**
+ * THE HOSTS, as a shared canon. Rob walks as QUANTUS, Mahal as TESS — the
+ * owner's ask, 2026-09-09: "use quantus and tess likeness as our personal
+ * avatars." Both renderers already knew the names (`preset`), but only the
+ * 2D sprite knew what they LOOK like, hard-coded in avatar.js. This is that
+ * character sheet in data, so the 3D figure and the 2D sprite cannot drift:
+ *
+ *   both     the black hoodie with the teal rim-light and a gold zip
+ *   QUANTUS  rich skin, locs under a black cap worn BACKWARDS, silver
+ *            headphones ON the ears with gold trim and a teal glow, a goatee
+ *   TESS     golden skin, the soft feminine afro framing the face, gold hoop
+ *            earrings, headphones worn around the NECK
+ *
+ * Skin/hair/fit here are real SKINS/HAIRS/FITS entries, so a renderer that
+ * knows nothing about presets still draws the right body.
+ */
+const PRESETS = {
+  quantus: {
+    label: 'QUANTUS', skin: '#4A2E18', hair: 'locs', fit: '#E3B23C',
+    hoodie: '#1A161C', rim: '#3FC8C8', cap: '#0E0C10', phones: 'ears',
+    silver: '#C9CDD4', goatee: true, hoops: false,
+  },
+  tess: {
+    label: 'TESS', skin: '#8A5A38', hair: 'afro', fit: '#E3B23C',
+    hoodie: '#1A161C', rim: '#3FC8C8', cap: null, phones: 'neck',
+    silver: '#C9CDD4', goatee: false, hoops: true,
+  },
+};
+
+/** The full look for a host, or null for anything that is not one. */
+function presetLook(id) {
+  const p = PRESETS[id];
+  return p ? { preset: id, ...p } : null;
+}
+
 const DEFAULT_IDENTITY = {
   asked: false,
   name: '',
@@ -3437,15 +5152,19 @@ function makeIdentity(raw) {
   const name = String(raw.name || '').trim().slice(0, 20) || 'The Keeper';
   const t = PLAYER_TRADES.find(x => x.trade === raw.trade) || PLAYER_TRADES[0];
   const preset = (raw.preset === 'quantus' || raw.preset === 'tess') ? raw.preset : 'custom';
+  // A host's body comes from the canon, never from the swatches — otherwise
+  // "Quantus" with a light skin swatch left over from browsing is a different
+  // person, and the sheet on the wall says he is not.
+  const canon = PRESETS[preset] || null;
   return {
     asked: true,
     name,
     trade: t.trade,
     pillar: t.pillar,
     preset,
-    skin: SKINS.some(s => s.hex === raw.skin) ? raw.skin : DEFAULT_IDENTITY.skin,
-    hair: HAIRS.some(h => h.id === raw.hair) ? raw.hair : DEFAULT_IDENTITY.hair,
-    fit: FITS.some(f => f.hex === raw.fit) ? raw.fit : DEFAULT_IDENTITY.fit,
+    skin: canon ? canon.skin : (SKINS.some(s => s.hex === raw.skin) ? raw.skin : DEFAULT_IDENTITY.skin),
+    hair: canon ? canon.hair : (HAIRS.some(h => h.id === raw.hair) ? raw.hair : DEFAULT_IDENTITY.hair),
+    fit: canon ? canon.fit : (FITS.some(f => f.hex === raw.fit) ? raw.fit : DEFAULT_IDENTITY.fit),
   };
 }
 
@@ -3455,7 +5174,11 @@ const needsIdentity = (state) => !(state.identity && state.identity.asked);
 /** The look the renderer should draw for the player figure. */
 function playerLook(state) {
   const id = state.identity || DEFAULT_IDENTITY;
-  if (id.preset === 'quantus' || id.preset === 'tess') return { preset: id.preset };
+  // A host returns the WHOLE canon, not just a name. The old `{ preset }`
+  // alone left the 3D `makeAvatar` — which reads skin/hair/fit — with nothing,
+  // so "walk as Quantus" quietly rendered the default figure.
+  const host = presetLook(id.preset);
+  if (host) return host;
   return { preset: 'custom', skin: id.skin, hair: id.hair, fit: id.fit };
 }
 
@@ -3466,1003 +5189,215 @@ function homesteadLabel(state) {
   const n = id.name.toUpperCase();
   return n.endsWith('S') ? `${n}' BLOCK` : `${n}'S BLOCK`;
 }
-return { makeIdentity, playerLook, homesteadLabel, SKINS, HAIRS, FITS, PLAYER_TRADES, DEFAULT_IDENTITY, needsIdentity };
-})();
-
-/* ── neighbors.js ─────────────────────────────────────── */
-__M['neighbors.js'] = (function () {
-// C.U.I. — the neighbours.
-//
-// The block used to hold an integer called `households`. Nobody lived here.
-// Unity — "community labour" — was minted by BUILDINGS, which meant a player
-// could max it out having never given anything to anyone. The mechanic
-// contradicted the message, and as an organizing tool it taught the wrong
-// lesson: build infrastructure and community appears.
-//
-// It is the other way round. You know your neighbours, or you do not have any.
-//
-// So: buildings no longer mint Unity. They create the OCCASION — a fire circle
-// is where people gather, a freedom school is where somebody teaches somebody.
-// Unity is minted the moment you spend your own reserve on a person who asked.
-
-const { SCORED, PILLARS } = __M['config.js'];
-
-/** Unity per unit of stock given away. 6 SHELTER given => 18 Unity. */
-const UNITY_PER_UNIT = 3;
-const NEED_MIN = 3, NEED_MAX = 8;
-const BASE_NEED_GAP = 4.0;        // days between asks with nowhere to gather
-const MIN_NEED_GAP = 1.4;
-const STANDING_PER_HELP = 0.34;   // three real favours and they are all in
-const STANDING_DECAY_PER_DECLINE = 0.18;
-
-/**
- * The roster. Each trade maps to something the block actually needs, so
- * carrying a person is an investment in the pillar they know.
- */
-// The real ones. GitMoney crew goes on the block by NAME — but only opt-in:
-// these two are the known anchors of the stack this game rides on. Everyone
-// else joins through the ADD YOUR CREW editor when they raise a hand in
-// #general. Never scrape a member list into a game; ask.
-const REAL_CREW = [
-  { name: 'Red Pillar',  trade: 'herbalist',  pillar: 'food', prod: 0.9, guard: 0.10,
-    real: true },   // A GAME Herbal Remedies — the actual trade
-  { name: 'Hits',        trade: 'engineer',   pillar: 'tech', prod: 1.0, guard: 0.05,
-    real: true },   // Hitsuyo Aku — the stack plug
-];
-
-const ROSTER = [
-  { name: 'Ruthie Mbeki',     trade: 'herbalist',   pillar: 'food',    prod: 0.5, guard: 0.10 },
-  { name: 'The Okonkwos',     trade: 'welder',      pillar: 'tech',    prod: 0.9, guard: 0.02 },
-  { name: 'Dev & Marisol',    trade: 'seamstress',  pillar: 'clothes', prod: 0.8, guard: 0 },
-  { name: 'Miss Alma',        trade: 'griot',       pillar: 'art',     prod: 1.0, guard: 0.04 },
-  { name: 'Baba Yusuf',       trade: 'mason',       pillar: 'shelter', prod: 0.9, guard: 0.03 },
-  { name: 'Tunde & Nia',      trade: 'growers',     pillar: 'food',    prod: 1.1, guard: 0 },
-  { name: 'Auntie Winsome',   trade: 'baker',       pillar: 'food',    prod: 0.8, guard: 0.02 },
-  { name: 'Marcus & Tasha',   trade: 'electrician', pillar: 'tech',    prod: 1.0, guard: 0.03 },
-  { name: 'Elder June',       trade: 'midwife',     pillar: 'shelter', prod: 0.3, guard: 0.14 },
-  { name: 'The Kamaus',       trade: 'carpenter',   pillar: 'shelter', prod: 1.0, guard: 0.02 },
-  { name: 'Cheryl Dawson',    trade: 'cook',        pillar: 'food',    prod: 0.9, guard: 0 },
-  { name: 'The Reyes family', trade: 'mechanic',    pillar: 'tech',    prod: 0.8, guard: 0.03 },
-];
-
-/** How a shortage gets phrased. Specific beats generic. */
-const ASKS = {
-  food: [
-    '{n} is out of food before payday.',
-    '{n} fed three kids on one pot last night.',
-    'The pantry at {n} is down to salt and pride.',
-  ],
-  art: [
-    '{n} wants to teach the young ones and has nothing to teach with.',
-    'The drum at {n} split. There is no circle without it.',
-    '{n} has been quiet a week. That is not like them.',
-  ],
-  clothes: [
-    '{n} has kids growing out of everything at once.',
-    'The work coat at {n} finally gave out.',
-    '{n} needs cloth to make the block a banner.',
-  ],
-  tech: [
-    '{n} has no power to run the freezer.',
-    'The radio at {n} is dead and the weather is turning.',
-    '{n} can fix half the block if somebody spots the parts.',
-  ],
-  shelter: [
-    '{n} has a roof going before the rain.',
-    '{n} is patching a wall with cardboard.',
-    'The pipes at {n} froze and nobody is coming.',
-  ],
-};
-
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const clamp01 = (v) => Math.max(0, Math.min(1, v));
-
-const makeNeighbor = (def, day) => ({
-  ...def, id: def.name, since: day, helped: 0, declined: 0, standing: 0, memory: [],
-});
-
-// ── relationship memory ───────────────────────────────────────────────────
-// standing is a number; what people actually remember is the ACT. "You gave
-// Ruthie 8 TECH on day 12" lands where "standing 0.34" does not, and it makes
-// the number legible instead of arbitrary.
-//
-// Capped hard: this rides inside cui_save_v2 in localStorage, and an uncapped
-// per-neighbour journal would grow without bound across a long block.
-const MEMORY_MAX = 8;
-
-/** Append one remembered act, newest first, oldest dropped past the cap. */
-function remember(n, day, kind, extra = {}) {
-  const entry = { day: Math.floor(day), kind, ...extra };
-  return { ...n, memory: [entry, ...(n.memory || [])].slice(0, MEMORY_MAX) };
-}
-
-/** Turn one entry into a line a person would actually say. */
-function memoryLine(e, pillarLabel) {
-  const d = `day ${e.day}`;
-  switch (e.kind) {
-    case 'gave':     return `you gave ${e.amount} ${pillarLabel(e.pillar)} — ${d}`;
-    case 'declined': return `you had none to spare — ${d}`;
-    case 'worked':   return `you worked their ${e.job || 'job'} — ${d}`;
-    case 'traded':   return `you traded — ${d}`;
-    case 'partied':  return `you threw the block a party — ${d}`;
-    case 'expired':  return `their ${e.job || 'job'} went unanswered — ${d}`;
-    default:         return d;
-  }
-}
-
-/** Seed the founding households: the real crew first, then fictional fill. */
-function seedNeighbors(count) {
-  const out = [];
-  for (const d of REAL_CREW.slice(0, count)) out.push(makeNeighbor(d, 0));
-  const pool = [...ROSTER];
-  while (out.length < count && pool.length) {
-    out.push(makeNeighbor(pool.splice(Math.floor(Math.random() * pool.length), 1)[0], 0));
-  }
-  return out;
-}
-
-/** Trades the ADD YOUR CREW editor can hand out, with their pillar. */
-const TRADES = [
-  { trade: 'grower',      pillar: 'food',    prod: 1.0, guard: 0 },
-  { trade: 'cook',        pillar: 'food',    prod: 0.9, guard: 0 },
-  { trade: 'herbalist',   pillar: 'food',    prod: 0.6, guard: 0.08 },
-  { trade: 'griot',       pillar: 'art',     prod: 1.0, guard: 0.04 },
-  { trade: 'artist',      pillar: 'art',     prod: 0.9, guard: 0 },
-  { trade: 'seamstress',  pillar: 'clothes', prod: 0.8, guard: 0 },
-  { trade: 'cobbler',     pillar: 'clothes', prod: 0.7, guard: 0 },
-  { trade: 'engineer',    pillar: 'tech',    prod: 1.0, guard: 0.05 },
-  { trade: 'electrician', pillar: 'tech',    prod: 1.0, guard: 0.03 },
-  { trade: 'mechanic',    pillar: 'tech',    prod: 0.8, guard: 0.03 },
-  { trade: 'mason',       pillar: 'shelter', prod: 0.9, guard: 0.03 },
-  { trade: 'carpenter',   pillar: 'shelter', prod: 1.0, guard: 0.02 },
-  { trade: 'medic',       pillar: 'shelter', prod: 0.3, guard: 0.14 },
-];
-
-/** A member said yes in the chat — put them on the block. */
-function addCustomNeighbor(state, name, tradeKey) {
-  const clean = String(name || '').trim().slice(0, 24);
-  if (!clean) return null;
-  const taken = new Set((state.neighbors || []).map(n => n.name.toLowerCase()));
-  if (taken.has(clean.toLowerCase())) return null;
-  const t = TRADES.find(x => x.trade === tradeKey) || TRADES[0];
-  return { name: clean, trade: t.trade, pillar: t.pillar, prod: t.prod,
-           guard: t.guard, real: true, id: clean, since: state.day,
-           helped: 0, declined: 0, standing: 0 };
-}
-
-/** A household moving in takes a face nobody on the block is already using. */
-function addNeighbor(state) {
-  const taken = new Set((state.neighbors || []).map(n => n.name));
-  const free = ROSTER.filter(d => !taken.has(d.name));
-  return free.length ? makeNeighbor(pick(free), state.day) : null;
-}
-
-/** How much gathering space is built. Drives how often anybody asks. */
-const gatheringLevel = (defs) => defs.reduce((a, d) => a + (d.gather || 0), 0);
-
-/** Days between asks. A block with nowhere to gather barely hears anybody. */
-const needGap = (gather) =>
-  Math.max(MIN_NEED_GAP, BASE_NEED_GAP - gather * 0.30);
-
-/** Gathering space makes an act of help go further. */
-const aidMultiplier = (gather) => 1 + gather * 0.12;
-
-/** Unity earned for covering a need. */
-const aidUnity = (need, gather) =>
-  Math.round(need.amount * UNITY_PER_UNIT * aidMultiplier(gather));
-
-/** Can the block actually cover this ask right now? */
-const canAfford = (state, need) =>
-  !!need && (state.stock[need.pillar] || 0) >= need.amount;
-
-// ── labour: the other half of mutual aid ─────────────────────────────────
-// Giving goods is one verb. The older verb is showing up with your hands —
-// plow the field, patch the roof before the rain comes — and being paid in
-// kind: food from the harvest, a rebuilt tool, a book. No money anywhere.
-// Labour asks nothing from your stock, which makes it the income of last
-// resort: when you have nothing to give, you give hands.
-
-const JOBS = {
-  food: [
-    { verb: 'help plow the field for the garden at {n}',   payLine: 'a share of the first harvest' },
-    { verb: 'haul water for the beds at {n} through the dry spell', payLine: 'a basket from the yield' },
-  ],
-  art: [
-    { verb: 'help {n} record the elders before the stories walk off', payLine: 'a book from their shelf' },
-    { verb: 'stretch and prime a wall so {n} can paint it', payLine: 'a print of the finished mural' },
-  ],
-  clothes: [
-    { verb: 'help {n} cut and pin a winter run of coats',  payLine: 'a coat off that same table' },
-  ],
-  tech: [
-    { verb: 'crawl the attic and run new wire with {n}',   payLine: 'a rebuilt power tool' },
-    { verb: 'help {n} pull and rebuild a seized motor',    payLine: 'parts and a working charger' },
-  ],
-  shelter: [
-    { verb: 'help patch the hole in the roof at {n} before the rain comes',
-      payLine: 'a crate from their cellar', rainDeadline: true },
-    { verb: 'dig the drainage ditch at {n} before the ground freezes', payLine: 'a cord of split wood' },
-  ],
-};
-const JOB_DURATION_MIN = 0.35, JOB_DURATION_MAX = 0.7;   // in-game days of work
-const JOB_PAY_MIN = 4, JOB_PAY_MAX = 9;
-const JOB_UNITY_MIN = 14, JOB_UNITY_MAX = 26;
-
-/** Somebody raises a need — goods or labour. Roughly half and half. */
-function raiseNeed(state) {
-  const ns = state.neighbors || [];
-  if (!ns.length) return null;
-  const who = pick(ns);
-
-  if (Math.random() < 0.5) {
-    // A job. Pays in kind from THEIR trade — the seamstress pays in cloth.
-    const jobPillar = Math.random() < 0.6 ? who.pillar : pick(SCORED);
-    const job = pick(JOBS[jobPillar] || JOBS.food);
-    return {
-      type: 'labor', who: who.name, trade: who.trade, at: state.day,
-      pillar: who.pillar,                       // what they pay you IN
-      verb: job.verb.replace(/\{n\}/g, who.name),
-      payLine: job.payLine,
-      payAmount: Math.round(JOB_PAY_MIN + Math.random() * (JOB_PAY_MAX - JOB_PAY_MIN)),
-      unity: Math.round(JOB_UNITY_MIN + Math.random() * (JOB_UNITY_MAX - JOB_UNITY_MIN)),
-      duration: JOB_DURATION_MIN + Math.random() * (JOB_DURATION_MAX - JOB_DURATION_MIN),
-      rainDeadline: !!job.rainDeadline,
-      line: job.verb.replace(/\{n\}/g, who.name),
-    };
-  }
-
-  const pillar = Math.random() < 0.45 ? who.pillar : pick(SCORED);
-  const amount = Math.round(NEED_MIN + Math.random() * (NEED_MAX - NEED_MIN));
-  return {
-    type: 'give', who: who.name, trade: who.trade, pillar, amount, at: state.day,
-    line: pick(ASKS[pillar] || ASKS.food).replace(/\{n\}/g, who.name),
-  };
-}
-
-/** Roll up your sleeves. The job goes active; time does the rest. */
-function startJob(state, need) {
-  return {
-    ...state,
-    pendingNeed: null,
-    activeJob: { ...need, startDay: state.day },
-  };
-}
-
-/** Called from the tick when the work is done. Payment in kind + unity. */
-function finishJob(state, gather) {
-  const j = state.activeJob;
-  if (!j) return { state, done: null };
-  const unity = Math.round(j.unity * aidMultiplier(gather));
-  const next = {
-    ...state,
-    activeJob: null,
-    stock: { ...state.stock, [j.pillar]: (state.stock[j.pillar] || 0) + j.payAmount },
-    unity: state.unity + unity,
-    neighbors: state.neighbors.map(n => n.name === j.who
-      ? remember({ ...n, helped: n.helped + 1,
-                   standing: clamp01(n.standing + STANDING_PER_HELP) },
-                 state.day, 'worked', { job: j.job || j.label, pillar: j.pillar })
-      : n),
-  };
-  return { state: next, done: { ...j, unityPaid: unity } };
-}
-
-/**
- * Give. Costs the stock, mints the Unity, raises their standing.
- * This is the only large source of Unity in the game now.
- */
-function giveAid(state, need, gather) {
-  return {
-    ...state,
-    stock: { ...state.stock, [need.pillar]: state.stock[need.pillar] - need.amount },
-    unity: state.unity + aidUnity(need, gather),
-    neighbors: state.neighbors.map(n => n.name === need.who
-      ? remember({ ...n, helped: n.helped + 1,
-                   standing: clamp01(n.standing + STANDING_PER_HELP) },
-                 state.day, 'gave', { pillar: need.pillar, amount: need.amount })
-      : n),
-    pendingNeed: null,
-  };
-}
-
-/** Decline. Costs nothing but a little of the relationship. */
-function declineAid(state, need) {
-  return {
-    ...state,
-    neighbors: state.neighbors.map(n => n.name === need.who
-      ? remember({ ...n, declined: n.declined + 1,
-                   standing: clamp01(n.standing - STANDING_DECAY_PER_DECLINE) },
-                 state.day, 'declined', { pillar: need.pillar })
-      : n),
-    pendingNeed: null,
-  };
-}
-
-// ── barter: trade goods for goods, no money anywhere ─────────────────────
-// Aid is one-directional; TRADE is the mutual half of the same economy. Each
-// neighbour posts a daily offer out of their trade: bring what they are short
-// of, take what they make. Standing moves the rate — people deal better with
-// people who showed up — and every completed swap mints a little Unity,
-// because a block that trades with itself is a block that talks.
-const TRADE_UNITY_PER_UNIT = 1.2;
-
-/** Deterministic per neighbour per day, so an offer holds until tomorrow. */
-function tradeOffer(n, day) {
-  const d = Math.floor(day);
-  let h = 0;
-  const key = n.name + ':' + d;
-  for (let i = 0; i < key.length; i++) h = ((h << 5) - h + key.charCodeAt(i)) | 0;
-  const r = (m) => { h = (h * 1103515245 + 12345) | 0; return Math.abs(h) % m; };
-  const wants = SCORED.filter(k => k !== n.pillar);
-  const wantPillar = wants[r(wants.length)];
-  const wantAmt = 3 + r(4);                                   // 3..6
-  // rate: cold neighbours deal thin, solid neighbours deal generous
-  const giveAmt = Math.max(2, Math.round(wantAmt * (0.7 + n.standing * 0.6)));
-  return { who: n.name, wantPillar, wantAmt, givePillar: n.pillar, giveAmt,
-           unity: Math.round(wantAmt * TRADE_UNITY_PER_UNIT) };
-}
-
-/** Swap the goods, mint the Unity, warm the relationship a notch. */
-function executeTrade(state, name) {
-  const n = (state.neighbors || []).find(x => x.name === name);
-  if (!n) return null;
-  const offer = tradeOffer(n, state.day);
-  if ((state.stock[offer.wantPillar] || 0) < offer.wantAmt) return null;
-  return {
-    state: {
-      ...state,
-      stock: {
-        ...state.stock,
-        [offer.wantPillar]: state.stock[offer.wantPillar] - offer.wantAmt,
-        [offer.givePillar]: (state.stock[offer.givePillar] || 0) + offer.giveAmt,
-      },
-      unity: state.unity + offer.unity,
-      neighbors: state.neighbors.map(x => x.name === name
-        ? remember({ ...x, standing: clamp01(x.standing + 0.08) },
-                   state.day, 'traded', { pillar: offer.givePillar })
-        : x),
-    },
-    offer,
-  };
-}
-
-// ── work orders: the block raises its own infrastructure ─────────────────
-// Place something big and a work order goes out. Neighbours who rate you
-// answer it — everyone is going to need that solar array eventually, and a
-// barn-raising is what a block IS. Helpers speed the build and come out more
-// invested than they went in.
-const WORK_ORDER_MIN_BUILD = 0.8;    // days of build that justify a call-out
-const MAX_HELPERS = 3;
-
-function needsWorkOrder(def) {
-  return (def.build || 0) >= WORK_ORDER_MIN_BUILD;
-}
-
-/** Who answers the call. Standing is the whole probability. */
-function answerWorkOrder(state) {
-  const out = [];
-  for (const n of state.neighbors || []) {
-    if (out.length >= MAX_HELPERS) break;
-    if (n.standing >= 0.25 && Math.random() < 0.25 + n.standing * 0.55) out.push(n.name);
-  }
-  return out;
-}
-
-/** Each pair of hands cuts real time off the raise. */
-const helperSpeed = (helpers) => 1 + 0.4 * (helpers ? helpers.length : 0);
-
-// ── the block party: abundance turned into community, on purpose ─────────
-// Hella food and the lights on is not a win condition, it is an OCCASION.
-// A party burns real surplus and pays in the only currency this game has:
-// everybody's standing rises, Unity lands big, and word gets out.
-const PARTY_COST = { food: 10, art: 6, tech: 5 };
-const PARTY_COOLDOWN_DAYS = 2;
-const PARTY_GLOW_DAYS = 0.5;
-
-/** Why you can't throw one right now — or null if you can. */
-function partyBlocker(state) {
-  if (state.lastPartyAt !== null && state.lastPartyAt !== undefined
-      && state.day - state.lastPartyAt < PARTY_COOLDOWN_DAYS) {
-    return 'The last party is still the talk of the block. Give it a day.';
-  }
-  for (const k in PARTY_COST) {
-    if ((state.stock[k] || 0) < PARTY_COST[k]) {
-      return `A party takes ${PARTY_COST.food} food, ${PARTY_COST.art} art and ${PARTY_COST.tech} tech — you are short on ${k}.`;
-    }
-  }
-  return null;
-}
-
-/** Throw it. Costs the spread, pays everybody. */
-function throwParty(state, tileIndex) {
-  if (partyBlocker(state)) return null;
-  const stock = { ...state.stock };
-  for (const k in PARTY_COST) stock[k] -= PARTY_COST[k];
-  const unity = 30 + state.households * 10;
-  return {
-    state: {
-      ...state,
-      stock,
-      unity: state.unity + unity,
-      lastPartyAt: state.day,
-      partyUntil: state.day + PARTY_GLOW_DAYS,
-      partyTile: tileIndex,
-      neighbors: (state.neighbors || []).map(n =>
-        remember({ ...n, standing: clamp01(n.standing + 0.15) },
-                 state.day, 'partied')),
-    },
-    unity,
-  };
-}
-
-// ── lend the tools: the shed is a thing you USE, not a lawn ornament ─────
-/** Halve the remaining work on the active job, once per job. */
-function lendTools(state) {
-  const j = state.activeJob;
-  if (!j || j.tooled) return null;
-  const elapsed = state.day - j.startDay;
-  const remaining = Math.max(0, j.duration - elapsed);
-  return {
-    ...state,
-    activeJob: { ...j, tooled: true, duration: elapsed + remaining / 2 },
-  };
-}
-
-/**
- * What the neighbours give back, scaled by standing. The loop closing: the
- * people you carried are the people who carry you.
- */
-function neighborContribution(state) {
-  const prod = {};
-  let guard = 0;
-  const showing = [];
-  for (const n of state.neighbors || []) {
-    if (n.standing <= 0.01) continue;
-    prod[n.pillar] = (prod[n.pillar] || 0) + n.prod * n.standing;
-    guard += (n.guard || 0) * n.standing;
-    if (n.standing >= 0.3) showing.push(n);
-  }
-  return { prod, guard: Math.min(0.45, guard), showing };
-}
-
-/** For the roster panel: everyone, sorted by how solid they are with you. */
-function roster(state) {
-  return [...(state.neighbors || [])]
-    .sort((a, b) => b.standing - a.standing)
-    .map(n => ({
-      ...n,
-      pillarLabel: PILLARS[n.pillar] ? PILLARS[n.pillar].label : n.pillar,
-      pillarIcon: PILLARS[n.pillar] ? PILLARS[n.pillar].icon : '.',
-      contributes: n.prod * n.standing,
-      status: n.standing >= 0.66 ? 'all in'
-            : n.standing >= 0.30 ? 'showing up'
-            : n.helped > 0       ? 'warming up'
-            : n.declined > 0     ? 'keeping distance'
-                                 : 'new here',
-      // what this household actually remembers, newest first
-      memoryLines: (n.memory || [])
-        .map(e => memoryLine(e, k => (PILLARS[k] ? PILLARS[k].label : k))),
-    }));
-}
-return { seedNeighbors, addCustomNeighbor, addNeighbor, raiseNeed, startJob, finishJob, giveAid, declineAid, tradeOffer, executeTrade, needsWorkOrder, answerWorkOrder, partyBlocker, throwParty, lendTools, neighborContribution, roster, UNITY_PER_UNIT, TRADES, gatheringLevel, needGap, aidMultiplier, aidUnity, canAfford, helperSpeed, PARTY_COST, PARTY_COOLDOWN_DAYS, PARTY_GLOW_DAYS };
-})();
-
-/* ── tutorial.js ─────────────────────────────────────── */
-__M['tutorial.js'] = (function () {
-// C.U.I. — THE FIRST WEEK: the built-in tutorial.
-//
-// Not a popup lecture — a quest line. Seven small objectives that watch the
-// game and tick themselves off when the player actually DOES the thing:
-// walk, work, help, gather, claim, build, hold the line. Each step teaches
-// one loop of the game by making the player live it once. Finishing pays.
-//
-// Pure data + checks. main.js owns the flags and the advancing; ui.js draws
-// the card.
-
-const TUTORIAL_DONE = 8;   // must equal STEPS.length
-const TUTORIAL_SKIPPED = 99;
-const TUTORIAL_REWARD = 25;
-
-const STEPS = [
-  {
-    icon: '🚶', title: 'WALK YOUR LAND',
-    hint: 'WASD or arrows. You are the one in the hood — take a lap around the homestead.',
-    check: (state, base, flags) => flags.walked >= 4,
-  },
-  {
-    icon: '🔨', title: 'RAISE A BUILDING',
-    hint: 'Open BUILD (bottom-left), pick something, click your ground. A Fire Circle (SHELTER tab, ✊30) is the classic first raise.',
-    check: (state, base) => {
-      let n = 0;
-      for (const t of state.tiles) if (t && t.b) n++;
-      return n > base.buildings;
-    },
-  },
-  {
-    icon: '🧺', title: 'WORK SOMETHING',
-    hint: 'Click a building you own — or walk up and press E — and put an hour in. (New builds take a moment to finish.)',
-    check: (state, base, flags) => !!flags.worked,
-  },
-  {
-    icon: '✊', title: 'HELP WHO ASKS',
-    hint: 'A neighbor will ask for something (top-right). GIVE goods or ROLL UP SLEEVES — helping is how Unity is made.',
-    check: (state, base, flags) => !!flags.helped,
-  },
-  {
-    icon: '🏛', title: 'VISIT THE TOWN HALL',
-    hint: 'The building on the square. Walk up and press E — parties, the world signal, the doors.',
-    check: (state, base, flags) => !!flags.hall,
-  },
-  {
-    icon: '🚧', title: 'CLAIM OPEN RANGE',
-    hint: 'Click a dashed tile at your fence line (or CLAIM PLOT in the toolbar). The land grows plot by plot.',
-    check: (state, base) => state.unlocked.size > base.unlocked,
-  },
-  {
-    icon: '🎉', title: 'THROW OR TRADE',
-    hint: 'Open the roster (HOUSEHOLDS chip) and TRADE with a neighbor — or click a gathering place for a block party.',
-    check: (state, base, flags) => !!flags.traded,
-  },
-  {
-    icon: '🛡', title: 'HOLD THE LINE',
-    hint: 'A crisis is coming — the clock runs on real-world odds. Keep every pillar above zero until it passes.',
-    check: (state, base) => (state.stats.crisesHeld || 0) > base.held,
-  },
-];
-
-/** Snapshot the counters the checks compare against. */
-function tutorialBase(state) {
-  let buildings = 0;
-  for (const t of state.tiles) if (t && t.b) buildings++;
-  return {
-    unlocked: state.unlocked.size,
-    buildings,
-    held: state.stats.crisesHeld || 0,
-  };
-}
-
-const tutorialActive = (state) =>
-  Number.isFinite(state.tutorialStep) && state.tutorialStep < TUTORIAL_DONE;
-
-/**
- * Advance if the current step's condition is met.
- * Returns { state, advanced, completed } — completed fires exactly once.
- */
-function tutorialTick(state, flags) {
-  if (!tutorialActive(state)) return { state, advanced: false, completed: false };
-  const step = STEPS[state.tutorialStep];
-  if (!step || !step.check(state, state.tutBase, flags)) {
-    return { state, advanced: false, completed: false };
-  }
-  const next = state.tutorialStep + 1;
-  const completed = next >= TUTORIAL_DONE;
-  return {
-    state: {
-      ...state,
-      tutorialStep: next,
-      // re-baseline so later steps count from NOW, not from game start
-      tutBase: tutorialBase(state),
-      unity: completed ? state.unity + TUTORIAL_REWARD : state.unity,
-    },
-    advanced: true,
-    completed,
-  };
-}
-return { tutorialBase, tutorialTick, TUTORIAL_DONE, TUTORIAL_SKIPPED, TUTORIAL_REWARD, STEPS, tutorialActive };
-})();
-
-/* ── state.js ─────────────────────────────────────── */
-__M['state.js'] = (function () {
-// C.U.I. — game state: creation, derived totals, persistence.
-
-const { GRID, BUILDINGS, BASE_CAP, START, START_UNLOCKED, HOUSEHOLD_UNITY } = __M['config.js'];
-const { seedNeighbors } = __M['neighbors.js'];
-const { tutorialBase } = __M['tutorial.js'];
-const { foreignLot, inSquare, HOME_PARCEL } = __M['lots.js'];
-
-// v2: the F.A.C.T.S. rework changed the whole resource model, so v1 saves
-// are not migratable and are simply ignored.
-const SAVE_KEY = 'cui_save_v2';
-
-/** A tile that has never been claimed. */
-const emptyTile = () => ({ b: null, built: 0, age: 0 });
-
-function newGame() {
-  const tiles = [];
-  for (let y = 0; y < GRID; y++) {
-    for (let x = 0; x < GRID; x++) tiles.push(emptyTile());
-  }
-  return {
-    v: 2,
-    day: 0,                       // elapsed in-game days (float)
-    unity: START.unity,
-    households: START.households,
-    stock: { ...START.stock },
-    tiles,
-    unlocked: unlockedSet(START_UNLOCKED),
-    crisis: null,                 // { id, left, total }
-    nextCrisis: null,             // day number of next hit (set by sim)
-    weather: 'clear',
-    dryFor: 0,               // days a reserve has sat at zero
-    paused: false,           // the block keeps its own clock stopped
-    badges: [],
-    log: [],
-    stats: { crisesFaced: 0, crisesHeld: 0, householdsLost: 0, peakReadiness: 0 },
-    // what each crisis did to this block, and how often. Held ones land
-    // softer next time; ones that broke you land harder. { id: {held,broke,lastDay} }
-    scars: {},
-    savedAt: null,
-    joined: [],              // KTL doors the player says they walked through
-    pendingJoin: null,       // { label, at } — a door opened, answer not yet given
-    neighbors: seedNeighbors(START.households),
-    pendingNeed: null,       // { type:'give'|'labor', who, pillar, ... }
-    alarm: null,             // { at: day } — the block called a crisis early
-    lastPartyAt: null,       // block-party cooldown
-    partyUntil: 0,           // the glow window after one
-    partyTile: null,
-    avatar: { x: 7, y: 11 },
-    avatarChar: 'quantus',
-    identity: null,          // who's on this block (see identity.js)
-    tutorialStep: 0,         // THE FIRST WEEK quest line
-    tutBase: null,           // filled on first tick
-    roofAt: null,            // once-a-day house upkeep
-    guttersAt: null,
-    hearthAt: null,
-    // MAKE DO: run shops on the other substrate when their input is dry, at
-    // twice the cost for half the yield. Off by default — it is a choice.
-    makeDo: false,
-    activeJob: null,         // a labour need in progress: { ...need, startDay }
-    lastNeedAt: undefined,
-  };
-}
-
-/** The family lot: START_UNLOCKED² tiles anchored on the home parcel. */
-function unlockedSet(n) {
-  const set = new Set();
-  for (let y = HOME_PARCEL.y0; y < HOME_PARCEL.y0 + n; y++) {
-    for (let x = HOME_PARCEL.x0; x < HOME_PARCEL.x0 + n; x++) set.add(y * GRID + x);
-  }
-  return set;
-}
-
-const idx = (x, y) => y * GRID + x;
-const inBounds = (x, y) => x >= 0 && y >= 0 && x < GRID && y < GRID;
-
-/**
- * Cost in Unity to unlock one more tile — rises as the block grows.
- * Priced off plots you have CLAIMED, never off the starting block: an `owned`
- * term put the very first plot at 115 Unity against a 95 Unity opening purse,
- * so no opening move could ever afford one. The first plot has to be within
- * reach on day one or the expansion loop never starts turning.
- */
-function expandCost(state) {
-  const owned = state.unlocked.size;
-  const claimed = Math.max(0, owned - START_UNLOCKED * START_UNLOCKED);
-  return Math.round(32 + Math.pow(claimed, 1.35) * 9);
-}
-
-/**
- * Where Unity comes from under the aid economy: giving to neighbours who ask.
- * Gathering places no longer pay by themselves — they raise how often needs
- * reach you and how far each act of help goes.
- */
-function unitySources(state) {
-  const gatherPlaces = [];
-  for (const b of activeBuildings(state)) {
-    if (b.def.gather) gatherPlaces.push({ id: b.tile.b, name: b.def.name,
-                                          gather: b.def.gather, done: b.done });
-  }
-  gatherPlaces.sort((a, c) => c.gather - a.gather);
-  const built = new Set(gatherPlaces.map(g => g.id));
-  const available = Object.entries(BUILDINGS)
-    .filter(([id, def]) => def.gather && !built.has(id))
-    .map(([id, def]) => ({ id, name: def.name, pillar: def.pillar,
-                           gather: def.gather, cost: def.cost,
-                           afford: def.cost <= state.unity }))
-    .sort((a, c) => (a.cost / a.gather) - (c.cost / c.gather));
-  return { gatherPlaces, available, household: HOUSEHOLD_UNITY * state.households };
-}
-
-/** A locked tile may only be claimed if it touches an unlocked one —
- *  and never off somebody's LOT. Their land is theirs. */
-function canExpandTo(state, x, y) {
-  if (!inBounds(x, y) || state.unlocked.has(idx(x, y))) return false;
-  if (foreignLot(state, x, y)) return false;
-  if (inSquare(x, y)) return false;          // the square belongs to everybody
-  const n = [[1,0],[-1,0],[0,1],[0,-1]];
-  return n.some(([dx, dy]) => inBounds(x+dx, y+dy) && state.unlocked.has(idx(x+dx, y+dy)));
-}
-
-/** Every placed building on the board, with its def and tile position. */
-function activeBuildings(state) {
-  const out = [];
-  for (let i = 0; i < state.tiles.length; i++) {
-    const t = state.tiles[i];
-    if (!t.b) continue;
-    out.push({ i, x: i % GRID, y: Math.floor(i / GRID), tile: t,
-               def: BUILDINGS[t.b], done: t.built >= 1 });
-  }
-  return out;
-}
-
-/** Storage ceilings: base + every finished capacity building. */
-function capacity(state) {
-  const cap = { ...BASE_CAP };
-  for (const b of activeBuildings(state)) {
-    if (!b.done || !b.def.cap) continue;
-    for (const k in b.def.cap) cap[k] = (cap[k] || 0) + b.def.cap[k];
-  }
-  return cap;
-}
-
-/** Shelter: households the block can actually house. */
-function shelter(state) {
-  let homes = 2; // the two founding households always have a roof
-  for (const b of activeBuildings(state)) {
-    if (b.done && b.def.homes) homes += b.def.homes;
-  }
-  return homes;
-}
-
-/** Crisis damage reduction (0..0.6): guard buildings + neighbours who show up. */
-function crisisGuard(state) {
-  let g = 0;
-  for (const b of activeBuildings(state)) {
-    if (b.done && b.def.crisisGuard) g += b.def.crisisGuard;
-  }
-  // Elder June knowing your name is worth as much as a radio tower.
-  for (const n of state.neighbors || []) g += (n.guard || 0) * n.standing;
-  // A block that sounded the alarm in time meets the crisis staged and taped.
-  if (state.crisis && state.crisis.prepared) g += 0.12;
-  return Math.min(0.6, g);
-}
-
-// ── Persistence ───────────────────────────────────────────────────────────
-
-function save(state) {
-  try {
-    const flat = {
-      ...state,
-      // Wall-clock stamp: without it the block freezes the moment the tab
-      // closes and nothing is ever at stake between sessions. offline.js
-      // replays the gap from this. See [[project_cui]] notes.
-      savedAt: Date.now(),
-      unlocked: [...state.unlocked],
-      tiles: state.tiles.map(t => (t.b
-        ? { b: t.b, built: t.built, age: t.age,
-            ...(t.helpers && t.helpers.length ? { helpers: t.helpers } : {}),
-            ...(t.tended ? { tended: t.tended } : {}) }
-        : 0)),
-      log: state.log.slice(-40),
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(flat));
-    return true;
-  } catch (err) {
-    console.warn('[cui] save failed:', err);
-    return false;
-  }
-}
-
-function load() {
-  let raw;
-  try {
-    raw = localStorage.getItem(SAVE_KEY);
-  } catch (err) {
-    console.warn('[cui] localStorage unreadable:', err);
-    return null;
-  }
-  if (!raw) return null;
-  try {
-    const f = JSON.parse(raw);
-    if (!f || f.v !== 2 || !Array.isArray(f.tiles)) return null;
-
-    // ── world migration: a 9×9 save wakes up in the middle of the 15×15 ──
-    // Everything the player built shifts by (+3,+3) into the new homestead
-    // area. Their world got BIGGER, not replaced.
-    if (f.tiles.length === 81 && GRID === 15) {
-      const remap = (i) => ((Math.floor(i / 9) + 3) * 15) + ((i % 9) + 3);
-      const tiles = new Array(225).fill(0);
-      f.tiles.forEach((t, i) => { if (t) tiles[remap(i)] = t; });
-      f.tiles = tiles;
-      f.unlocked = (f.unlocked || []).map(remap);
-      if (Number.isFinite(f.partyTile)) f.partyTile = remap(f.partyTile);
-      if (f.avatar && Number.isFinite(f.avatar.x)) { f.avatar.x += 3; f.avatar.y += 3; }
-    }
-
-    // ── town-square migration: the centre became the commons, so anything a
-    // save holds there moves four tiles south onto the family lot ──
-    {
-      const G = 15, cIdx = [];
-      for (let y = 6; y <= 8; y++) for (let x = 6; x <= 8; x++) cIdx.push(y * G + x);
-      const hasCentre = (f.unlocked || []).some(i => cIdx.includes(i));
-      if (hasCentre && Array.isArray(f.tiles) && f.tiles.length === 225) {
-        const shift = (i) => i + 4 * G;
-        for (const i of cIdx) {
-          if (f.tiles[i]) { if (!f.tiles[shift(i)]) f.tiles[shift(i)] = f.tiles[i]; f.tiles[i] = 0; }
-        }
-        f.unlocked = [...new Set(f.unlocked.map(i => (cIdx.includes(i) ? shift(i) : i)))];
-        if (Number.isFinite(f.partyTile) && cIdx.includes(f.partyTile)) f.partyTile = shift(f.partyTile);
-        if (f.avatar && f.avatar.x >= 5.5 && f.avatar.x <= 8.5
-            && f.avatar.y >= 5.5 && f.avatar.y <= 8.5) f.avatar.y += 4;
-      }
-    }
-
-    const base = newGame();
-    return {
-      ...base,
-      ...f,
-      unlocked: new Set(f.unlocked || []),
-      // Drop any tile naming a building this build no longer defines — an
-      // unknown id reaches the sim as `undefined` and takes the whole game down.
-      tiles: f.tiles.map(t => (t && t.b && BUILDINGS[t.b]
-        ? { b: t.b, built: t.built, age: t.age || 0,
-            ...(Array.isArray(t.helpers) ? { helpers: t.helpers } : {}),
-            ...(Number.isFinite(t.tended) ? { tended: t.tended } : {}) }
-        : emptyTile())),
-      stock: { ...START.stock, ...(f.stock || {}) },
-      stats: { ...base.stats, ...(f.stats || {}) },
-      savedAt: Number.isFinite(f.savedAt) ? f.savedAt : null,
-      joined: Array.isArray(f.joined) ? f.joined : [],
-      pendingJoin: f.pendingJoin && f.pendingJoin.label ? f.pendingJoin : null,
-      // pre-neighbour saves get faces for their existing household count.
-      // Saves from before the memory log have no `memory` array — seed it empty
-      // rather than leaving it undefined, or every read has to guard.
-      neighbors: Array.isArray(f.neighbors) && f.neighbors.length
-        ? f.neighbors.map(n => ({ ...n, memory: Array.isArray(n.memory) ? n.memory : [] }))
-        : seedNeighbors(f.households || START.households),
-      pendingNeed: f.pendingNeed && f.pendingNeed.who ? f.pendingNeed : null,
-      scars: (f.scars && typeof f.scars === 'object') ? f.scars : {},
-      makeDo: f.makeDo === true,
-      activeJob: f.activeJob && f.activeJob.who ? f.activeJob : null,
-      alarm: f.alarm && Number.isFinite(f.alarm.at) ? f.alarm : null,
-      lastPartyAt: Number.isFinite(f.lastPartyAt) ? f.lastPartyAt : null,
-      partyUntil: Number.isFinite(f.partyUntil) ? f.partyUntil : 0,
-      partyTile: Number.isFinite(f.partyTile) ? f.partyTile : null,
-      avatar: f.avatar && Number.isFinite(f.avatar.x) ? f.avatar : { x: 7, y: 11 },
-      avatarChar: f.avatarChar === 'tess' ? 'tess' : 'quantus',
-      identity: f.identity && f.identity.asked ? f.identity : null,
-      tutorialStep: Number.isFinite(f.tutorialStep) ? f.tutorialStep : 0,
-      tutBase: f.tutBase && Number.isFinite(f.tutBase.unlocked) ? f.tutBase : null,
-      roofAt: Number.isFinite(f.roofAt) ? f.roofAt : null,
-      guttersAt: Number.isFinite(f.guttersAt) ? f.guttersAt : null,
-      hearthAt: Number.isFinite(f.hearthAt) ? f.hearthAt : null,
-    };
-  } catch (err) {
-    console.warn('[cui] save corrupt, starting fresh:', err);
-    return null;
-  }
-}
-
-function wipe() {
-  try { localStorage.removeItem(SAVE_KEY); }
-  catch (err) { console.warn('[cui] wipe failed:', err); }
-}
-return { newGame, expandCost, unitySources, canExpandTo, activeBuildings, capacity, shelter, crisisGuard, save, load, wipe, SAVE_KEY, idx, inBounds };
+return { makeIdentity, playerLook, homesteadLabel, SKINS, HAIRS, FITS, PLAYER_TRADES, DEFAULT_IDENTITY, needsIdentity, PRESETS, presetLook };
 })();
 
 /* ── pm_snapshot.js ─────────────────────────────────────── */
 __M['pm_snapshot.js'] = (function () {
 // GENERATED by tools/pm_snapshot.mjs — do not edit by hand.
-// Real Polymarket odds, resolved 2026-08-27T13:37:29.287Z.
+// Real Polymarket odds, resolved 2026-09-16T17:56:56.550Z.
 // Refresh:  node tools/pm_snapshot.mjs      (inspect: --probe)
 const PM_SNAPSHOT = {
-  "takenAt": "2026-08-27T13:37:29.287Z",
+  "takenAt": "2026-09-16T17:56:56.550Z",
   "source": "Polymarket Gamma public-search (read-only odds)",
-  "covered": 4,
+  "covered": 3,
   "total": 6,
   "crises": {
     "grid_failure": {
-      "covered": true,
-      "prob": 0.4198,
-      "sources": [
-        {
-          "question": "Will there be a power grid emergency in the Midwest before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.425,
-          "liquidity": 288,
-          "endDate": "2026-10-01T04:59:00Z"
-        },
-        {
-          "question": "Will there be a power grid emergency in New York before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.405,
-          "liquidity": 202,
-          "endDate": "2026-10-01T03:59:00Z"
-        },
-        {
-          "question": "Will there be a power grid emergency in Texas before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.445,
-          "liquidity": 193,
-          "endDate": "2026-10-01T04:59:00Z"
-        },
-        {
-          "question": "Will there be a power grid emergency in New England before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.39,
-          "liquidity": 86,
-          "endDate": "2026-10-01T03:59:00Z"
-        },
-        {
-          "question": "Will there be a power grid emergency in California before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.425,
-          "liquidity": 52,
-          "endDate": "2026-10-01T06:59:00Z"
-        },
-        {
-          "question": "Will there be a power grid emergency in the Central US before October 1?",
-          "slug": "will-there-be-a-power-grid-emergency-before-october-1-1786552244191",
-          "prob": 0.4,
-          "liquidity": 52,
-          "endDate": "2026-10-01T04:59:00Z"
-        }
-      ]
+      "covered": false,
+      "prob": null,
+      "sources": []
     },
     "heat_dome": {
       "covered": true,
-      "prob": 0.74,
+      "prob": 0.76,
       "sources": [
         {
           "question": "Will 2026 be the hottest year on record?",
           "slug": "where-will-2026-rank-among-the-hottest-years-on-record",
-          "prob": 0.74,
-          "liquidity": 13528,
+          "prob": 0.76,
+          "liquidity": 10735,
           "endDate": "2026-12-31T00:00:00Z"
         }
       ]
     },
     "supply_halt": {
       "covered": true,
-      "prob": 0.1087,
+      "prob": 0.0092,
       "sources": [
         {
           "question": "Government shutdown by October 1?",
           "slug": "government-shutdown-by-october-1-20260610162414910",
-          "prob": 0.105,
-          "liquidity": 16469,
+          "prob": 0.0085,
+          "liquidity": 20341,
           "endDate": "2026-10-02T03:59:00Z"
         },
         {
           "question": "Federal Appropriations Lapse on October 1?",
           "slug": "federal-appropriations-lapse-on-october-1-20260804220923652",
-          "prob": 0.115,
-          "liquidity": 9861,
-          "endDate": "2026-10-01T23:59:00Z"
+          "prob": 0.011,
+          "liquidity": 8595,
+          "endDate": "2026-10-02T03:59:00Z"
         }
       ]
     },
     "water_main": {
       "covered": true,
-      "prob": 0.1203,
+      "prob": 0.3361,
       "sources": [
         {
-          "question": "Will Virginia reach D4 (Exceptional Drought) by August 31, 2026?",
-          "slug": "will-virginia-reach-d4-exceptional-drought-by-august-31-2026-20260721193543607",
-          "prob": 0.325,
-          "liquidity": 113,
-          "endDate": "2026-09-01T03:59:00Z"
+          "question": "Will Nevada have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.941,
+          "liquidity": 357,
+          "endDate": "2026-09-17T13:00:00Z"
         },
         {
-          "question": "Will Tennessee have D4 (Exceptional Drought) this week?",
-          "slug": "state-d4-drought-2026-08-25",
-          "prob": 0.0045,
-          "liquidity": 95,
-          "endDate": "2026-08-27T13:00:00Z"
+          "question": "Will Oregon have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.994,
+          "liquidity": 326,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Maryland have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.026,
+          "liquidity": 321,
+          "endDate": "2026-09-17T13:00:00Z"
         },
         {
           "question": "Will Ohio have D4 (Exceptional Drought) this week?",
-          "slug": "state-d4-drought-2026-09-01",
-          "prob": 0.045,
-          "liquidity": 80,
-          "endDate": "2026-09-03T13:00:00Z"
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.0335,
+          "liquidity": 309,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will New Jersey have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.0305,
+          "liquidity": 297,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Iowa have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.035,
+          "liquidity": 264,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Alabama have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.0325,
+          "liquidity": 201,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Kentucky have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.0355,
+          "liquidity": 200,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will New Mexico have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.94,
+          "liquidity": 126,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Washington have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.05,
+          "liquidity": 106,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will West Virginia have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.1795,
+          "liquidity": 94,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Mississippi have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.847,
+          "liquidity": 85,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Montana have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.065,
+          "liquidity": 82,
+          "endDate": "2026-09-17T13:00:00Z"
         },
         {
           "question": "Will Delaware have D4 (Exceptional Drought) this week?",
-          "slug": "state-d4-drought-2026-09-01",
-          "prob": 0.035,
-          "liquidity": 71,
-          "endDate": "2026-09-03T13:00:00Z"
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.002,
+          "liquidity": 80,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will 3-4 states be in D4 (Exceptional Drought) this week?",
+          "slug": "states-in-d4-drought-2026-09-15",
+          "prob": 0.354,
+          "liquidity": 70,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Arkansas have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.93,
+          "liquidity": 69,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will 1-2 states be in D4 (Exceptional Drought) this week?",
+          "slug": "states-in-d4-drought-2026-09-15",
+          "prob": 0.355,
+          "liquidity": 68,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Tennessee have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.02,
+          "liquidity": 66,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Missouri have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.065,
+          "liquidity": 63,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Idaho have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.9545,
+          "liquidity": 58,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will Kansas have D4 (Exceptional Drought) this week?",
+          "slug": "state-d4-drought-2026-09-15",
+          "prob": 0.07,
+          "liquidity": 56,
+          "endDate": "2026-09-17T13:00:00Z"
+        },
+        {
+          "question": "Will 5-6 states be in D4 (Exceptional Drought) this week?",
+          "slug": "states-in-d4-drought-2026-09-15",
+          "prob": 0.3625,
+          "liquidity": 54,
+          "endDate": "2026-09-17T13:00:00Z"
         }
       ]
     },
@@ -4966,7 +5901,8 @@ __M['sim.js'] = (function () {
 const { BUILDINGS, CONSUMED, SCORED, LAND_ORDER, DRAW_PER_HOUSEHOLD, CRISES, CRISIS_FIRST_DAY, DAY_SECONDS, HOUSEHOLD_UNITY, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT } = __M['config.js'];
 const { activeBuildings, capacity, shelter, crisisGuard } = __M['state.js'];
 const { pickCrisis, crisisGap } = __M['worldsignal.js'];
-const { neighborContribution, gatheringLevel, needGap, raiseNeed, finishJob, helperSpeed } = __M['neighbors.js'];
+const { neighborContribution, gatheringLevel, needGap, raiseNeed, finishJob, helperSpeed, labourDone } = __M['neighbors.js'];
+const { landDelivery } = __M['delivery.js'];
 
 const SUNRISE = 0.22, SUNSET = 0.80;
 const RESERVE_TARGET_DAYS = 10;   // reserve that scores a perfect pillar
@@ -5266,11 +6202,28 @@ function tick(state, dtSeconds) {
   const rates = computeRates(state);
 
   // ── a running job finishes ────────────────────────────────────────────────
-  if (state.activeJob && state.day >= state.activeJob.startDay + state.activeJob.duration) {
+  // Time AND, for a `hands` job, the labour. `labourDone` is true for any
+  // job that never asked for hands, so the 2D game and every older save
+  // finish exactly as they always did.
+  if (state.activeJob && state.day >= state.activeJob.startDay + state.activeJob.duration
+      && labourDone(state.activeJob)) {
     const gather = gatheringLevel(activeBuildings(state).filter(b => b.done).map(b => b.def));
     const res = finishJob(state, gather);
     state = res.state;
     if (res.done) events.push({ kind: 'jobDone', job: res.done });
+  }
+
+  // ── a drone run lands ─────────────────────────────────────────────────────
+  // Here, in the shared tick, and NOT in the renderer that launched it: that
+  // is what makes `offline.js` complete a run that was still in the air when
+  // the tab closed. A delivery held in mid-flight for three days because
+  // nobody was watching is the same bug as a block that stops eating.
+  {
+    const res = landDelivery(state);
+    if (res.landed) {
+      state = res.state;
+      events.push({ kind: 'delivered', run: res.landed });
+    }
   }
 
   // ── a rain-deadline job the player sat on expires when the sky opens ─────
@@ -6712,7 +7665,18 @@ function initSfx() {
   } catch { ctx = null; }
 }
 
-function setMuted(m) { muted = m; }
+// The 2D game mutes with an on-screen button you can see the state of. The 3D
+// world mutes with a keystroke and has no such button, so an unpersisted
+// toggle would silently come back ON every reload. Persisting it here rather
+// than in either renderer means both games honour the same preference — the
+// same reason `music.js` keeps its level in localStorage.
+const MUTE_KEY = 'cui_sfx_muted';
+try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch { /* private mode */ }
+
+function setMuted(m) {
+  muted = !!m;
+  try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* private mode */ }
+}
 const isMuted = () => muted;
 
 const now = () => ctx.currentTime;
@@ -6849,7 +7813,10 @@ __M['music.js'] = (function () {
 // or leave the frame loop in a bad state when the audio is missing — the game
 // has to be as playable in a Discord attachment as it is on the site.
 
-const BASE = 'audio/';
+// The site deploy lives at /cui/3d/ and borrows the 2D game's cues from
+// /cui/audio/ (byte-identical files) instead of shipping 7.9 MB twice, so the
+// page may point BASE elsewhere before the bundle loads. Unset = as before.
+const BASE = globalThis.CUI_AUDIO_BASE || 'audio/';
 const CUES = {
   day: 'cui-day.mp3',
   night: 'cui-night.mp3',
@@ -6912,7 +7879,13 @@ function initMusic() {
 
   for (const [cue, file] of Object.entries(CUES)) {
     try {
-      const el = new Audio(BASE + file);
+      // A SINGLE-FILE build has no `audio/` directory to fetch from, so it
+      // may hand the cues over inline instead — `__CUI_AUDIO` maps the same
+      // filenames to data: URIs. Relative paths stay the default and every
+      // normal build is unchanged; this only fires when something has
+      // deliberately inlined them (the shareable one-file link).
+      const inline = globalThis.__CUI_AUDIO && globalThis.__CUI_AUDIO[file];
+      const el = new Audio(inline || (BASE + file));
       el.loop = true;
       el.preload = 'auto';
       el.volume = 0;
@@ -8668,6 +9641,7 @@ __M['main.js'] = (function () {
 const { GRID, BUILDINGS, JOIN_UNITY } = __M['config.js'];
 const { newGame, load, save, wipe, idx, expandCost, canExpandTo, capacity, unitySources } = __M['state.js'];
 const { tick, tryGrow, computeRates, readiness, omen, soundAlarm, quickResponse } = __M['sim.js'];
+const { claimPlot, placeBuilding, workBuilding } = __M['actions.js'];
 const { drawScene, makeCamera, screenToTile } = __M['render.js'];
 const { refreshLive } = __M['worldsignal.js'];
 const { catchUp } = __M['offline.js'];
@@ -8792,29 +9766,28 @@ function shortfallToast(cost) {
   toast(`Short ✊${short}.${tail}`, 'bad');
 }
 
-/** Work one of your buildings for an instant handful of its output. */
+/**
+ * Work one of your buildings for an instant handful of its output.
+ *
+ * The RULE now lives in actions.js so the 3D world can offer the same verb;
+ * this is the 2D presentation of it — toast, sound, save. When the rule and
+ * its presentation lived in one function the 3D world could not reach it
+ * without a second copy, which is the drift actions.js exists to prevent.
+ */
 function tendTile(i) {
   const t = state.tiles[i];
-  if (!t || !t.b || t.built < 1) return false;
-  if (t.tended && state.day - t.tended < 1) {
-    sfx('deny'); toast('Already worked today — come back tomorrow.', 'bad'); return false;
+  if (!t || !t.b) return false;
+  const res = workBuilding(state, i % GRID, Math.floor(i / GRID));
+  if (!res.ok) {
+    // A building still going up is not a refusal worth a noise — it is just
+    // not ready. Only a real "no" gets the stick tap.
+    if ((t.built ?? 1) >= 1) { sfx('deny'); toast(res.message, 'bad'); }
+    return false;
   }
-  const def = BUILDINGS[t.b];
-  const cap = capacity(state);
-  const stock = { ...state.stock };
-  const got = [];
-  for (const [k, v] of Object.entries(def.prod || {})) {
-    if (k === 'unity') continue;
-    const amt = v * 0.5;
-    stock[k] = Math.min(cap[k] === undefined ? 999 : cap[k], (stock[k] || 0) + amt);
-    got.push(`+${amt.toFixed(1)} ${k.toUpperCase()}`);
-  }
-  const tiles = [...state.tiles];
-  tiles[i] = { ...t, tended: state.day };
-  state = { ...state, tiles, stock };
+  state = res.state;
   tutFlags.worked = true;
   sfx('give');
-  toast(got.length ? `You worked the ${def.name}. ${got.join(' · ')}.` : `${def.name} tended.`, 'good');
+  toast(res.message, 'good');
   save(state);
   return true;
 }
@@ -8870,14 +9843,14 @@ function handleClick(x, y) {
   const i = idx(x, y);
 
   if (expandMode) {
-    if (!canExpandTo(state, x, y)) { toast('That plot does not touch your block.', 'bad'); return; }
+    // The rule lives in actions.js so the 3D world enforces the SAME one.
     const cost = expandCost(state);
     if (state.unity < cost) { sfx('deny'); shortfallToast(cost); return; }
-    const unlocked = new Set(state.unlocked);
-    unlocked.add(i);
-    state = { ...state, unlocked, unity: state.unity - cost };
+    const res = claimPlot(state, x, y);
+    if (!res.ok) { toast(res.message, 'bad'); return; }
+    state = res.state;
     sfx('claim');
-    toast('Plot claimed. The block grows.', 'good');
+    toast(res.message, 'good');
     return;
   }
 
@@ -8938,24 +9911,14 @@ function handleClick(x, y) {
   const def = BUILDINGS[sel];
   if (state.unity < def.cost) { sfx('deny'); shortfallToast(def.cost); return; }
 
-  const tiles = [...state.tiles];
-  // A big raise posts a WORK ORDER — neighbours who rate you answer it, the
-  // build runs faster, and the ones who helped come out more invested. The
-  // block raises its own infrastructure; that is the whole point of a block.
-  let helpers = [];
-  if (needsWorkOrder(def)) helpers = answerWorkOrder(state);
-  tiles[i] = { b: sel, built: 0, age: 0, helpers };
-  state = { ...state, tiles, unity: state.unity - def.cost };
+  // The raise itself — including the WORK ORDER that pulls neighbours in —
+  // lives in actions.js, so the 3D world raises buildings by the same rule.
+  const res = placeBuilding(state, x, y, sel);
+  if (!res.ok) { sfx('deny'); toast(res.message, 'bad'); return; }
+  state = res.state;
   rewardQuickResponse();
   sfx('place');
-  if (needsWorkOrder(def)) {
-    toast(helpers.length
-      ? `Work order out — ${helpers.join(' and ')} answered. Build runs faster.`
-      : `Work order out for the ${def.name}. Nobody answered — help who asks, and they show up.`,
-      helpers.length ? 'good' : '');
-  } else {
-    toast(`${def.name} — crew is on it.`, 'good');
-  }
+  toast(res.message, res.tone);
 }
 
 // ── frame loop ────────────────────────────────────────────────────────────
@@ -9604,6 +10567,127 @@ if (state.day > 0) {
 // day-12 block came back as day 0).
 window.addEventListener('beforeunload', () => { if (running) save(state); });
 return {  };
+})();
+
+/* ── todo.js ─────────────────────────────────────── */
+__M['todo.js'] = (function () {
+// C.U.I. — THE COMMUNITY TO-DO LIST.
+//
+// The owner, 2026-09-09: "if the drones report unusual activity, or potential
+// threats, it gives us a community to do list." So when the watch comes home
+// from a sweep, everything the block KNOWS is turned into things a person can
+// go and DO — and only those. A list with an entry nobody can act on is a
+// status screen wearing a to-do list's clothes.
+//
+// This composes rules that already exist and invents none: `crisisAnswers`
+// and `pillarDiagnosis` (sim.js), `gridSupport` (power.js), `signalInfo`
+// (worldsignal.js), `chargeOf` (charge.js), `labourNeeded` (neighbors.js).
+// If the diagnosis of a pillar ever changes, this list changes with it.
+//
+// Each item carries a stable `id`, so a renderer can tick it DONE the moment
+// the rule that raised it stops firing — throwing a switch clears "SUBSTATION
+// SUB3 IS DARK" without anybody tapping a checkbox. The list is the watch's;
+// the ticks are the block's.
+//
+// Lives in src/, shared. The 2D game does not show it yet; when it does, it
+// will be THIS list.
+
+const { PILLAR_ORDER } = __M['config.js'];
+const { gridSupport } = __M['power.js'];
+const { computeRates, pillarState, pillarDiagnosis, currentCrisis, crisisAnswers } = __M['sim.js'];
+const { signalInfo } = __M['worldsignal.js'];
+const { chargeOf, isFlat } = __M['charge.js'];
+const { labourNeeded } = __M['neighbors.js'];
+
+// Priority: 0 = now, 1 = today, 2 = soon, 3 = when you pass by.
+const NOW = 0, TODAY = 1, SOON = 2, LATER = 3;
+const HOT = 1.15;              // signal weight above which a crisis is "on the horizon"
+
+/**
+ * @param {object} state
+ * @param {object} ctx   { night, stations: [{id}], vehicles: [{id, label}] }
+ *                       — what only the renderer knows. All optional.
+ * @returns {Array<{id:string, kind:string, pri:number, text:string, where?:string}>}
+ */
+function communityTodo(state, ctx = {}) {
+  const items = [];
+  const push = (id, kind, pri, text, where) =>
+    items.push({ id, kind, pri, text, ...(where ? { where } : {}) });
+  const rates = computeRates(state);
+
+  // ── THREATS — a live crisis first, then what the signal says is coming ──
+  const crisis = currentCrisis(state);
+  if (crisis) {
+    const ans = crisisAnswers(state);
+    const offline = ans && ans.built.find((b) => b.offline);
+    const next = ans && ans.buildable[0];
+    const fix = offline ? ` — your ${offline.name} is fighting it and it is OFFLINE`
+      : (next ? ` — a ${next.name} (✊${next.cost}) would answer it` : '');
+    push(`crisis:${crisis.id}`, 'threat', NOW, `${crisis.icon} ${crisis.name} IS ON THE BLOCK${fix}`);
+  }
+  for (const r of signalInfo().rows) {
+    if (r.weight <= HOT || (crisis && crisis.id === r.id)) continue;
+    const pct = r.covered && r.prob != null ? ` · ${(r.prob * 100).toFixed(0)}% on the market` : '';
+    push(`threat:${r.id}`, 'threat', TODAY,
+      `${r.icon} ${r.name} ON THE HORIZON${pct} — stock the pillar it squeezes before it lands`);
+  }
+
+  // ── THE GRID ─────────────────────────────────────────────────────────────
+  const sup = gridSupport(state, !!ctx.night);
+  const lit = new Set(state.energized || []);
+  if (!sup.capable) {
+    push('grid:none', 'grid', TODAY, 'NO POWER OF YOUR OWN — raise a solar array, a wind turbine, or the micro-hydro wheel');
+  } else if (!sup.storage) {
+    push('grid:storage', 'grid', SOON, 'NO STORAGE — a battery wall would hold the night for the lights AND the machines');
+  }
+  // Dark substations, once the block is in the power game at all. The ITEM is
+  // "it is dark"; what changes with your capacity is the HINT. The first
+  // version only listed them while there was spare capacity — so the moment
+  // the last spare district was spent, every other dark station vanished from
+  // the list and the sheet ticked them ☑ "done" while they sat unlit. A tick
+  // must mean the thing was DONE, never that it stopped being convenient.
+  const spare = Math.max(0, sup.districts - lit.size);
+  if (sup.capable > 0) {
+    for (const s of ctx.stations || []) {
+      if (lit.has(s.id)) continue;
+      push(`sub:${s.id}`, 'grid', spare > 0 ? SOON : LATER,
+        `SUBSTATION ${s.id.toUpperCase()} IS DARK — ${spare > 0
+          ? 'walk out and throw the switch'
+          : 'nothing spare to carry it yet; more power or a battery wall first'}`, s.id);
+    }
+  }
+
+  // ── THE BLOCK — every pillar that is not healthy, and its cheapest fix ───
+  for (const k of PILLAR_ORDER) {
+    const st = pillarState(state, k, rates);
+    if (st === 'healthy' || st === 'recovering') continue;
+    const d = pillarDiagnosis(state, k, rates);
+    const fix = d && d.fix ? ` — ${d.fix.cost ? `raise a ${d.fix.name} (✊${d.fix.cost})` : d.fix.name}` : '';
+    const why = d && d.cause ? ` (${d.cause})` : '';
+    push(`pillar:${k}`, 'pillar', st === 'critical' ? NOW : SOON, `${k.toUpperCase()} IS ${st.toUpperCase()}${why}${fix}`);
+  }
+
+  // ── PEOPLE ───────────────────────────────────────────────────────────────
+  if (state.pendingNeed && state.pendingNeed.who) {
+    push(`ask:${state.pendingNeed.who}`, 'people', TODAY, `${state.pendingNeed.who.toUpperCase()} IS ASKING — press R and answer them`);
+  }
+  const j = state.activeJob;
+  if (j && j.hands) {
+    const pct = Math.min(1, (j.worked || 0) / labourNeeded(j));
+    if (pct < 1) push(`hands:${j.who}`, 'people', TODAY, `${j.who.toUpperCase()} NEEDS YOUR HANDS — ${Math.round(pct * 100)}% done, go to their place and press E`);
+  }
+
+  // ── THE MOTOR POOL ───────────────────────────────────────────────────────
+  for (const v of ctx.vehicles || []) {
+    if (isFlat(state, v.id)) push(`flat:${v.id}`, 'pool', LATER, `THE ${v.label} IS FLAT — crawl it back to the rack`);
+    else if (chargeOf(state, v.id) < 0.25) push(`low:${v.id}`, 'pool', LATER, `THE ${v.label} IS LOW — park it on the rack`);
+  }
+
+  items.sort((a, b) => a.pri - b.pri);
+  return items;
+}
+
+return { communityTodo };
 })();
 </script>
 </body>
