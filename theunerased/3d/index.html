@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>THE UNERASED 3D — QMM Overhead Run &amp; Gun</title>
+<meta name="description" content="The golden age of the Moor is under the erasure-force. Melvinci and Ki-Maya hold the line in 3D: three fronts, three bosses, eighteen real pages to recover.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B0713'/%3E%3Cpath d='M16 4 L28 16 L16 28 L4 16 Z' fill='none' stroke='%23C9A84C' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%234CE0E0'/%3E%3C/svg%3E">
+<style>
+  :root{ --purple:#2D1B4E; --gold:#C9A84C; --orange:#E8843C; --ink:#0B0713; --cyan:#4CE0E0; --red:#C43B3B; --char:#B6D02E; --violet:#9b6cff; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:#05030a;overflow:hidden;font-family:'Trebuchet MS',system-ui,sans-serif;color:#f4ecd8;}
+  #scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none;}
+  #vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 55%, rgba(5,3,10,.75) 100%);z-index:2;}
+  /* ---- HUD ---- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5;padding:14px 16px;display:none;}
+  body.playing #hud{display:block;}
+  .panel{position:absolute;background:linear-gradient(160deg,rgba(45,27,78,.72),rgba(11,7,19,.85));border:1px solid rgba(201,168,76,.35);
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);padding:9px 14px;box-shadow:0 6px 22px rgba(0,0,0,.5);}
+  #tl{left:16px;top:14px;min-width:230px;}
+  #heroName{font-weight:900;letter-spacing:.14em;font-size:1.05rem;} #heroTitle{font-size:.62rem;letter-spacing:.32em;opacity:.7;margin-left:8px;}
+  #lives{color:var(--gold);letter-spacing:.2em;font-size:1rem;margin:4px 0 6px;text-shadow:0 0 10px rgba(201,168,76,.6);}
+  #wep{display:inline-block;font-size:.7rem;font-weight:900;letter-spacing:.18em;padding:3px 9px;border:1px solid;border-radius:6px;background:rgba(11,7,19,.5);}
+  #pow{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle;} #pow i{width:9px;height:9px;border:1px solid var(--gold);transform:rotate(45deg);display:block;} #pow i.on{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+  .bar{height:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);margin-top:6px;position:relative;overflow:hidden;} .bar i{display:block;height:100%;width:100%;transition:width .08s linear;}
+  #wardBar i{background:linear-gradient(90deg,var(--cyan),#8ff);box-shadow:0 0 10px var(--cyan);} #wardBar.broken i{background:var(--red);}
+  #chargeBar i{background:linear-gradient(90deg,var(--orange),var(--gold));} #chargeBar.full i{background:#fff;box-shadow:0 0 12px #fff;}
+  .lbl{font-size:.55rem;letter-spacing:.3em;opacity:.6;margin-top:6px;}
+  #tr{right:16px;top:14px;text-align:right;min-width:200px;}
+  #score{font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:.06em;text-shadow:0 0 14px rgba(255,255,255,.35);} #mult{font-weight:900;font-size:.95rem;margin-left:6px;}
+  #pages{font-size:.62rem;letter-spacing:.3em;color:var(--gold);margin-top:4px;} #rail{font-size:.6rem;letter-spacing:.3em;margin-top:4px;opacity:.85;}
+  #flash{position:absolute;left:0;right:0;top:16%;text-align:center;font-weight:900;font-size:clamp(1rem,3vw,1.8rem);letter-spacing:.2em;opacity:0;pointer-events:none;}
+  #hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:.62rem;letter-spacing:.14em;opacity:.55;}
+  #bossBar{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(560px,80vw);text-align:center;}
+  #bossName{font-size:.72rem;letter-spacing:.36em;color:#ff6b6b;font-weight:900;margin-bottom:5px;text-shadow:0 0 12px rgba(255,43,43,.5);}
+  #bossTrack{height:10px;background:rgba(11,7,19,.7);border:1px solid rgba(255,43,43,.5);} #bossFill{height:100%;width:100%;background:linear-gradient(90deg,#ff2b2b,#ff9a3c);box-shadow:0 0 14px rgba(255,43,43,.6);transition:width .12s;}
+  #pageCard{position:absolute;left:50%;top:26%;transform:translateX(-50%);width:min(520px,86vw);background:linear-gradient(160deg,#f4ecd8,#e6d7b8);color:#1a1020;padding:16px 20px;border:2px solid var(--gold);box-shadow:0 0 40px rgba(201,168,76,.5);
+    clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);animation:cardIn .4s ease-out;}
+  @keyframes cardIn{from{opacity:0;transform:translateX(-50%) translateY(14px);}to{opacity:1;transform:translateX(-50%);}}
+  #pageCard small.k{display:block;font-size:.55rem;letter-spacing:.36em;color:#7a5a1a;font-weight:900;} #pgTitle{font-weight:900;font-size:1.05rem;letter-spacing:.08em;margin:2px 0 6px;} #pgLine{font-size:.85rem;line-height:1.5;} #pgSrc{display:block;margin-top:6px;font-size:.65rem;letter-spacing:.2em;color:#6a4a1a;}
+  /* ---- overlays (same DNA as the 2D game) ---- */
+  .overlay{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:safe center;overflow:auto;text-align:center;padding:24px;
+    background:radial-gradient(120% 120% at 50% 30%, rgba(45,27,78,.72), rgba(5,3,10,.92));}
+  .hidden{display:none!important;}
+  .title{font-size:clamp(2.2rem,9vw,5rem);font-weight:900;letter-spacing:.02em;line-height:.95;color:var(--gold);text-shadow:0 0 16px rgba(201,168,76,.8),0 0 42px rgba(201,168,76,.45),0 0 92px rgba(76,224,224,.28),0 4px 0 #000;animation:breathe 3.4s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{text-shadow:0 0 16px rgba(201,168,76,.8),0 0 42px rgba(201,168,76,.45),0 0 92px rgba(76,224,224,.28),0 4px 0 #000;}50%{text-shadow:0 0 22px rgba(201,168,76,.95),0 0 64px rgba(201,168,76,.6),0 0 128px rgba(76,224,224,.42),0 4px 0 #000;}}
+  .title small{display:block;font-size:.3em;letter-spacing:.5em;color:var(--cyan);margin-top:.7em;font-weight:700;text-shadow:0 0 12px rgba(76,224,224,.75);}
+  .sub{max-width:620px;margin:18px 0 8px;opacity:.88;font-size:clamp(.9rem,2.4vw,1.05rem);line-height:1.6;}
+  .keys{margin:12px 0 22px;font-size:.8rem;opacity:.72;line-height:2.1;max-width:720px;} .keys b{color:var(--gold);background:rgba(201,168,76,.12);padding:2px 9px;border-radius:6px;border:1px solid rgba(201,168,76,.3);}
+  .btn{cursor:pointer;border:none;font-family:inherit;font-weight:800;letter-spacing:.12em;padding:15px 40px;font-size:1.05rem;border-radius:12px;color:var(--ink);background:linear-gradient(135deg,var(--gold),var(--orange));box-shadow:0 0 30px rgba(201,168,76,.4),0 6px 0 #6b4a1a;transition:transform .1s;text-transform:uppercase;margin:6px;}
+  .btn:active{transform:translateY(3px);} .btn.ghost{background:rgba(11,7,19,.6);color:var(--gold);border:1px solid rgba(201,168,76,.5);box-shadow:none;}
+  .selrow{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin:14px 0 20px;}
+  .selcard{width:230px;padding:14px;border:2px solid rgba(201,168,76,.25);border-radius:14px;background:rgba(11,7,19,.55);cursor:pointer;transition:transform .12s,border-color .12s;}
+  .selcard.sel{border-color:var(--gold);box-shadow:0 0 30px rgba(201,168,76,.35);transform:translateY(-4px);} .selcard.locked{opacity:.45;cursor:not-allowed;}
+  .selname{font-weight:900;letter-spacing:.16em;margin-top:8px;} .seltag{font-size:.68rem;opacity:.7;line-height:1.5;margin-top:4px;min-height:3em;} .selbest{font-size:.6rem;letter-spacing:.12em;color:var(--gold);margin-top:8px;} .lock{font-size:.6rem;letter-spacing:.2em;color:#ff6b6b;margin-top:6px;}
+  .selcard.hero{width:300px;padding:10px;} .poster{height:380px;border-radius:10px;overflow:hidden;position:relative;background:#0b0713;}
+  .poster img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;display:block;transition:transform .35s ease,filter .35s;filter:saturate(.8) brightness(.8);}
+  .selcard.hero.sel .poster img{transform:scale(1.05);filter:none;} .selcard.hero .poster::after{content:'';position:absolute;inset:0;box-shadow:inset 0 -60px 60px -20px rgba(5,3,10,.9);}
+  @media (max-width:700px){ .selcard.hero{width:46vw;} .poster{height:48vw;} }
+  #tJump{right:190px;bottom:84px;width:58px;height:58px;font-size:.62rem;background:rgba(255,215,106,.12);border-color:rgba(255,215,106,.5);color:#ffd76a;}
+  #combo{position:absolute;right:28px;top:38%;text-align:right;opacity:0;transform:scale(.8);transition:opacity .2s,transform .2s;pointer-events:none;}
+  #combo.on{opacity:1;transform:scale(1);} #combo b{display:block;font-size:3.2rem;line-height:1;font-weight:900;text-shadow:0 0 18px currentColor,0 3px 0 #000;}
+  #combo small{font-size:.62rem;letter-spacing:.35em;} #combo.pop b{animation:cpop .18s ease-out;} @keyframes cpop{0%{transform:scale(1.45);}100%{transform:scale(1);}}
+  .hglyph,.wglyph{height:130px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:3.4rem;}
+  .hglyph{background:radial-gradient(circle at 50% 40%, var(--acc) 0%, rgba(11,7,19,.9) 70%);}
+  .selcard .pal{display:flex;gap:6px;justify-content:center;margin-top:8px;} .pal i{width:16px;height:16px;border-radius:50%;display:block;border:1px solid rgba(255,255,255,.3);}
+  .cx-wrap{max-width:880px;width:100%;text-align:left;} .cx-world{margin:14px 0;} .cx-world h3{letter-spacing:.2em;font-size:.95rem;margin-bottom:8px;} .cx-world h3 small{opacity:.6;letter-spacing:.1em;font-size:.65rem;margin-left:10px;}
+  .cx-page{background:rgba(244,236,216,.06);border-left:3px solid var(--gold);padding:8px 12px;margin:6px 0;} .cx-page b{letter-spacing:.1em;font-size:.82rem;} .cx-page p{font-size:.78rem;line-height:1.5;opacity:.88;margin:3px 0;} .cx-page small{font-size:.6rem;letter-spacing:.2em;opacity:.6;}
+  .cx-page.redacted{border-left-color:#444;} .cx-page.redacted .bar{display:block;height:8px;background:#222;margin:5px 0;}
+  .rankcard{background:rgba(11,7,19,.7);border:1px solid rgba(201,168,76,.4);padding:14px 18px;width:min(560px,92vw);margin:8px 0 14px;text-align:left;}
+  .rk-head{display:flex;justify-content:space-between;align-items:baseline;} .rk-rank{font-size:1.8rem;font-weight:900;letter-spacing:.2em;} .rk-score b{font-size:1.4rem;} .rk-score small{display:block;font-size:.55rem;letter-spacing:.3em;opacity:.6;text-align:right;}
+  .rk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;} .rk-grid div{background:rgba(255,255,255,.04);padding:6px 8px;} .rk-grid small{display:block;font-size:.55rem;letter-spacing:.24em;opacity:.6;} .rk-grid b{font-size:.95rem;}
+  .rk-hint{font-size:.72rem;opacity:.75;line-height:1.5;border-top:1px solid rgba(255,255,255,.1);padding-top:8px;} .rk-lbt{font-size:.58rem;letter-spacing:.3em;color:var(--gold);margin:10px 0 4px;}
+  .lbrow{display:grid;grid-template-columns:24px 1fr 90px 90px 90px;gap:6px;font-size:.72rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+  #nowPlaying{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:16;display:flex;gap:10px;align-items:baseline;padding:6px 14px;background:rgba(11,7,19,.72);border:1px solid rgba(201,168,76,.45);border-radius:20px;pointer-events:none;font-size:.7rem;letter-spacing:.2em;color:#f4ecd8;}
+  #nowPlaying b{color:var(--gold);font-size:.9rem;} #nowPlaying small{font-size:.55rem;letter-spacing:.15em;opacity:.55;} #nowPlaying.flash{animation:npflash 1.2s ease-out;}
+  @keyframes npflash{0%{box-shadow:0 0 22px rgba(201,168,76,.9);}100%{box-shadow:none;}}
+  .loadline{margin-top:10px;font-size:.7rem;letter-spacing:.3em;color:var(--cyan);min-height:1em;} .btn:disabled{opacity:.45;filter:grayscale(.6);cursor:wait;}
+  .credit{position:absolute;bottom:12px;font-size:.66rem;opacity:.5;letter-spacing:.08em;width:100%;text-align:center;} .credit a{color:var(--cyan);}
+  .topbtn{position:fixed;top:14px;z-index:15;width:42px;height:42px;border-radius:10px;background:rgba(11,7,19,.5);border:1px solid rgba(201,168,76,.4);color:var(--gold);font-size:1.05rem;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
+  #pauseBtn{right:232px;} #muteBtn{right:282px;}
+  /* ---- touch ---- */
+  #touch{position:fixed;inset:0;z-index:10;pointer-events:none;display:none;} body.touch.playing #touch{display:block;}
+  .tbtn{position:absolute;pointer-events:auto;border-radius:50%;background:rgba(201,168,76,.10);border:2px solid rgba(201,168,76,.35);display:flex;align-items:center;justify-content:center;color:var(--gold);user-select:none;font-weight:900;width:62px;height:62px;font-size:.72rem;backdrop-filter:blur(4px);}
+  .tbtn.hit{background:rgba(201,168,76,.3);transform:scale(.94);}
+  #stick{position:absolute;pointer-events:auto;touch-action:none;left:calc(18px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:138px;height:138px;border-radius:50%;border:2px solid rgba(201,168,76,.40);background:radial-gradient(circle,rgba(45,27,78,.50),rgba(11,7,19,.30));}
+  #knob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;pointer-events:none;border:2px solid rgba(201,168,76,.85);background:radial-gradient(circle at 38% 32%,rgba(76,224,224,.34),rgba(11,7,19,.9));}
+  #tFire{right:20px;bottom:88px;width:78px;height:78px;background:rgba(232,132,60,.14);border-color:rgba(232,132,60,.5);color:var(--orange);}
+  #tBlade{right:104px;bottom:34px;background:rgba(76,224,224,.12);border-color:rgba(76,224,224,.4);color:var(--cyan);}
+  #tWard{right:112px;bottom:118px;background:rgba(76,224,224,.12);border-color:rgba(76,224,224,.4);color:var(--cyan);}
+  #tDash{right:22px;bottom:180px;} #tSwap{right:190px;bottom:24px;width:52px;height:52px;font-size:.6rem;}
+  body.touch #hint{display:none;}
+  #touch .ab{width:48px;height:48px;font-size:.8rem;top:auto;bottom:calc(210px + env(safe-area-inset-bottom,0px));background:rgba(181,108,255,.14);border-color:rgba(181,108,255,.5);color:#e2c8ff;}
+  #tAb1{right:214px;} #tAb2{right:158px;} #tAb3{right:102px;} #tUlt{right:30px;width:60px;height:60px;border-color:#ffd76a;color:#ffd76a;}
+  /* ---- FF-style hotbar + chakra meter ---- */
+  .hotbar{position:absolute;left:50%;bottom:62px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;}
+  .hotbar .chakra{width:332px;height:9px;background:rgba(11,7,19,.8);border:1px solid rgba(201,168,76,.45);position:relative;overflow:hidden;}
+  .hotbar .chakra i{display:block;height:100%;width:0;transition:width .12s;} .hotbar .chakra span{position:absolute;right:4px;top:-14px;font-size:.5rem;letter-spacing:.3em;color:#e2c8ff;}
+  .hotbar.full .chakra{box-shadow:0 0 18px #b56cff,0 0 36px #ffd76a;animation:ultPulse .7s ease-in-out infinite alternate;}
+  @keyframes ultPulse{from{filter:brightness(1);}to{filter:brightness(1.6);}}
+  .hotbar .slots{display:flex;gap:8px;}
+  .slot{width:76px;height:58px;position:relative;background:linear-gradient(160deg,rgba(45,27,78,.9),rgba(11,7,19,.95));border:1px solid var(--c);clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);overflow:hidden;}
+  .slot::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,var(--c),transparent 70%);opacity:.35;}
+  .slot.ready::before{opacity:.8;} .slot.ult{width:92px;}
+  .slot em{position:absolute;inset:0;background:conic-gradient(rgba(5,3,10,.78) var(--cd,0deg),transparent 0);}
+  .slot b{position:absolute;left:6px;top:3px;font-size:.8rem;color:#fff;text-shadow:0 0 6px var(--c);z-index:1;}
+  .slot small{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:.47rem;letter-spacing:.08em;line-height:1.15;color:#fff;z-index:1;padding:0 3px;text-shadow:0 1px 2px #000;}
+  body.touch .hotbar{bottom:auto;top:108px;transform:translateX(-50%) scale(.72);}
+  .screenflash{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;} .screenflash.go{animation:sflash .9s ease-out;}
+  @keyframes sflash{0%{opacity:1;}100%{opacity:0;}}
+  #bossBar{bottom:170px !important;}
+  @media (max-width:700px){ #tl{min-width:170px;padding:7px 10px;} #tr{min-width:150px;} #score{font-size:1.15rem;} .selcard{width:200px;} }
+</style>
+</head>
+<body>
+  <script>
+  // WebGL gate: a device that cannot draw WebGL gets the Classic 2D game instead of a black screen
+  (function () { var ok = false; try { var c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) {}
+    if (!ok && !/[?&]nogate/.test(location.search) && /quantummelaninmedia\.com$/.test(location.hostname)) location.replace('../'); })();
+  </script>
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+  <div id="pauseBtn" class="topbtn hidden">❚❚</div>
+  <div id="muteBtn" class="topbtn hidden">🔊</div>
+
+  <div id="hud">
+    <div class="panel" id="tl">
+      <span id="heroName">MELVINCI</span><span id="heroTitle">THE KING</span>
+      <div id="lives">◆◆◆</div>
+      <span id="wep">ASTROLABE BOLT</span><span id="pow"></span>
+      <div class="lbl">GIRIH WARD</div><div class="bar" id="wardBar"><i></i></div>
+      <div class="lbl">CHARGE</div><div class="bar" id="chargeBar"><i></i></div>
+    </div>
+    <div class="panel" id="tr">
+      <span id="score">0</span><span id="mult">×1</span>
+      <div id="pages">0/6 PAGES</div><div id="rail">COAST → THE GATE</div>
+    </div>
+    <div id="flash"></div>
+    <div id="hint"></div>
+    <div id="bossBar" class="hidden"><div id="bossName">BOSS</div><div id="bossTrack"><div id="bossFill"></div></div></div>
+    <div id="pageCard" class="hidden"><small class="k">PAGE RECOVERED</small><div id="pgTitle"></div><div id="pgLine"></div><small id="pgSrc"></small></div>
+  </div>
+
+  <div id="touch">
+    <div id="stick"><div id="knob"></div></div>
+    <div class="tbtn" id="tFire">FIRE</div><div class="tbtn" id="tBlade">BLADE</div><div class="tbtn" id="tWard">WARD</div><div class="tbtn" id="tDash">DASH</div><div class="tbtn" id="tSwap">SWAP</div><div class="tbtn" id="tJump">JUMP</div>
+    <div class="tbtn ab" id="tAb1">1</div><div class="tbtn ab" id="tAb2">2</div><div class="tbtn ab" id="tAb3">3</div><div class="tbtn ab ult" id="tUlt">F</div>
+  </div>
+
+  <div class="overlay" id="menu">
+    <div class="title">THE<br>UNERASED<small>QMM · TITLE 02 · 3D</small></div>
+    <p class="sub">The golden age of the Moor is under the <b style="color:var(--char)">erasure-force</b>. Choose your warrior — <b style="color:var(--cyan)">MELVINCI</b> the King or <b style="color:#3ce08f">KI-MAYA</b> the Queen — cross the ramparts room by room, break open the <b style="color:var(--gold)">powerup crates</b> to level your blaster, raise the <b style="color:var(--cyan)">Girih Ward</b> when the engine's maw lights up, and bring down the book-burning engine at the gate. Every crate gives a page back.</p>
+    <div class="keys"><b>WASD</b> move (double-tap = <b>SPRINT</b>, long hold = <b>LONG DASH</b>) · <b>SHIFT</b> jump (again in the air = double jump — climb the rune terraces) · <b>MOUSE</b> aim · <b>SPACE / CLICK</b> fire — hold to charge, release at full for the alt-fire · <b>J</b> plasma blade (3-hit combo, the third launches; dash then blade = lunge) · <b>V</b> hold = Girih Ward — raise it right before a hit to <b>PARRY</b> · <b>DOUBLE-CLICK + DRAG</b> spins the camera 360° · <b>WHEEL</b> zooms · <b>R</b> resets the view · <b>C</b> swap blaster · <b>P</b> pause</div>
+    <div><button class="btn" id="start">Choose Your Warrior</button><button class="btn ghost" id="codexBtn">📜 The Codex</button></div>
+    <div id="loadLine" class="loadline">SUMMONING THE WARRIORS · 0%</div>
+    <div class="credit">QUANTUM MELANIN MEDIA · every visual is drawn in code, every sound is synthesized · <a href="../">Classic 2D version</a></div>
+  </div>
+
+  <div class="overlay hidden" id="select">
+    <div class="title" style="font-size:clamp(1.6rem,6vw,3rem)">CHOOSE YOUR WARRIOR</div>
+    <div class="selrow">
+      <div class="selcard sel hero" id="cardM" style="--acc:#4CE0E0"><div class="poster"><img src="./assets/ui/melvinci_poster.jpg" alt="Melvinci, the King, with his plasma greatsword"></div><div class="selname" style="color:var(--cyan)">MELVINCI</div><div class="seltag">THE KING · plasma greatsword on his back · astrolabe hand-cannon · Root Quake · Solar Melanin Beam · Crown Nova</div><div class="pal"><i style="background:#241a5e"></i><i style="background:#C9A84C"></i><i style="background:#4CE0E0"></i><i style="background:#2ee6a8"></i></div></div>
+      <div class="selcard hero" id="cardK" style="--acc:#3ce08f"><div class="poster"><img src="./assets/ui/kimaya_poster.jpg" alt="Ki-Maya, the Queen, with her plasma saber and lotus scepter"></div><div class="selname" style="color:#3ce08f">KI-MAYA</div><div class="seltag">THE QUEEN · plasma saber at her hip · lotus scepter · Chakram Storm · Heart Lotus · Ancestral Starfall</div><div class="pal"><i style="background:#0e5c3c"></i><i style="background:#C9A84C"></i><i style="background:#3ce08f"></i><i style="background:#ffd76a"></i></div></div>
+    </div>
+    <p class="sub" style="margin-top:0;font-size:.8rem;opacity:.7">Both warriors are live behind this card — the one you pick charges up.</p>
+    <div><button class="btn" id="confirm">Choose The Front</button></div>
+  </div>
+
+  <div class="overlay hidden" id="worldSel">
+    <div class="title" style="font-size:clamp(1.6rem,6vw,3rem)">CHOOSE THE FRONT</div>
+    <div class="selrow" id="wrow"></div>
+    <div><button class="btn" id="wconfirm">Hold The Line</button><button class="btn ghost" id="backSel">Back</button></div>
+  </div>
+
+  <div class="overlay hidden" id="codexPop">
+    <div class="title" style="font-size:clamp(1.6rem,6vw,3rem)">THE CODEX</div>
+    <p class="sub" style="margin-top:6px">Eighteen real records the erasure-force tried to swallow. Recover a world's full set and its crates arrive one tier stronger.</p>
+    <div class="cx-wrap" id="cxWrap"></div>
+    <button class="btn" id="cxBack" style="margin:16px 0 30px">Back</button>
+  </div>
+
+  <div class="overlay hidden" id="pausePop">
+    <div class="title" style="font-size:clamp(1.6rem,6vw,3rem)">PAUSED</div>
+    <div><button class="btn" id="resume">Resume</button><button class="btn ghost" id="quit">Quit To Menu</button></div>
+  </div>
+
+  <div class="overlay hidden" id="endPop">
+    <div class="title" id="endMsg" style="font-size:clamp(1.8rem,7vw,3.6rem)">—</div>
+    <p class="sub" id="endSub"></p>
+    <div class="rankcard">
+      <div class="rk-head"><div class="rk-rank" id="rkRank">SCRIBE</div><div class="rk-score"><b id="rkScore">0</b><small>STYLE SCORE</small></div></div>
+      <div class="rk-grid" id="rkGrid"></div>
+      <div class="rk-hint" id="rkHint"></div>
+      <div class="rk-lbt">TOP RUNS · <span id="rkWorld"></span> · this device</div>
+      <div id="rkRows"></div>
+    </div>
+    <div><button class="btn" id="again">Again</button><button class="btn hidden" id="nextWorld">Next World ▸</button><button class="btn ghost" id="toMenu">Menu</button></div>
+  </div>
+
+  <script src="./bundle.js?v=1789604263965"></script>
+</body>
+</html>
