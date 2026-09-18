@@ -8,21 +8,65 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0714'/%3E%3Cpath d='M16 6 L28 16 L16 26 L4 16 Z' fill='%234A3428'/%3E%3Cpath d='M16 6 L28 16 L16 20 L4 16 Z' fill='%23E3B23C' opacity='.9'/%3E%3Ccircle cx='16' cy='15' r='3.2' fill='%23E8843C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rakkas&family=Bangers&display=swap">
+<!-- ONE family now, not two. Bangers is gone: the display voice is Georgia, a
+     local serif, read off quantummelaninmedia.com's own computed h1. Rakkas
+     stays for the C.U.I. brand glyphs only — it is the Moorish mark, and it is
+     the one place a decorative face earns its request. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rakkas&display=swap">
 <style>
 /* C.U.I. F.A.C.T.S. — 3D world shell.
    Same Afro-futurist earth direction as the 2D game: deep indigo ground,
    terracotta and copper structure, gold as the signal colour. The HUD sits
    ON the world, not in a chrome bar around it — this is a place, not an app. */
 :root {
-  --ink:#0A0714; --ember:#E8843C; --gold:#E3B23C;
-  --copper:#B5651D; --terracotta:#A44A3F; --bone:#F4ECD8;
-  --unity:#F0D68A;
-  --edge: 0 0 0 1px rgba(227,178,60,.22), 0 6px 22px rgba(0,0,0,.55);
+  /* THE QMM HOUSE PALETTE — quantummelaninmedia.com, the same tokens QUAN-TESS
+     runs on: gold, deep indigo, violet. Owner, 2026-09-18: "that new super
+     smooth QMM web page GOLD and dark blue and purple like how the QMM site
+     looks and how we did QUAN-TESS".
+
+     ONLY THE CHROME MOVES. The WORLD's colours live in src/config.js PAL,
+     which is shared with the 2D game and with every art registry — recolouring
+     there would repaint both renderers and every building. The HUD, the sheets
+     and the panels are this file's to set, and they are what you actually read
+     the game through. */
+  --ink:#07050d; --ink-2:#0d0918;
+  --card:#160f24; --card-hi:#1e1533; --line:#2c2140;
+  --gold:#e8c25a; --gold-hi:#f5dc8e; --violet:#a877e6; --sky:#6fb7ff;
+  --ember:#E8843C; --copper:#B5651D; --terracotta:#A44A3F;
+  --bone:#f3efe6; --mut:#a99fc0;
+  --unity:#f5dc8e;
+  --edge: 0 0 0 1px rgba(232,194,90,.24), 0 8px 28px rgba(0,0,0,.55);
+  /* One easing for everything that moves, so the whole UI has one gait. */
+  --ease: .16s cubic-bezier(.22,.61,.36,1);
+
+  /* ── TYPE, READ OFF THE SITE RATHER THAN GUESSED ──────────────────────
+     Owner, 2026-09-18: "get this visually updated to the website quality".
+     So I opened quantummelaninmedia.com and QUAN-TESS headless and read their
+     computed styles instead of building what I imagined they looked like:
+
+       h1        Georgia, 72px, weight 400, letter-spacing -0.72px
+       body      -apple-system / Segoe UI, NOT a serif
+       colours   bg #07050d · text #f3efe6 · muted #a99fc0 · gold #e8c25a
+
+     That is an elegant SERIF display over a clean sans body. The game was
+     running Bangers — an Impact-class poster face — for all 38 of its display
+     strings, and that single choice was most of why it did not look like the
+     site. Both hero titles are also TWO-TONE (gold word + bone word), which
+     .brand h1 now does.
+
+     Georgia and the system sans are local, so this costs no webfont request:
+     the page now loads ONE family (Rakkas, for the C.U.I. brand glyphs) where
+     it used to load two. */
+  --display: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:var(--ink); }
-body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smoothing:antialiased; }
+/* Body copy is SANS on both of his sites. Rakkas at paragraph size was the
+   other half of the problem: a decorative display face set as body text reads
+   as a fantasy game, not as a product. Rakkas survives on the brand mark. */
+body { font-family:var(--sans); color:var(--bone); -webkit-font-smoothing:antialiased;
+       font-size:15px; line-height:1.55; }
 #scene { display:block; width:100vw; height:100vh; touch-action:none; cursor:grab; }
 #scene:active { cursor:grabbing; }
 
@@ -31,10 +75,15 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .row { display:flex; gap:14px; align-items:flex-start; justify-content:space-between; }
 
 /* The title block. A kente-derived rule under it rather than a border-box —
-   a straight line would read as a web page; the notched rule reads as cloth. */
-.brand h1 { font-family:'Bangers', Impact, sans-serif; font-size:clamp(20px,2.4vw,34px);
-            margin:0; letter-spacing:.055em; color:var(--gold);
-            text-shadow:0 2px 0 #6B4A12, 0 0 26px rgba(232,132,60,.35); }
+   a straight line would read as a web page; the notched rule reads as cloth.
+   The lockup itself is now the site's: a serif at weight 400 with TIGHT
+   (negative) tracking, and two-tone — gold word, bone word — exactly as
+   "Quantum Melanin Media" and "QUAN-TESS The Akashic AI" are set.
+   The hard letterpress shadow is gone; the site has no such thing. */
+.brand h1 { font-family:var(--display); font-size:clamp(21px,2.5vw,36px);
+            margin:0; letter-spacing:-.01em; font-weight:400; color:var(--bone);
+            text-shadow:0 2px 24px rgba(0,0,0,.6); }
+.brand h1 .lead { color:var(--gold); }
 .brand .facts { display:flex; gap:.42em; font-size:clamp(9px,.86vw,12px); letter-spacing:.30em;
                 margin-top:5px; color:#C6B79A; text-transform:uppercase; }
 .brand .facts b { color:var(--ember); font-weight:400; }
@@ -44,53 +93,73 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
     repeating-linear-gradient(90deg, var(--terracotta) 0 7px, var(--copper) 7px 15px);
   opacity:.85; }
 
-.panel { background:linear-gradient(160deg, rgba(16,19,46,.90), rgba(10,7,20,.94));
+/* Indigo-violet glass instead of flat navy. The clipped corner STAYS — it is
+   the Moorish x graphic-novel signature the owner asked for in August, and
+   "smooth" was a note about colour and finish, not an instruction to turn this
+   into a rounded web card. The smoothness comes from the blur, the softer
+   shadow and one shared easing. */
+.panel { background:linear-gradient(160deg, rgba(30,21,51,.90), rgba(13,9,24,.95));
          box-shadow:var(--edge); padding:9px 13px; display:flex; gap:15px; align-items:center;
-         clip-path:polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
-.panel .big { font-family:'Bangers', Impact, sans-serif; font-size:19px; letter-spacing:.05em; }
-#hud-day { color:var(--bone); }
-#hud-unity { color:var(--unity); }
+         backdrop-filter:blur(7px);
+         border-radius:12px; }
+/* The stat row. Numerals are the SERIF at a real size; labels are tiny, upper,
+   wide-tracked and muted — the site's exact hierarchy. Separated by hairlines
+   rather than by gaps, which is what makes it read as one instrument. */
+.panel.stats { gap:0; padding:10px 6px; align-items:stretch; }
+.stat { display:flex; flex-direction:column; align-items:flex-start; gap:1px;
+        padding:2px 16px; border-left:1px solid var(--line); }
+.stat:first-child { border-left:0; }
+.stat b { font-family:var(--display); font-weight:400; font-size:23px;
+          line-height:1; letter-spacing:-.01em; color:var(--gold); }
+.stat i { font-style:normal; font-family:var(--sans); font-size:9.5px;
+          letter-spacing:.18em; text-transform:uppercase; color:var(--mut); }
+/* Ready is the one number that is a WARNING as much as a fact, so it keeps
+   the ember; the clock is ambient and stays muted. */
 #hud-ready { color:var(--ember); }
-#hud-clock { font-family:'Bangers', Impact, sans-serif; font-size:15px; color:#9E93B8;
-             letter-spacing:.09em; }
+#hud-clock { color:var(--mut); font-size:19px; }
 
 /* the switch back to the Classic 2D block — the HUD is pointer-events:none, so opt in */
-.switch2d { pointer-events:auto; display:inline-block; margin-top:8px; font-family:'Bangers', Impact, sans-serif;
+.switch2d { pointer-events:auto; display:inline-block; margin-top:8px; font-family:var(--display);
   font-size:12px; letter-spacing:.14em; color:var(--gold); text-decoration:none;
   border:1px solid rgba(227,178,60,.45); padding:3px 9px; border-radius:3px; background:rgba(10,7,20,.55); }
 .switch2d:hover { background:rgba(227,178,60,.18); border-color:var(--gold); }
 #hud-pillars { display:flex; gap:8px; }
 .chip { display:flex; align-items:center; gap:5px; padding:6px 10px 6px 8px;
-        background:linear-gradient(160deg, rgba(16,19,46,.92), rgba(10,7,20,.95));
-        box-shadow:0 0 0 1px color-mix(in srgb, var(--c) 42%, transparent), 0 4px 16px rgba(0,0,0,.5);
-        clip-path:polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px); }
+        background:linear-gradient(160deg, rgba(30,21,51,.92), rgba(13,9,24,.96));
+        box-shadow:0 0 0 1px color-mix(in srgb, var(--c) 42%, transparent), 0 5px 18px rgba(0,0,0,.5);
+        backdrop-filter:blur(7px); transition:transform var(--ease), box-shadow var(--ease);
+        border-radius:10px; }
 .chip .ic { font-size:14px; filter:saturate(1.15); }
-.chip b { font-family:'Bangers', Impact, sans-serif; font-size:12px; color:var(--c);
+.chip b { font-family:var(--display); font-size:12px; color:var(--c);
           letter-spacing:.07em; }
 .chip i { font-style:normal; font-size:14px; min-width:22px; text-align:right; color:var(--bone); }
 
-#hud-crisis { align-self:center; font-family:'Bangers', Impact, sans-serif; font-size:22px;
+#hud-crisis { align-self:center; font-family:var(--display); font-size:22px;
               letter-spacing:.07em; color:#FFD9C4; padding:9px 24px; opacity:0;
               transform:translateY(-8px); transition:opacity .35s, transform .35s;
               background:linear-gradient(160deg, rgba(164,74,63,.94), rgba(90,24,30,.95));
               box-shadow:0 0 0 1px rgba(232,132,60,.5), 0 10px 34px rgba(0,0,0,.6);
-              clip-path:polygon(11px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%, 0 11px); }
+              border-radius:14px; }
 #hud-crisis.on { opacity:1; transform:translateY(0); }
 
-.keys { display:flex; gap:16px; font-size:12px; color:#8C82A6; letter-spacing:.12em;
-        text-transform:uppercase; }
-.keys kbd { font-family:'Bangers', Impact, sans-serif; font-size:12px; color:var(--gold);
+.keys { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:var(--mut);
+        letter-spacing:.12em; text-transform:uppercase; }
+.keys kbd { font-family:var(--display); font-size:12px; color:var(--gold);
             letter-spacing:.06em; }
+/* A new verb has to be findable, or it shipped without being wired. Violet
+   marks it as new against a rail of gold; it is the only one in that colour. */
+.keys .key-new { color:var(--violet); }
+.keys .key-new kbd { color:var(--violet); text-shadow:0 0 12px rgba(168,119,230,.55); }
 
 /* ── The E prompt ─────────────────────────────────────────────────────── */
 .prompt { position:fixed; left:50%; bottom:23%; transform:translate(-50%,8px);
           display:flex; gap:9px; align-items:center; opacity:0; pointer-events:none;
           transition:opacity .18s, transform .18s;
-          background:linear-gradient(160deg, rgba(16,19,46,.94), rgba(10,7,20,.96));
-          box-shadow:var(--edge); padding:8px 16px;
-          clip-path:polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+          background:linear-gradient(160deg, rgba(30,21,51,.94), rgba(13,9,24,.97));
+          box-shadow:var(--edge); padding:8px 16px; backdrop-filter:blur(7px);
+          border-radius:11px; }
 .prompt.on { opacity:1; transform:translate(-50%,0); }
-.prompt kbd { font-family:'Bangers', Impact, sans-serif; font-size:15px; color:var(--ink);
+.prompt kbd { font-family:var(--display); font-size:15px; color:var(--ink);
               background:var(--gold); padding:2px 9px; letter-spacing:.05em; }
 .prompt-label { font-size:13px; letter-spacing:.15em; color:var(--bone); }
 
@@ -108,10 +177,11 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
            backdrop-filter:blur(3px); pointer-events:auto; padding:24px; }
 .overlay.on { display:flex; }
 .sheet { max-width:620px; width:100%; max-height:70vh; overflow-y:auto;
-         background:linear-gradient(160deg, rgba(19,22,52,.98), rgba(10,7,20,.99));
-         box-shadow:var(--edge); padding:26px 30px;
-         clip-path:polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); }
-.sheet h2 { font-family:'Bangers', Impact, sans-serif; font-size:27px; margin:0 0 4px;
+         background:linear-gradient(160deg, rgba(30,21,51,.98), rgba(13,9,24,.99));
+         box-shadow:0 0 0 1px rgba(232,194,90,.2), 0 18px 54px rgba(0,0,0,.6);
+         padding:26px 30px;
+         border-radius:14px; }
+.sheet h2 { font-family:var(--display); font-size:27px; margin:0 0 4px;
             color:var(--gold); letter-spacing:.05em; }
 .sheet h2 + .sheet-body { border-top:2px solid rgba(227,178,60,.28); padding-top:14px; }
 .sheet-body { display:flex; flex-direction:column; gap:11px; font-size:15px; line-height:1.55; }
@@ -122,7 +192,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .line.power span { color:var(--gold); }
 .real { border-left:3px solid var(--gold); padding:9px 0 9px 14px; background:rgba(227,178,60,.07); }
 .real b { color:var(--gold); letter-spacing:.1em; font-size:12px; }
-.sheet-close { font-family:'Bangers', Impact, sans-serif; font-size:14px; letter-spacing:.1em;
+.sheet-close { font-family:var(--display); font-size:14px; letter-spacing:.1em;
                background:var(--gold); color:var(--ink); border:0; padding:9px 26px;
                cursor:pointer; }
 .sheet-close:hover { background:var(--ember); }
@@ -138,7 +208,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .tab { display:flex; align-items:center; gap:5px; background:rgba(10,7,20,.7); border:0;
        box-shadow:0 0 0 1px color-mix(in srgb, var(--c) 34%, transparent);
        padding:6px 9px; cursor:pointer; color:var(--bone); }
-.tab b { font-family:'Bangers', Impact, sans-serif; font-size:11px; letter-spacing:.07em;
+.tab b { font-family:var(--display); font-size:11px; letter-spacing:.07em;
          color:var(--c); font-weight:400; }
 .tab.on { background:color-mix(in srgb, var(--c) 24%, transparent);
           box-shadow:0 0 0 1px var(--c); }
@@ -150,7 +220,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .card.sel { box-shadow:0 0 0 2px var(--gold); background:rgba(227,178,60,.12); }
 .card.poor { opacity:.45; }
 .card-name { font-size:15px; }
-.card-cost { font-family:'Bangers', Impact, sans-serif; font-size:14px; color:var(--unity);
+.card-cost { font-family:var(--display); font-size:14px; color:var(--unity);
              letter-spacing:.04em; }
 .card-desc { grid-column:1 / -1; font-size:12px; color:#9E93B8; line-height:1.45; }
 .drawer-hint { font-size:11px; letter-spacing:.13em; color:#8C82A6; text-transform:uppercase; }
@@ -161,7 +231,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
    you climbed into the sky to look at. Teal is the watch's own colour, the
    same one on the drones' rim lights. */
 .feed { position:fixed; inset:0; pointer-events:none; opacity:0;
-        transition:opacity .25s; font-family:'Bangers', Impact, sans-serif; }
+        transition:opacity .25s; font-family:var(--display); }
 .feed.on { opacity:1; }
 .feed-c { position:absolute; width:34px; height:34px; border:2px solid rgba(63,200,200,.85); }
 .feed-c.tl { top:22px; left:22px; border-right:0; border-bottom:0; }
@@ -202,7 +272,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .tpad { position:absolute; right:20px; bottom:24px; width:172px; height:172px;
         pointer-events:none; }
 .tbtn { position:absolute; border:0; pointer-events:auto; touch-action:none; cursor:pointer;
-        font-family:'Bangers', Impact, sans-serif; letter-spacing:.05em;
+        font-family:var(--display); letter-spacing:.05em;
         color:var(--bone); background:linear-gradient(160deg, rgba(19,22,52,.86), rgba(10,7,20,.9));
         box-shadow:0 0 0 2px rgba(227,178,60,.34), 0 4px 16px rgba(0,0,0,.5);
         border-radius:50%; display:grid; place-items:center; }
@@ -262,7 +332,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .ask-line { font-size:19px; line-height:1.5; color:#FFE9BC; padding:6px 0 4px;
             border-left:3px solid var(--ember); padding-left:14px; }
 .ask-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-.act { font-family:'Bangers', Impact, sans-serif; font-size:14px; letter-spacing:.09em;
+.act { font-family:var(--display); font-size:14px; letter-spacing:.09em;
        background:rgba(10,7,20,.7); color:var(--bone); border:0; padding:11px 22px;
        cursor:pointer; box-shadow:0 0 0 1px rgba(227,178,60,.4); margin-top:8px; }
 .act:hover:not(:disabled) { box-shadow:0 0 0 1px var(--gold); background:rgba(30,22,52,.85); }
@@ -277,22 +347,28 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
             background:linear-gradient(160deg, rgba(16,19,46,.93), rgba(10,7,20,.96));
             box-shadow:var(--edge); opacity:0; transition:opacity .25s;
             font-size:12px; letter-spacing:.12em; color:var(--bone);
-            clip-path:polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+            border-radius:11px; }
 .jobstrip.on { opacity:1; }
 .jobstrip i { display:block; height:3px; margin-top:7px; background:var(--gold);
               width:0%; transition:width .4s; }
 
 /* ── Doors panel ──────────────────────────────────────────────────────── */
-.door-group { margin-top:10px; padding-top:10px; border-top:1px solid rgba(227,178,60,.22);
-              display:flex; flex-direction:column; gap:2px; }
-.door-group b { font-family:'Bangers', Impact, sans-serif; font-size:14px; color:var(--gold);
+.door-group { margin-top:7px; padding-top:7px; border-top:1px solid rgba(232,194,90,.22);
+              display:flex; flex-direction:column; gap:1px; }
+.door-group b { font-family:var(--display); font-size:14px; color:var(--gold);
                 letter-spacing:.08em; font-weight:400; }
 .door-credit { font-size:12px; color:#9E93B8; }
+/* Tighter than it was. The list went from six doors to EIGHT when QUAN-TESS
+   and Alignment 365 were added, and at the owner's 1036x476 the sheet showed
+   two and a half of them — putting his own two products permanently below the
+   fold, which is the opposite of why they were added. Same information, less
+   air: ~44px a row instead of ~62px. */
 .door { display:flex; justify-content:space-between; align-items:center; gap:12px;
-        width:100%; text-align:left; background:rgba(10,7,20,.62); border:0; cursor:pointer;
-        color:var(--bone); font-family:inherit; padding:11px 14px; margin-top:6px;
-        box-shadow:0 0 0 1px rgba(227,178,60,.2); }
-.door:hover { box-shadow:0 0 0 1px var(--gold); background:rgba(28,20,48,.85); }
+        width:100%; text-align:left; background:rgba(13,9,24,.62); border:0; cursor:pointer;
+        color:var(--bone); font-family:inherit; padding:7px 13px; margin-top:4px;
+        border-radius:7px; box-shadow:0 0 0 1px rgba(232,194,90,.2);
+        transition:background var(--ease), box-shadow var(--ease); }
+.door:hover { box-shadow:0 0 0 1px var(--gold); background:var(--card-hi); }
 .door-label { font-size:15px; }
 .door-note { font-size:11px; letter-spacing:.1em; color:#9E93B8; text-transform:uppercase;
              white-space:nowrap; }
@@ -322,7 +398,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .sheet.who .sheet-body { overflow-y:auto; min-height:0; flex:1; padding-right:6px; }
 .sheet.who > .act { flex:none; margin-top:12px; width:100%; }
 .who-field { display:flex; flex-direction:column; gap:6px; }
-.who-field > b { font-family:'Bangers', Impact, sans-serif; font-size:11px; letter-spacing:.14em;
+.who-field > b { font-family:var(--display); font-size:11px; letter-spacing:.14em;
                  color:var(--gold); font-weight:400; }
 .who-rail { display:flex; flex-wrap:wrap; gap:6px; }
 .who-opt { font-family:'Rakkas', Georgia, serif; font-size:12.5px; color:var(--bone);
@@ -335,6 +411,38 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .who-opt.sw { width:38px; height:30px; padding:0; background:var(--sw); }
 .who-opt.sw:hover { background:var(--sw); }
 .who-opt.sw.on { background:var(--sw); box-shadow:0 0 0 2px var(--gold), 0 0 14px rgba(227,178,60,.5); }
+
+/* THE BLOCK — the eight starting characters. Wider than a swatch because each
+   one carries a name and a trade; a grid rather than a wrap so the row reads
+   as a cast list instead of a ragged rail. */
+.who-opt.who-face { display:flex; align-items:center; gap:8px; padding:7px 10px 7px 7px;
+  text-align:left; min-width:0; }
+.who-face-chip { width:22px; height:22px; flex:none; border-radius:50%;
+  background:var(--sw); box-shadow:inset 0 0 0 1px rgba(244,236,216,.28); }
+.who-face-t { display:flex; flex-direction:column; line-height:1.2; min-width:0; }
+.who-face-t b { font-family:var(--display); font-size:12.5px;
+  letter-spacing:.06em; font-weight:400; color:var(--bone); }
+.who-face-t i { font-style:normal; font-size:10.5px; letter-spacing:.04em;
+  color:rgba(244,236,216,.6); }
+.who-opt.who-face.on .who-face-t i { color:var(--gold); }
+/* Four across, so eight people are TWO rows and not four.
+   Measured at the owner's 1036x476: a two-column grid put four names on screen
+   and pushed LIKENESS, SKIN, HAIR, FIT and TRADE off the bottom — the sheet
+   then offered a cast of four and hid the word "customize" entirely. The
+   column count keys off WIDTH only; height has nothing to do with how many
+   fit side by side, and keying it to height was the bug. */
+.who-field:has(.who-face) .who-rail {
+  display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; }
+@media (max-width: 620px) {
+  .who-field:has(.who-face) .who-rail { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .who-face-t i { display:none; }
+}
+/* Short windows tighten the row rather than reflowing it. */
+@media (max-height: 560px) {
+  .who-opt.who-face { padding:5px 8px 5px 5px; gap:6px; }
+  .who-face-chip { width:18px; height:18px; }
+  .who-face-t i { font-size:9.5px; }
+}
 .who-input { font-family:'Rakkas', Georgia, serif; font-size:15px; color:var(--bone);
              background:rgba(10,7,20,.72); border:0; padding:9px 12px; width:100%;
              box-shadow:0 0 0 1px rgba(227,178,60,.24); }
@@ -354,11 +462,11 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
          background:linear-gradient(160deg, rgba(16,19,46,.93), rgba(10,7,20,.96));
          box-shadow:var(--edge); opacity:0; transform:translateX(-10px);
          transition:opacity .3s, transform .3s; pointer-events:auto;
-         clip-path:polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+         border-radius:13px; }
 .tutor.on { opacity:1; transform:translateX(0); }
 .tutor-head { display:flex; align-items:center; gap:8px; }
 .tutor-icon { font-size:17px; }
-.tutor-title { font-family:'Bangers', Impact, sans-serif; font-size:15px; letter-spacing:.07em;
+.tutor-title { font-family:var(--display); font-size:15px; letter-spacing:.07em;
                color:var(--gold); font-weight:400; }
 .tutor-hint { font-size:13px; line-height:1.5; color:#C6B79A; margin-top:6px; }
 .tutor-foot { display:flex; align-items:center; gap:9px; margin-top:10px;
@@ -370,9 +478,9 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
              box-shadow:inset 0 0 0 1px rgba(227,178,60,.38); }
 .tutor-dot.done { background:var(--gold); box-shadow:none; }
 .tutor-dot.now { background:var(--ember); box-shadow:0 0 8px rgba(232,132,60,.75); }
-.tutor-count { font-family:'Bangers', Impact, sans-serif; font-size:11px; color:#8C82A6;
+.tutor-count { font-family:var(--display); font-size:11px; color:#8C82A6;
                letter-spacing:.08em; }
-.tutor-skip { font-family:'Bangers', Impact, sans-serif; font-size:11px; letter-spacing:.1em;
+.tutor-skip { font-family:var(--display); font-size:11px; letter-spacing:.1em;
               background:none; border:0; color:#8C82A6; cursor:pointer; padding:2px 4px; }
 .tutor-skip:hover { color:var(--ember); }
 
@@ -384,7 +492,7 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 .toast { font-size:14px; letter-spacing:.04em; padding:9px 20px; color:var(--bone);
          background:linear-gradient(160deg, rgba(16,19,46,.95), rgba(10,7,20,.97));
          box-shadow:var(--edge); opacity:1; transition:opacity .5s, transform .5s;
-         clip-path:polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
+         border-radius:12px; }
 .toast.good { box-shadow:0 0 0 1px rgba(95,224,138,.5), 0 6px 22px rgba(0,0,0,.55); }
 .toast.bad  { box-shadow:0 0 0 1px rgba(224,90,90,.55), 0 6px 22px rgba(0,0,0,.55); }
 .toast.out  { opacity:0; transform:translateY(-10px); }
@@ -403,6 +511,286 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 @media (prefers-reduced-motion: reduce) {
   #hud-crisis { transition:none; }
 }
+/* ── THE SITE'S TWO REMAINING SIGNATURES ────────────────────────────────
+   Read off quantummelaninmedia.com and QUAN-TESS, not invented:
+
+   1. THE EYEBROW PILL. Both heroes open with a bordered, fully-rounded pill
+      holding small-caps gold at wide tracking — "✦ CATCH THE MYTH · BECOME THE
+      FISHERMAN", "✦ THE AKASHIC AI · BUILT ON THE SIX BOOKS". Every section
+      label in this game was already that text; it was just never given the pill.
+
+   2. FULLY-ROUNDED BUTTONS. Every call to action on both sites is a pill:
+      primary in a gold gradient with dark text, secondary outlined. The game's
+      buttons were square-cornered blocks. */
+.ge-eyebrow, .rl-eyebrow, .who-field > b, .door-group b {
+  display:inline-flex; align-items:center; gap:.5em; align-self:flex-start;
+  font-family:var(--sans); font-size:10px; font-weight:600;
+  letter-spacing:.17em; text-transform:uppercase; color:var(--gold);
+  border:1px solid rgba(232,194,90,.42); border-radius:999px;
+  padding:4px 11px; background:rgba(232,194,90,.07);
+  /* A pill is a single-line shape. Anything long enough to wrap inside one
+     stops reading as a label and starts reading as a broken button, so the
+     text is kept on one line and the pill grows with it. */
+  white-space:nowrap; max-width:100%; }
+.ge-eyebrow::before, .rl-eyebrow::before,
+.who-field > b::before, .door-group b::before { content:'✦'; opacity:.8; }
+
+/* Primary: the gold gradient pill, dark text. Both sites' main CTA. */
+.act.go, .sheet-close, .ge-close, .rl-close, .rl-accept, .ge-jump, #btn-more {
+  border-radius:999px; font-family:var(--sans); font-weight:600;
+  letter-spacing:.02em; text-transform:none; }
+.act.go, .sheet-close, .ge-close, .rl-close, .rl-accept {
+  background:linear-gradient(180deg, var(--gold-hi), var(--gold));
+  color:#1a1206; border:0; }
+.act.go:hover, .sheet-close:hover, .ge-close:hover,
+.rl-close:hover, .rl-accept:hover { filter:brightness(1.07); }
+
+/* Secondary: outlined pill, gold text. */
+.act, .rl-reply, .rl-supply, .ge-row, .door, .who-opt, .abtn3 {
+  border-radius:999px; font-family:var(--sans); }
+.act { font-weight:600; letter-spacing:.02em; text-transform:none;
+       border:1px solid var(--line); }
+/* The rows that hold two stacked lines stay softly rounded rather than fully
+   pilled — a 999px radius on a 56px-tall row bows the text off its own edges. */
+.ge-row, .rl-supply, .who-opt.who-face, .abtn3, .door { border-radius:12px; }
+.sheet { border-radius:16px; }
+.who-opt.sw { border-radius:8px; }
+
+/* ── ☰ MORE — the hidden menu ───────────────────────────────────────────
+   Parity with the 2D game's #more-wrap. The 3D world had all of these verbs
+   bound to keys and advertised only in a thirteen-item legend along the
+   bottom, which is how you ship a feature nobody finds. */
+#more-wrap { position:relative; pointer-events:auto; align-self:flex-end; }
+.abtn3 { display:flex; align-items:center; gap:8px; width:100%;
+  font-family:var(--display); font-size:13px; letter-spacing:.09em;
+  color:var(--bone); cursor:pointer; text-align:left; text-decoration:none;
+  padding:9px 13px; border-radius:8px; border:1px solid transparent;
+  background:linear-gradient(160deg, rgba(30,21,51,.92), rgba(13,9,24,.95));
+  transition:background var(--ease), border-color var(--ease), transform var(--ease); }
+.abtn3:hover { background:var(--card-hi); border-color:var(--line); transform:translateY(-1px); }
+.abtn3 kbd { margin-left:auto; font-family:var(--display); font-size:11px;
+  color:var(--ink); background:var(--gold); border-radius:3px; padding:1px 7px; }
+.abtn3.hot { border-color:rgba(232,194,90,.5); }
+.abtn3.hot kbd { background:var(--violet); color:#fff; }
+.abtn3.join { color:var(--gold-hi); border-color:rgba(232,194,90,.35); }
+.abtn3.danger { color:#ff9a8a; }
+.abtn3.switch { color:var(--violet); }
+
+#btn-more { width:auto; justify-content:center; padding:10px 18px;
+  box-shadow:0 0 0 1px rgba(232,194,90,.3), 0 8px 22px rgba(0,0,0,.5);
+  backdrop-filter:blur(7px); }
+#btn-more.on { background:var(--gold); color:var(--ink); border-color:var(--gold); }
+
+#more-pop { position:absolute; right:0; bottom:calc(100% + 10px); display:none;
+  flex-direction:column; gap:5px; width:264px; padding:9px; border-radius:12px;
+  background:linear-gradient(165deg, rgba(22,15,36,.97), rgba(7,5,13,.98));
+  border:1px solid var(--line);
+  box-shadow:0 18px 50px rgba(0,0,0,.72), 0 0 0 1px rgba(232,194,90,.14);
+  backdrop-filter:blur(10px); }
+#more-pop.show { display:flex; }
+@media (max-height: 560px) {
+  #more-pop { width:236px; }
+  .abtn3 { padding:7px 11px; font-size:12px; }
+}
+@media (prefers-reduced-motion: reduce) { .abtn3 { transition:none; } }
+
+/* ── THE GOD'S EYE ──────────────────────────────────────────────────────
+   The QMM house palette — quantummelaninmedia.com, the same tokens QUAN-TESS
+   runs on: gold on deep indigo, violet for the world. Declared locally rather
+   than pushed into :root, because the WORLD's colours come from src/config.js
+   PAL, which is shared with the 2D game and must not move. */
+.godseye {
+  --ge-gold:#e8c25a; --ge-gold-hi:#f5dc8e; --ge-violet:#a877e6;
+  --ge-ink:#07050d; --ge-card:#160f24; --ge-card-hi:#1e1533;
+  --ge-line:#2c2140; --ge-txt:#f3efe6; --ge-mut:#a99fc0;
+  position:fixed; inset:0; z-index:60; display:none; pointer-events:auto;
+  color:var(--ge-txt); font-family:'Rakkas', Georgia, serif;
+  /* The globe is drawn on the canvas BEHIND this layer, so the backdrop has to
+     stay transparent — a background here would hide the Earth entirely. */
+  background:transparent; cursor:grab;
+}
+.godseye.on { display:block; }
+.godseye:active { cursor:grabbing; }
+
+/* The block's HUD comes off while the Earth is up. Everything in it — the
+   readiness dial, the pillar chips, the [E] prompt, the key legend — describes
+   a block you are not looking at, and on the first render it all collided with
+   the globe's own header and hint. See main3d.js openGodsEye for why this is
+   not the "never display:none a panel" rule being broken, and for why it is a
+   deliberate one-off rather than a pattern: nothing else here hides #hud. */
+body.godseye-open #hud,
+body.godseye-open .toasts,
+body.godseye-open .tutor { display:none; }
+
+.ge-head { position:absolute; top:0; left:0; right:0; padding:18px 22px;
+  display:flex; align-items:baseline; gap:16px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(7,5,13,.92), rgba(7,5,13,0)); }
+.ge-head h2 { font-family:var(--display); margin:0;
+  font-size:clamp(22px,2.6vw,34px); letter-spacing:.06em; color:var(--ge-gold);
+  text-shadow:0 2px 18px rgba(232,194,90,.35); }
+.ge-sub { font-size:13px; color:var(--ge-mut); letter-spacing:.04em; flex:1; }
+.ge-close { pointer-events:auto; font-family:var(--display);
+  font-size:13px; letter-spacing:.1em; border:0; cursor:pointer; padding:9px 20px;
+  color:var(--ge-ink); background:linear-gradient(180deg,var(--ge-gold-hi),var(--ge-gold));
+  border-radius:3px; transition:filter .16s ease, transform .16s ease; }
+.ge-close:hover { filter:brightness(1.08); transform:translateY(-1px); }
+
+/* The reading column. Its own scroll, never squeezed by anything else —
+   the dock rule from the 2D game applies here too. */
+.ge-side { position:absolute; top:76px; right:18px; bottom:52px; width:352px;
+  overflow-y:auto; display:flex; flex-direction:column; gap:10px;
+  padding-right:6px; pointer-events:auto;
+  scrollbar-width:thin; scrollbar-color:var(--ge-gold) transparent; }
+.ge-side::-webkit-scrollbar { width:7px; }
+.ge-side::-webkit-scrollbar-thumb { background:var(--ge-gold); border-radius:4px; }
+
+.ge-eyebrow { font-family:var(--display); font-size:12px;
+  letter-spacing:.16em; color:var(--ge-violet); margin-top:6px; }
+.ge-card, .ge-twin, .ge-flat {
+  background:linear-gradient(165deg, rgba(30,21,51,.93), rgba(13,9,24,.95));
+  border:1px solid var(--ge-line); border-radius:10px; padding:14px 16px;
+  backdrop-filter:blur(6px); box-shadow:0 10px 30px rgba(0,0,0,.45); }
+.ge-twin { border-color:rgba(232,194,90,.45);
+  box-shadow:0 0 0 1px rgba(232,194,90,.16), 0 10px 30px rgba(0,0,0,.5); }
+.ge-twin-name { font-family:var(--display); font-size:21px;
+  letter-spacing:.05em; color:var(--ge-gold-hi); margin:2px 0 6px; }
+.ge-card-h { display:flex; align-items:center; gap:9px; }
+.ge-card-h b { font-family:var(--display); font-size:17px;
+  letter-spacing:.05em; color:var(--ge-txt); font-weight:400; }
+.ge-ico { font-size:16px; }
+.ge-big { font-family:var(--display); font-size:30px;
+  line-height:1.1; color:var(--ge-gold); margin:4px 0 2px; }
+.ge-meta { font-size:12.5px; color:var(--ge-mut); line-height:1.5; }
+/* THE RECEIPT — the market question, verbatim. Violet rule down the left so it
+   reads as a quotation from outside, not as our own copy. */
+.ge-receipt { margin-top:9px; padding:8px 0 8px 12px; font-size:12.5px;
+  line-height:1.5; color:var(--ge-txt); opacity:.86;
+  border-left:3px solid var(--ge-violet); background:rgba(168,119,230,.07); }
+
+.ge-list { display:flex; flex-direction:column; gap:5px; }
+.ge-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  cursor:pointer; padding:9px 12px; border-radius:8px; color:var(--ge-txt);
+  font-family:'Rakkas', Georgia, serif; font-size:14px;
+  background:rgba(22,15,36,.82); border:1px solid transparent;
+  transition:background .16s ease, border-color .16s ease, transform .16s ease; }
+.ge-row:hover { background:var(--ge-card-hi); border-color:var(--ge-line); transform:translateX(2px); }
+.ge-row.on { border-color:var(--ge-gold); background:rgba(232,194,90,.13); }
+.ge-row-t { display:flex; flex-direction:column; line-height:1.3; }
+.ge-row-t b { font-weight:400; letter-spacing:.03em; }
+.ge-row-t i { font-style:normal; font-size:11.5px; color:var(--ge-mut); }
+.ge-jump { margin-top:8px; width:100%; cursor:pointer; border:1px solid var(--ge-gold);
+  background:rgba(232,194,90,.14); color:var(--ge-gold-hi); border-radius:7px;
+  font-family:var(--display); font-size:13px; letter-spacing:.09em;
+  padding:9px 12px; transition:background .16s ease; }
+.ge-jump:hover { background:rgba(232,194,90,.26); }
+.ge-flat b { display:block; font-weight:400; color:var(--ge-gold); font-size:13px; letter-spacing:.04em; }
+.ge-flat span { font-size:12px; color:var(--ge-mut); line-height:1.45; }
+
+.ge-hint { position:absolute; left:22px; bottom:18px; font-size:12px;
+  letter-spacing:.09em; color:var(--ge-mut); pointer-events:none;
+  text-shadow:0 2px 10px rgba(0,0,0,.9); }
+
+/* Narrow windows — including the owner's 1036x476 — get the column as a
+   bottom sheet rather than losing it. No panel is ever display:none'd by
+   another panel's state; that rule cost this project a whole UI rework. */
+@media (max-width: 900px), (max-height: 560px) {
+  .ge-side { top:auto; right:0; left:0; bottom:0; width:auto; max-height:46vh;
+    padding:12px 16px 14px;
+    background:linear-gradient(180deg, rgba(7,5,13,0), rgba(7,5,13,.96) 18%); }
+  .ge-hint { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ge-row, .ge-close, .ge-jump { transition:none; }
+}
+
+/* ── THE RELIEF RUN ─────────────────────────────────────────────────────
+   Same chrome language as THE GOD'S EYE, one layer up. */
+.relief {
+  position:fixed; inset:0; z-index:62; display:none; pointer-events:auto;
+  color:var(--bone); font-family:'Rakkas', Georgia, serif; background:transparent;
+}
+.relief.on { display:block; }
+.rl-head { position:absolute; top:0; left:0; right:0; padding:18px 22px;
+  display:flex; align-items:baseline; gap:16px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(7,5,13,.92), rgba(7,5,13,0)); }
+.rl-head h2 { font-family:var(--display); margin:0;
+  font-size:clamp(20px,2.3vw,30px); letter-spacing:.06em; color:var(--gold);
+  text-shadow:0 2px 18px rgba(232,194,90,.35); }
+.rl-sub { font-size:13px; color:var(--mut); letter-spacing:.04em; flex:1; }
+.rl-close { pointer-events:auto; font-family:var(--display);
+  font-size:13px; letter-spacing:.1em; border:0; cursor:pointer; padding:9px 20px;
+  color:var(--ink); background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+  border-radius:3px; transition:filter var(--ease), transform var(--ease); }
+.rl-close:hover { filter:brightness(1.08); transform:translateY(-1px); }
+
+.rl-side { position:absolute; top:74px; right:18px; bottom:18px; width:372px;
+  overflow-y:auto; display:flex; flex-direction:column; gap:9px; padding-right:6px;
+  pointer-events:auto; scrollbar-width:thin; scrollbar-color:var(--gold) transparent; }
+.rl-side::-webkit-scrollbar { width:7px; }
+.rl-side::-webkit-scrollbar-thumb { background:var(--gold); border-radius:4px; }
+
+/* THE DISCLAIMER. Violet, at the top, never collapsible. The alert is real and
+   the person is not, and the sheet says so before it says anything else. */
+.rl-real { border:1px solid rgba(168,119,230,.55); border-radius:10px; padding:11px 14px;
+  background:linear-gradient(165deg, rgba(50,32,82,.92), rgba(18,12,32,.95)); }
+.rl-real b { display:block; font-family:var(--display); font-size:12px;
+  letter-spacing:.11em; color:var(--violet); font-weight:400; margin-bottom:4px; }
+.rl-real span { font-size:12px; line-height:1.5; color:var(--mut); }
+
+.rl-card { background:linear-gradient(165deg, rgba(30,21,51,.93), rgba(13,9,24,.95));
+  border:1px solid var(--line); border-radius:10px; padding:13px 15px;
+  backdrop-filter:blur(6px); box-shadow:0 10px 30px rgba(0,0,0,.45); }
+.rl-eyebrow { font-family:var(--display); font-size:11.5px;
+  letter-spacing:.16em; color:var(--violet); }
+.rl-where { font-family:var(--display); font-size:18px;
+  letter-spacing:.04em; color:var(--gold-hi); margin-top:3px; }
+.rl-name { font-family:var(--display); font-size:19px;
+  letter-spacing:.05em; color:var(--gold-hi); margin:3px 0 5px; }
+.rl-said { font-size:14px; line-height:1.55; color:var(--bone); }
+.rl-meta { font-size:12px; line-height:1.5; color:var(--mut); margin-top:5px; }
+.rl-receipt { margin-top:8px; padding:7px 0 7px 12px; font-size:12px; line-height:1.5;
+  color:var(--bone); opacity:.86; border-left:3px solid var(--violet);
+  background:rgba(168,119,230,.07); }
+
+.rl-reply { width:100%; text-align:left; cursor:pointer; padding:10px 14px;
+  border-radius:8px; font-family:'Rakkas', Georgia, serif; font-size:13.5px;
+  color:var(--bone); background:rgba(22,15,36,.85); border:1px solid var(--line);
+  transition:background var(--ease), border-color var(--ease), transform var(--ease); }
+.rl-reply:hover { background:var(--card-hi); border-color:var(--gold); transform:translateX(2px); }
+
+/* TAKE THE RUN. The one commitment on this sheet, so it carries the gold. */
+.rl-accept { width:100%; cursor:pointer; padding:12px 14px; border-radius:8px;
+  font-family:var(--display); font-size:15px; letter-spacing:.09em;
+  color:var(--ink); border:0;
+  background:linear-gradient(180deg, var(--gold-hi), var(--gold));
+  transition:filter var(--ease), transform var(--ease); }
+.rl-accept:hover { filter:brightness(1.07); transform:translateY(-1px); }
+
+.rl-supply { display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  cursor:pointer; padding:9px 13px; border-radius:8px; color:var(--bone);
+  font-family:'Rakkas', Georgia, serif; background:rgba(22,15,36,.85);
+  border:1px solid transparent;
+  transition:background var(--ease), border-color var(--ease), transform var(--ease); }
+.rl-supply:hover:not(:disabled) { background:var(--card-hi); border-color:var(--line); transform:translateX(2px); }
+/* What they actually asked for is marked, because sending the wrong thing is
+   allowed and pays less — the player should be able to see the difference. */
+.rl-supply.need { border-color:var(--gold); background:rgba(232,194,90,.13); }
+.rl-supply.short, .rl-supply:disabled { opacity:.42; cursor:not-allowed; }
+.rl-ico { font-size:17px; }
+.rl-supply-t { display:flex; flex-direction:column; line-height:1.3; }
+.rl-supply-t b { font-family:var(--display); font-size:13px;
+  letter-spacing:.06em; font-weight:400; }
+.rl-supply-t i { font-style:normal; font-size:11px; color:var(--mut); }
+
+@media (max-width: 900px), (max-height: 560px) {
+  .rl-side { top:auto; right:0; left:0; bottom:0; width:auto; max-height:52vh;
+    padding:12px 16px 14px;
+    background:linear-gradient(180deg, rgba(7,5,13,0), rgba(7,5,13,.96) 16%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rl-reply, .rl-supply, .rl-close { transition:none; }
+}
+
 /* shown only when the device cannot draw WebGL — see the gate script below */
 #nogl{position:fixed;inset:0;z-index:99;display:grid;place-items:center;padding:24px;
   background:#0A0714;color:#F4ECD8;font:600 18px/1.5 system-ui,-apple-system,sans-serif;text-align:center}
@@ -415,7 +803,9 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
 <div id="hud">
   <div class="row">
     <div class="brand">
-      <h1>C.U.I. F.A.C.T.S.</h1>
+      <!-- Two-tone, the way both hero lockups on his sites are set: the first
+           word in gold, the rest in bone. -->
+      <h1><span class="lead">C.U.I.</span> F.A.C.T.S.</h1>
       <div class="facts">
         <span><b>F</b>OOD</span><span><b>A</b>RT</span><span><b>C</b>LOTHES</span>
         <span><b>T</b>ECH</span><span><b>S</b>HELTER</span>
@@ -430,25 +820,45 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
   <div id="hud-crisis"></div>
 
   <div class="row">
-    <div class="panel">
-      <span class="big" id="hud-day">DAY 1</span>
-      <span class="big" id="hud-unity">✊ 0</span>
-      <span class="big" id="hud-ready">0% READY</span>
-      <span id="hud-clock">00:00</span>
+    <!-- THE STAT ROW, which is the site's most recognisable component: a big
+         gold numeral over a tiny uppercase muted label, repeated across a
+         hairline. quantummelaninmedia.com runs "5 FREE BROWSER GAMES / 7 BOOKS
+         ON AMAZON / 47 DROPS ON GUMROAD"; QUAN-TESS runs "6 BOOKS IN HIS
+         LIBRARY / 29 CRAFT SKILLS". The block's numbers are the same shape of
+         fact, and they were previously one run-on line of poster type. -->
+    <div class="panel stats">
+      <div class="stat"><b id="hud-day">1</b><i>Day</i></div>
+      <div class="stat"><b id="hud-unity">0</b><i>Unity</i></div>
+      <div class="stat"><b id="hud-ready">0%</b><i>Ready</i></div>
+      <div class="stat"><b id="hud-clock">00:00</b><i>Time</i></div>
     </div>
+    <!-- The keys you actually hold. Everything else moved behind MORE, the
+         same way the 2D game does it: a thirteen-item legend is not a control
+         scheme, it is a wall of text nobody reads twice. -->
     <div class="keys">
       <span><kbd>WASD</kbd> walk</span>
       <span><kbd>SHIFT</kbd> run</span>
       <span><kbd>E</kbd> act</span>
-      <span><kbd>R</kbd> answer</span>
-      <span><kbd>J</kbd> doors</span>
-      <span><kbd>M</kbd> music</span>
-      <span><kbd>N</kbd> sound</span>
-      <span><kbd>B</kbd> build</span>
       <span><kbd>F</kbd> raise / claim</span>
-      <span><kbd>T</kbd> to-do</span>
-      <span><kbd>L</kbd> lamp</span>
       <span><kbd>DRAG</kbd> look</span>
+    </div>
+
+    <!-- ☰ MORE — the hidden menu, matching the 2D game's #more-wrap. Every
+         item here is a key that already worked and that nobody could find. -->
+    <div id="more-wrap">
+      <button class="abtn3" id="btn-more" aria-haspopup="true" aria-expanded="false">☰ MORE</button>
+      <div id="more-pop">
+        <button class="abtn3 hot" id="m-godseye">🌍 THE GOD'S EYE <kbd>G</kbd></button>
+        <button class="abtn3" id="m-build">🧱 BUILD <kbd>B</kbd></button>
+        <button class="abtn3" id="m-todo">📋 THE BLOCK'S TO-DO <kbd>T</kbd></button>
+        <button class="abtn3 join" id="m-doors">✊ JOIN THE MOVEMENT <kbd>J</kbd></button>
+        <button class="abtn3" id="m-answer">🙋 RE-OPEN THE ASK <kbd>R</kbd></button>
+        <button class="abtn3" id="m-music">♪ MUSIC <kbd>M</kbd></button>
+        <button class="abtn3" id="m-sound">🔊 SOUND <kbd>N</kbd></button>
+        <a class="abtn3 switch" id="m-2d" href="https://quantummelaninmedia.com/cui/"
+           title="The same block, top-down — the original">🧭 CLASSIC 2D ↗</a>
+        <button class="abtn3 danger" id="m-reset">RESET BLOCK</button>
+      </div>
     </div>
   </div>
 </div>
@@ -477,6 +887,6 @@ body { font-family:'Rakkas', Georgia, serif; color:var(--bone); -webkit-font-smo
   if (classic) setTimeout(function () { location.replace(classic); }, 1800);
 })();
 </script>
-<script src="./bundle.js?v=1789582974185"></script>
+<script src="./bundle.js?v=1789758280647"></script>
 </body>
 </html>
