@@ -1466,6 +1466,21 @@ const BUILDINGS = {
     rock:'Copper wire · aluminium',
     desc:'When the towers drop, this still talks. Early warning on every crisis.',
     real:'Technician license is a 35-question test, no Morse. A $30 handheld reaches the county.' },
+  // The other half of the radio. comms_tower talks OUT; this one only
+  // remembers — offline Wikipedia, the medical library, the courses and a
+  // local model, on hardware the block owns. It is the most power-hungry
+  // building here on purpose: knowledge that never goes offline still runs
+  // on charge somebody has to make, so it browns out first and the block
+  // feels it as art drying up. Real stack it is modelled on:
+  // Project N.O.M.A.D. (Crosstalk Solutions, Apache-2.0) —
+  // https://github.com/Crosstalk-Solutions/project-nomad — Ollama + Qdrant,
+  // Kiwix, Kolibri, ProtoMaps. Fetched and confirmed 200 on 2026-09-19.
+  nomad_node: { name:'N.O.M.A.D. Node', pillar:'tech', cost:128, build:1.4,
+    prod:{art:2.0}, gather:1, upkeep:{tech:1.0}, light:true, crisisGuard:0.10,
+    rock:'Silicon · copper · lithium',
+    desc:'The library, the clinic and the teacher — all of it, with the internet dead.',
+    // ui.js:349 teases this at 70 chars — keep that first clause whole.
+    real:'Ollama, Kiwix and Kolibri on one mini-PC — AI chat, the whole library and the courses, with no signal at all. Project N.O.M.A.D. packages the stack, free and open source.' },
   tool_shed: { name:'Tool & Repair Shed', pillar:'tech', cost:78, build:0.9,
     prod:{tech:1.4, shelter:0.8}, upkeep:{mineral:0.4},
     rock:'Iron · steel stock',
@@ -1581,7 +1596,16 @@ const CRISES = [
     line:'The city went dark. Your block does not have to.',
     days:[4,6], weather:'none', sky:'#12132B', blackout:true, shareUnity:true,
     mult:{ prod:{}, draw:{tech:1.25} } },
-  { id:'water_main', name:'WATER MAIN BREAK', icon:'💧',
+  // Named WATER MAIN BREAK until 2026-09-19. The id stays `water_main` —
+  // saves, pm_map.json and hotspots.js all bind to it — but the DISPLAY name
+  // was the narrowest thing in the bucket. This crisis is bound to the
+  // Polymarket "drought" query (drought · water supply · reservoir · water
+  // main · boil water), so every state D4 market rendered under the banner
+  // "WATER MAIN BREAK". The owner read OREGON 99% on the globe and went
+  // looking for a burst pipe. A D4 exceptional drought is not a burst pipe,
+  // and the mult below is a drought anyway: food to 0.4, flora to 0.25 is
+  // crops dying, which no boil advisory does.
+  { id:'water_main', name:'WATER CRISIS', icon:'💧',
     line:'Boil advisory. No ETA. Same as last time.',
     days:[3,5], weather:'rain', sky:'#1E3348',
     mult:{ prod:{food:0.4, flora:0.25}, draw:{shelter:1.3} } },
@@ -1631,8 +1655,19 @@ const KTL = {
 const QMM = {
   name: 'QUANTUM MELANIN MEDIA',
   blurb: 'The studio that built this. Games, books, and the Bloodline Saga.',
+  // Every door pays the SAME ✊JOIN_UNITY + coins, once, on the honour system —
+  // see doors.js. QMM's own products sit in the same list as Red Pillar's on
+  // purpose: a door is a door, and the block does not rank whose movement you
+  // walk into.
+  //
+  // Both URLs were FETCHED and confirmed 200 on 2026-09-18 and identified by
+  // their own <title> ("QUAN-TESS AI - Quantum Melanin AI Platform & Akashic
+  // Records", "Alignment 365") rather than assumed off a memory note. A door
+  // that 404s costs the player nothing and costs us the whole point.
   links: [
     { label: 'Quantum Melanin Media', url: 'https://quantummelaninmedia.com/' },
+    { label: 'QUAN-TESS AI', url: 'https://quantus-ai.onrender.com/' },
+    { label: 'Alignment 365', url: 'https://alignment365.onrender.com/' },
   ],
 };
 return { GRID, TILE_HW, TILE_HH, DAY_SECONDS, START_UNLOCKED, PAL, PILLARS, PILLAR_ORDER, LAND, LAND_ORDER, CONSUMED, SCORED, DRAW_PER_HOUSEHOLD, HOUSEHOLD_UNITY, BASE_CAP, START, BUILDINGS, BUILD_ORDER, TAB_ORDER, CRISES, CRISIS_FIRST_DAY, CRISIS_GAP, JOIN_UNITY, KTL, QMM, SUBSTITUTE, SUB_INPUT_MULT, SUB_OUTPUT };
@@ -2846,7 +2881,55 @@ function workBuilding(state, x, y) {
     { worked: true });
 }
 
-return { claimPlot, placeBuilding, workBuilding };
+// ── RELIEF ────────────────────────────────────────────────────────────────
+// Sending the block's own drones out to a real-world event on THE GOD'S EYE.
+//
+// The rule lives HERE, with claimPlot and placeBuilding, for the reason at the
+// top of this file: the day src3d/ owns its own idea of what a crate of food
+// costs is the day the globe and the block disagree about the same stockpile.
+//
+// WATER IS FREE AND EVERYTHING ELSE IS NOT. The block has a spring — it is the
+// one thing it has more of than it needs, and giving it away should feel like
+// what it is. It pays the least Unity for exactly that reason. The five pillars
+// come off the shelf, and you feel it.
+const RELIEF = {
+  LOAD: 8,             // units in one drone run
+  UNITY_PER_UNIT: 2.4,
+  MATCH_BONUS: 1.8,    // sending what they actually asked for
+  WATER_UNITY: 9,      // a flat, smaller payment: the spring costs you nothing
+};
+
+/**
+ * Send a relief load to a real-world event.
+ *
+ * `supply` is a pillar key or 'water'. `need` is what the site asked for;
+ * matching it pays more, because aid that is not what was asked for is a
+ * smaller kind of help and the economy should say so.
+ */
+function sendRelief(state, supply, need) {
+  if (supply === 'water') {
+    const unity = RELIEF.WATER_UNITY * (need === 'water' ? RELIEF.MATCH_BONUS : 1);
+    return allow(
+      { ...state, unity: state.unity + unity, relief: (state.relief || 0) + 1 },
+      `The spring goes out. +✊${Math.round(unity)}.`,
+      { unity, units: RELIEF.LOAD, supply });
+  }
+  const have = Math.floor((state.stock && state.stock[supply]) || 0);
+  if (have < RELIEF.LOAD) {
+    return deny(state,
+      `Not enough ${supply.toUpperCase()} to load a drone — a run is ${RELIEF.LOAD}, you hold ${have}.`);
+  }
+  const unity = RELIEF.LOAD * RELIEF.UNITY_PER_UNIT * (supply === need ? RELIEF.MATCH_BONUS : 1);
+  return allow(
+    { ...state,
+      stock: { ...state.stock, [supply]: state.stock[supply] - RELIEF.LOAD },
+      unity: state.unity + unity,
+      relief: (state.relief || 0) + 1 },
+    `${RELIEF.LOAD} ${supply.toUpperCase()} is on the way. +✊${Math.round(unity)}.`,
+    { unity, units: RELIEF.LOAD, supply });
+}
+
+return { claimPlot, placeBuilding, workBuilding, sendRelief, RELIEF };
 })();
 
 /* ── art.js ─────────────────────────────────────── */
@@ -4070,6 +4153,173 @@ function comms_tower(ctx, e) {
   ctx.beginPath(); ctx.arc(0, -H - 10, 3, 0, Math.PI * 2); ctx.fill();
 }
 
+// The spring's outflow turning a wheel. Nothing here is gated on e.lit, and
+// that is the whole point of the building: it is the one source that does not
+// care about the sky, so it keeps turning at midnight, in a crisis, and while
+// the rest of the block is dark. Compare solar_array, which keys off e.sun —
+// a generator answers to its source, never to whether the block has charge.
+// Overshot from the left, so it turns counter-clockwise and the buckets that
+// carry water are the ones on the descending (left) side.
+function micro_hydro(ctx, e) {
+  const IRON = '#4A5058';
+  const spin = -e.t * 0.9;          // slow and heavy — it is 5.0 tech, not a toy
+
+  // tailrace pool it dumps into
+  ctx.fillStyle = shade(PAL.waterLo, -0.25);
+  ctx.beginPath(); ctx.ellipse(3, 3, 21, 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = rgba(PAL.water, 0.5);
+  ctx.beginPath(); ctx.ellipse(3, 2, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = rgba('#BFE6EE', 0.30); ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const r = ((e.t * 7 + i * 5) % 15);
+    ctx.beginPath(); ctx.ellipse(3, 2, r + 3, (r + 3) * 0.36, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // stone pier carrying the axle, drawn behind the wheel
+  ctx.fillStyle = shade(STONE, -0.22);
+  ctx.fillRect(12, -20, 11, 22);
+  ctx.fillStyle = shade(STONE, -0.05);
+  for (let i = 0; i < 5; i++) ctx.fillRect(12, -20 + i * 4.4, 11, 2.6);
+
+  // the flume, pouring in from upper-left
+  ctx.fillStyle = shade(WOOD, -0.22);
+  ctx.beginPath();
+  ctx.moveTo(-32, -33); ctx.lineTo(-12, -28); ctx.lineTo(-12, -24); ctx.lineTo(-32, -29);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = rgba(PAL.water, 0.75);
+  ctx.beginPath();
+  ctx.moveTo(-31, -32); ctx.lineTo(-13, -27.5); ctx.lineTo(-13, -26); ctx.lineTo(-31, -30.5);
+  ctx.closePath(); ctx.fill();
+  post(ctx, -26, 2, 30, 2.4, shade(WOOD, -0.1));
+
+  // the fall from the lip onto the upper-left rim
+  ctx.strokeStyle = rgba('#CFEFF6', 0.7); ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(-12.5, -26);
+  ctx.quadraticCurveTo(-10.5, -24, -7.5, -26.5);
+  ctx.stroke();
+
+  // the wheel
+  ctx.save(); ctx.translate(3, -17);
+  for (let i = 0; i < 10; i++) {
+    const a = spin + (i * Math.PI * 2) / 10;
+    const b = a + 0.44;
+    const mid = a + 0.22;
+    const c1 = Math.cos(a), s1 = Math.sin(a), c2 = Math.cos(b), s2 = Math.sin(b);
+    ctx.fillStyle = i % 2 ? shade(WOOD, 0.08) : shade(WOOD, -0.16);
+    ctx.beginPath();
+    ctx.moveTo(c1 * 10.5, s1 * 10.5); ctx.lineTo(c1 * 15.5, s1 * 15.5);
+    ctx.lineTo(c2 * 15.5, s2 * 15.5); ctx.lineTo(c2 * 10.5, s2 * 10.5);
+    ctx.closePath(); ctx.fill();
+    // buckets on the descending side are the ones carrying water down
+    if (Math.cos(mid) < 0 && Math.sin(mid) < 0.7) {
+      ctx.fillStyle = rgba(PAL.water, 0.55);
+      ctx.beginPath();
+      ctx.moveTo(c1 * 11, s1 * 11); ctx.lineTo(c1 * 15, s1 * 15);
+      ctx.lineTo(c2 * 15, s2 * 15); ctx.lineTo(c2 * 11, s2 * 11);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.strokeStyle = IRON; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(0, 0, 15.5, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(0, 0, 10.5, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 6; i++) {
+    const a = spin + (i * Math.PI) / 6;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * -10.5, Math.sin(a) * -10.5);
+    ctx.lineTo(Math.cos(a) * 10.5, Math.sin(a) * 10.5);
+    ctx.stroke();
+  }
+  ctx.fillStyle = shade(IRON, 0.25);
+  ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = PAL.copper;
+  ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // belt to the generator on the pier, and the copper coil itself
+  ctx.strokeStyle = rgba('#2A2420', 0.85); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(3, -20.5); ctx.lineTo(25, -18.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3, -13.5); ctx.lineTo(25, -15.5); ctx.stroke();
+  ctx.fillStyle = shade(IRON, 0.1);
+  ctx.fillRect(21, -22, 10, 10);
+  ctx.strokeStyle = PAL.copper; ctx.lineWidth = 1.3;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath(); ctx.moveTo(22, -20 + i * 3); ctx.lineTo(30, -20 + i * 3); ctx.stroke();
+  }
+  // it is always making power, so the pilot is never fully out
+  const pulse = 0.55 + Math.sin(e.t * 2.6) * 0.2;
+  ctx.fillStyle = `rgba(255,206,120,${e.lit ? pulse : pulse * 0.45})`;
+  ctx.beginPath(); ctx.arc(26, -24, 2, 0, Math.PI * 2); ctx.fill();
+
+  // splash where the buckets dump back into the race
+  for (let i = 0; i < 5; i++) {
+    const k = (e.t * 1.7 + i * 0.2) % 1;
+    ctx.fillStyle = rgba('#DFF4F9', 0.55 * (1 - k));
+    ctx.beginPath();
+    ctx.arc(-9 + i * 2.4, -2 + k * 6, 1.6 * (1 - k) + 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** A flat panel lying on the lower-right face of an iso box (slope -0.5). */
+function rightPanel(ctx, x0, w, yTop, h, fill) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(x0, yTop);
+  ctx.lineTo(x0 + w, yTop - w * 0.5);
+  ctx.lineTo(x0 + w, yTop - w * 0.5 + h);
+  ctx.lineTo(x0, yTop + h);
+  ctx.closePath(); ctx.fill();
+}
+
+// The archive box. Deliberately NO dish and NO antenna — comms_tower is the
+// one that talks out; this one only remembers. Screen and drive LEDs are both
+// gated on e.lit, so the node visibly goes dark the moment the block runs out
+// of charge. That is the trade the real hardware makes, drawn.
+function nomad_node(ctx, e) {
+  const CASE = '#39404B';
+  box(ctx, 0.58, 5, shade(STONE, -0.05));        // concrete pad
+  box(ctx, 0.44, 26, CASE, { rise: 5 });         // the cabinet
+
+  // vent louvres down the left face
+  ctx.strokeStyle = rgba(METAL, 0.4); ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    const y = -8 - i * 3.2;
+    ctx.beginPath(); ctx.moveTo(-12, y); ctx.lineTo(-3, y + 4.5); ctx.stroke();
+  }
+
+  // the screen — the whole point of the building, and it only glows on charge
+  rightPanel(ctx, 3, 9, -20, 7, e.lit ? '#9FE8C8' : '#1E2430');
+  if (e.lit) {
+    const s = (e.t * 0.55) % 1;
+    rightPanel(ctx, 3.6, 7.8, -19.6 + s * 6, 1, 'rgba(255,255,255,.45)');
+  }
+
+  // drive LEDs, staggered — the archive doing its work
+  for (let i = 0; i < 4; i++) {
+    const on = e.lit && Math.sin(e.t * (2.1 + i * 0.7) + i) > -0.2;
+    ctx.fillStyle = on ? (i === 0 ? '#7FE08A' : '#E8B75A') : 'rgba(120,128,140,.5)';
+    const x = 4.4 + i * 2.3;
+    ctx.beginPath(); ctx.arc(x, -9 - x * 0.5, 1.1, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // the shelf beside it: the library as physical objects, power or no power
+  const spines = ['#B4553F', '#3F6FB4', '#C9A227', '#4F8F5C', '#8A5BA8'];
+  ctx.fillStyle = shade(WOOD, -0.15);
+  ctx.fillRect(-27, 6, 17, 2);
+  for (let i = 0; i < spines.length; i++) {
+    const tall = 9 + (i % 2) * 1.5;
+    ctx.fillStyle = spines[i];
+    ctx.fillRect(-26 + i * 3, 6 - tall, 2.4, tall);
+  }
+
+  // DC feed into the pad — you can see what it eats
+  ctx.strokeStyle = rgba('#C9A227', 0.55); ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(-13, 2); ctx.quadraticCurveTo(-19, 8, -23, 7); ctx.stroke();
+}
+
 function fire_circle(ctx, e) {
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
@@ -4128,9 +4378,9 @@ function freedom_school(ctx, e) {
 const ART = {
   three_sisters, greens_bed, chicken_coop, root_cellar,
   herb_spiral, apothecary, med_station,
-  solar_array, wind_turbine, battery_wall,
+  solar_array, wind_turbine, battery_wall, micro_hydro,
   rain_catch, well, cistern, row_house,
-  watch_post, comms_tower, fire_circle, freedom_school,
+  watch_post, comms_tower, nomad_node, fire_circle, freedom_school,
   ...CRAFT_ART,
   ...LAND_ART,
 };
@@ -5130,6 +5380,51 @@ const PRESETS = {
   },
 };
 
+/**
+ * THE BLOCK — eight people you can move in as.
+ *
+ * Owner's ask, 2026-09-18: *"we can make a lil 5-8 man/woman verieties of
+ * melanated lil aatars players can select and customize"*, alongside *"stufff
+ * like the charecters dreadloc lookin dope are important"*.
+ *
+ * WHY THESE ARE NOT GENERATED MODELS. The offer was MuAPI or QUAN-TESS, and
+ * neither is used — which is the right call three times over: a published
+ * Artifact's CSP blocks every external file, so a generated texture or a .glb
+ * could not load at all; the figure is built from the same primitives as the
+ * rest of the game, so a photoreal head would look pasted onto a graphic
+ * novel; and this costs nothing. These are data rows over the renderer that
+ * already exists — the locs alone are 18 strands on two rings plus a crown
+ * cluster, at uneven lengths, because the owner called out the first flat
+ * version. That is where "dope" lives, and it is already paid for.
+ *
+ * WHAT A STARTER IS: a prefill, NOT a lock. Picking one writes its look into
+ * the draft and leaves `preset: 'custom'`, so every swatch underneath still
+ * works — select AND customize, which is what was asked for. QUANTUS and TESS
+ * stay separate: they are canon, they are the hosts, and they are not starting
+ * characters.
+ *
+ * Skin/hair/fit are real SKINS/HAIRS/FITS values, so a renderer that has never
+ * heard of a starter still draws the right body.
+ */
+const STARTERS = [
+  { id: 'amara',  label: 'AMARA',  skin: '#3E2614', hair: 'locs',   fit: '#E3B23C',
+    trade: 'herbalist',   hoops: true,  note: 'knows every plant on the range' },
+  { id: 'kofi',   label: 'KOFI',   skin: '#4A2E18', hair: 'locs',   fit: '#3A4A9E',
+    trade: 'carpenter',   goatee: true, note: 'raises the frame before the sun clears' },
+  { id: 'nia',    label: 'NIA',    skin: '#5C3A21', hair: 'braids', fit: '#C8548F',
+    trade: 'griot',       hoops: true,  note: 'keeps the block’s memory' },
+  { id: 'malik',  label: 'MALIK',  skin: '#6B4226', hair: 'fade',   fit: '#3FC8C8',
+    trade: 'electrician', goatee: true, note: 'put the first panel on the roof' },
+  { id: 'zaina',  label: 'ZAINA',  skin: '#8A5A38', hair: 'wrap',   fit: '#4E8C4A',
+    trade: 'grower',      hoops: true,  note: 'the beds answer to her' },
+  { id: 'obasi',  label: 'OBASI',  skin: '#3E2614', hair: 'bald',   fit: '#E8843C',
+    trade: 'mason',       goatee: true, note: 'lays stone that outlasts the crisis' },
+  { id: 'imani',  label: 'IMANI',  skin: '#4A2E18', hair: 'afro',   fit: '#3FC8C8',
+    trade: 'producer',    hoops: true,  note: 'the block’s sound comes out of her room' },
+  { id: 'tariq',  label: 'TARIQ',  skin: '#5C3A21', hair: 'locs',   fit: '#E8843C',
+    trade: 'mechanic',    goatee: true, note: 'nothing in the motor pool stays dead' },
+];
+
 /** The full look for a host, or null for anything that is not one. */
 function presetLook(id) {
   const p = PRESETS[id];
@@ -5145,6 +5440,10 @@ const DEFAULT_IDENTITY = {
   skin: '#4A2E18',
   hair: 'locs',
   fit: '#E3B23C',
+  // Small details the starters carry. Optional and false by default, so a save
+  // written before they existed loads with no migration and draws as it did.
+  hoops: false,
+  goatee: false,
 };
 
 /** Clean whatever came out of the form into a storable identity. */
@@ -5165,6 +5464,11 @@ function makeIdentity(raw) {
     skin: canon ? canon.skin : (SKINS.some(s => s.hex === raw.skin) ? raw.skin : DEFAULT_IDENTITY.skin),
     hair: canon ? canon.hair : (HAIRS.some(h => h.id === raw.hair) ? raw.hair : DEFAULT_IDENTITY.hair),
     fit: canon ? canon.fit : (FITS.some(f => f.hex === raw.fit) ? raw.fit : DEFAULT_IDENTITY.fit),
+    // A host's canon already carries these; a custom figure gets whatever the
+    // starter set, coerced to a real boolean so a stray string cannot reach
+    // the renderer as a truthy "false".
+    hoops: canon ? !!canon.hoops : !!raw.hoops,
+    goatee: canon ? !!canon.goatee : !!raw.goatee,
   };
 }
 
@@ -5179,7 +5483,8 @@ function playerLook(state) {
   // so "walk as Quantus" quietly rendered the default figure.
   const host = presetLook(id.preset);
   if (host) return host;
-  return { preset: 'custom', skin: id.skin, hair: id.hair, fit: id.fit };
+  return { preset: 'custom', skin: id.skin, hair: id.hair, fit: id.fit,
+    hoops: !!id.hoops, goatee: !!id.goatee };
 }
 
 /** What the block is called on the map. */
@@ -5189,7 +5494,7 @@ function homesteadLabel(state) {
   const n = id.name.toUpperCase();
   return n.endsWith('S') ? `${n}' BLOCK` : `${n}'S BLOCK`;
 }
-return { makeIdentity, playerLook, homesteadLabel, SKINS, HAIRS, FITS, PLAYER_TRADES, DEFAULT_IDENTITY, needsIdentity, PRESETS, presetLook };
+return { makeIdentity, playerLook, homesteadLabel, SKINS, HAIRS, FITS, PLAYER_TRADES, DEFAULT_IDENTITY, needsIdentity, PRESETS, presetLook, STARTERS };
 })();
 
 /* ── pm_snapshot.js ─────────────────────────────────────── */
@@ -5821,6 +6126,15 @@ function signalInfo() {
         prob: e && e.covered ? e.prob : null,
         weight: w[c.id],
         top: e && e.sources && e.sources[0] ? e.sources[0] : null,
+        // EVERY market behind this crisis, not just the loudest one.
+        //
+        // `top` was enough while the only consumer was a panel printing one
+        // receipt per crisis. THE GOD'S EYE needs all of them, because the
+        // averaging is exactly what it undoes: water_main reads 33.6%, and
+        // that single number is NEVADA at 94% and OHIO at 3% flattened
+        // together. On a globe those are two different places, one of which is
+        // in real trouble. Additive — `top` and every other field are untouched.
+        sources: (e && e.sources) || [],
       };
     }).sort((a, b) => b.weight - a.weight),
   };
