@@ -61,7 +61,7 @@
   .selcard{width:230px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--card);cursor:pointer;transition:transform .12s,border-color .12s;}
   .selcard.sel{border-color:var(--gold);box-shadow:0 22px 50px -22px rgba(232,194,90,.7);transform:translateY(-4px);} .selcard.locked{opacity:.45;cursor:not-allowed;}
   .selname{font-family:var(--serif);font-weight:400;font-size:1.2rem;letter-spacing:.06em;margin-top:8px;} .seltag{font-size:.7rem;color:var(--mut);line-height:1.5;margin-top:4px;min-height:3em;} .selbest{font-size:.6rem;letter-spacing:.12em;color:var(--gold);margin-top:8px;} .lock{font-size:.6rem;letter-spacing:.2em;color:#ff6b6b;margin-top:6px;}
-  .selcard.hero{width:300px;padding:10px;} .poster{height:380px;border-radius:10px;overflow:hidden;position:relative;background:#0b0713;}
+  .selcard.hero{width:250px;padding:10px;} .poster{height:320px;border-radius:10px;overflow:hidden;position:relative;background:#0b0713;}
   .poster img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;display:block;transition:transform .35s ease,filter .35s;filter:saturate(.8) brightness(.8);}
   .selcard.hero.sel .poster img{transform:scale(1.05);filter:none;} .selcard.hero .poster::after{content:'';position:absolute;inset:0;box-shadow:inset 0 -60px 60px -20px rgba(5,3,10,.9);}
   @media (max-width:700px){ .selcard.hero{width:46vw;} .poster{height:48vw;} }
@@ -205,7 +205,7 @@
 
   <div class="overlay" id="menu">
     <div class="title">THE<br>UNERASED<small>QMM · TITLE 02 · 3D</small></div>
-    <p class="sub">The golden age of the Moor is under the <b style="color:var(--char)">erasure-force</b>. Choose your warrior — <b style="color:var(--cyan)">MELVINCI</b> the King or <b style="color:#3ce08f">KI-MAYA</b> the Queen — cross the ramparts room by room, break open the <b style="color:var(--gold)">powerup crates</b> to level your blaster, raise the <b style="color:var(--cyan)">Girih Ward</b> when the engine's maw lights up, and bring down the book-burning engine at the gate. Every crate gives a page back.</p>
+    <p class="sub">The golden age of the Moor is under the <b style="color:var(--char)">erasure-force</b>. Choose your warrior — <b style="color:var(--cyan)">MELVINCI</b> the King, <b style="color:#3ce08f">KI-MAYA</b> the Queen, <b style="color:#2ee6a8">3BIZZLE</b> the 023 Destroyer of Injustices or the <b style="color:#b56cff">MAJESTIC HEALER</b> — cross the ramparts room by room, break open the <b style="color:var(--gold)">powerup crates</b> to level your blaster, raise the <b style="color:var(--cyan)">Girih Ward</b> when the engine's maw lights up, and bring down the book-burning engine at the gate. Every crate gives a page back.</p>
     <div class="keys"><b>WASD / ARROWS</b> move — <b>double-tap</b> a direction to <b>DASH</b> (i-frames; dash <i>through</i> a shockwave) · <b>SHIFT</b> jump (again in the air = double jump — climb the rune terraces) · <b>SPACE / LEFT-CLICK</b> <b>ATTACK</b> — the plasma blade, 3-hit combo, the third launches; dash then attack = lunge · <b>RIGHT-CLICK / K</b> blaster — hold to charge, release at full for the alt-fire · <b>MOUSE</b> aims · <b>V</b> or <b>L</b> hold = Girih Ward — raise it right before a hit to <b>PARRY</b> · <b>F</b> MAGIC — the meter climbs <b>LV1 → LV2 → LV3 → MAX MELANIN MAGIC BLAST</b>; press early for a small spell or wait for a bigger one · <b>C</b> swap blaster · <b>DOUBLE-CLICK + DRAG</b> spins the camera 360° · <b>WHEEL</b> zooms · <b>R</b> resets the view · <b>P</b> pause</div>
     <div><button class="btn" id="start">Choose Your Warrior</button><button class="btn ghost" id="codexBtn">📜 The Codex</button></div>
     <div id="menuSound"></div>
@@ -216,10 +216,12 @@
   <div class="overlay hidden" id="select">
     <div class="title" style="font-size:clamp(1.6rem,6vw,3rem)">CHOOSE YOUR WARRIOR</div>
     <div class="selrow">
-      <div class="selcard sel hero" id="cardM" style="--acc:#4CE0E0"><div class="poster"><img src="./assets/ui/melvinci_poster.jpg" alt="Melvinci, the King, with his plasma greatsword"></div><div class="selname" style="color:var(--cyan)">MELVINCI</div><div class="seltag">THE KING · plasma greatsword on his back · astrolabe hand-cannon · Root Quake · Solar Melanin Beam · Crown Nova</div><div class="pal"><i style="background:#241a5e"></i><i style="background:#C9A84C"></i><i style="background:#4CE0E0"></i><i style="background:#2ee6a8"></i></div></div>
-      <div class="selcard hero" id="cardK" style="--acc:#3ce08f"><div class="poster"><img src="./assets/ui/kimaya_poster.jpg" alt="Ki-Maya, the Queen, with her plasma saber and lotus scepter"></div><div class="selname" style="color:#3ce08f">KI-MAYA</div><div class="seltag">THE QUEEN · plasma saber at her hip · lotus scepter · Chakram Storm · Heart Lotus · Ancestral Starfall</div><div class="pal"><i style="background:#0e5c3c"></i><i style="background:#C9A84C"></i><i style="background:#3ce08f"></i><i style="background:#ffd76a"></i></div></div>
+      <div class="selcard sel hero" id="cardM" data-hero="melvinci" style="--acc:#4CE0E0"><div class="poster"><img src="./assets/ui/melvinci_poster.jpg" alt="Melvinci, the King, with his plasma greatsword"></div><div class="selname" style="color:var(--cyan)">MELVINCI</div><div class="seltag">THE KING · plasma greatsword on his back · astrolabe hand-cannon · Root Quake · Solar Melanin Beam · Crown Nova</div><div class="pal"><i style="background:#241a5e"></i><i style="background:#C9A84C"></i><i style="background:#4CE0E0"></i><i style="background:#2ee6a8"></i></div></div>
+      <div class="selcard hero" id="cardK" data-hero="kimaya" style="--acc:#3ce08f"><div class="poster"><img src="./assets/ui/kimaya_poster.jpg" alt="Ki-Maya, the Queen, with her plasma saber and lotus scepter"></div><div class="selname" style="color:#3ce08f">KI-MAYA</div><div class="seltag">THE QUEEN · plasma saber at her hip · lotus scepter · Chakram Storm · Heart Lotus · Ancestral Starfall</div><div class="pal"><i style="background:#0e5c3c"></i><i style="background:#C9A84C"></i><i style="background:#3ce08f"></i><i style="background:#ffd76a"></i></div></div>
+      <div class="selcard hero" id="cardB" data-hero="bizzle" style="--acc:#2ee6a8"><div class="poster"><img src="./assets/ui/bizzle_poster.jpg" alt="3Bizzle, VLTRN 023, the Destroyer of Injustices, jade visor and jade core"></div><div class="selname" style="color:#2ee6a8">3BIZZLE</div><div class="seltag">023 DESTROYER OF INJUSTICES · rally stripe plasma blade · twin exhaust cannon · Rally Stripe Slam · Jade Core Pulse · Destroyer of Injustices</div><div class="pal"><i style="background:#0b0b0d"></i><i style="background:#C9A84C"></i><i style="background:#ff2b2b"></i><i style="background:#2ee6a8"></i></div></div>
+      <div class="selcard hero" id="cardH" data-hero="mahal" style="--acc:#b56cff"><div class="poster"><img src="./assets/ui/mahal_poster.jpg" alt="The Majestic Healer, VLTRN8, aka Cosmic08b, with her medic drones"></div><div class="selname" style="color:#b56cff">MAJESTIC HEALER</div><div class="seltag">aka COSMIC08B · VLTRN8 · purple plasma sword · lotus shield · healing light from both gauntlets · The Power of Breath · Medic Drone Swarm · Majestic Heal · Cosmic Healing Rain</div><div class="pal"><i style="background:#5b2a9e"></i><i style="background:#C9A84C"></i><i style="background:#b56cff"></i><i style="background:#e8c25a"></i></div></div>
     </div>
-    <p class="sub" style="margin-top:0;font-size:.8rem;opacity:.7">Both warriors are live behind this card — the one you pick charges up.</p>
+    <p class="sub" style="margin-top:0;font-size:.8rem;opacity:.7">All four warriors are live behind this card — the one you pick charges up.</p>
     <div><button class="btn" id="confirm">Choose The Front</button></div>
   </div>
 
@@ -255,6 +257,6 @@
     <div><button class="btn" id="again">Again</button><button class="btn hidden" id="nextWorld">Next World ▸</button><button class="btn ghost" id="toMenu">Menu</button></div>
   </div>
 
-  <script src="./bundle.js?v=1789947953053"></script>
+  <script src="./bundle.js?v=1790030501988"></script>
 </body>
 </html>
