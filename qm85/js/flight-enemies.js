@@ -89,6 +89,10 @@ export class EnemySwarm {
     const target = player.center();
     for (const b of this.bots) {
       if (!b.alive) continue;
+      if (b.frozen) { // boss entrance cutscene: he rises and roars, holds fire
+        b.obj.userData.animate?.(t + b.phase);
+        continue;
+      }
       b.phase += dt * 0.6;
       const orbit = new THREE.Vector3(Math.cos(b.phase) * b.orbit, b.ground ? 0 : Math.sin(b.phase * 1.3) * 6 + 3, Math.sin(b.phase) * b.orbit);
       const goal = target.clone().add(orbit);
@@ -113,9 +117,10 @@ export class EnemySwarm {
       const dist = b.obj.position.distanceTo(target);
       if (dist < b.radius + 0.7) {
         damage += b.boss ? 2 : 1;
-        if (!b.boss) this.kill(b);
+        if (!b.boss) this.kill(b, true);
         continue;
       }
+      if (b.boss && !b.enraged && b.hp <= b.maxHp * 0.5) this.#enrage(b);
       b.cd -= dt;
       if (b.cd <= 0 && dist < FIRE_RANGE * (b.boss ? 1.6 : 1)) {
         b.cd = rand(...b.fireGap);
@@ -176,10 +181,21 @@ export class EnemySwarm {
     return null;
   }
 
-  kill(bot) {
+  /** rammed = it flew into QM85 (no points). The flight owns the explosion, sound, shake and score popup. */
+  kill(bot, rammed = false) {
     bot.alive = false;
     bot.obj.visible = false;
-    sfx.boom();
+    if (this.onKill) this.onKill(bot, rammed);
+    else sfx.boom();
+  }
+
+  /** Half health: the boss gets meaner — faster, more rounds, and he calls his faction in. */
+  #enrage(b) {
+    b.enraged = true;
+    b.fireGap = b.fireGap.map((g) => g * 0.7);
+    b.volley += 1;
+    b.speed *= 1.25;
+    this.onEnrage?.(b);
   }
 
   /** Nearest living bot inside a cone around `dir` from `from` (for aim assist), or null. */

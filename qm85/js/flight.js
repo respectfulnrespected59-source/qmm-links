@@ -18,6 +18,24 @@ import { HyperLoop } from "./flight-hyperloop.js";
 import { surfaceNormal, ricochet, applyDeflect, Sparks } from "./flight-impact.js";
 import { OaklandMission, TOTAL } from "./oakland-mission.js";
 import { DayCycle } from "./oakland-day.js";
+import { KillFX, Shake } from "./flight-fx.js";
+import { BackBlast } from "./flight-backblast.js";
+import { Wake } from "./flight-wake.js";
+import { Finale, applyBattleBody, setArmorProgress } from "./battle-body.js";
+
+// Air drift (owner 09-24): at high speed the turn rate softens and his velocity lags the nose, so he floats and
+// slides through sharp turns instead of snapping — fast but controllable.
+const DRIFT_FROM = 26; // m/s where drift starts creeping in
+const DRIFT_FULL = 60; // m/s where it's at full float
+const GRIP_LOW = 60; // how fast velocity swings onto the nose at cruise (≈ no slide)
+const GRIP_HIGH = 7; // ...and flat out: a mild slide, ~15-20° at the peak of a hard turn
+const HIGH_SPEED_TURN = 0.72; // turn-rate multiplier at full speed
+const HIT_STOP = 0.045; // freeze-frame on a kill
+const BOSS_HIT_STOP = 0.14;
+const BOSS_SLOWMO = 1.6; // real seconds of slow motion when a boss dies
+const SLOWMO_SCALE = 0.3;
+const BOSS_INTRO = 2.6;
+const WIN_DELAY = 2.4; // let the boss death play before the win card
 
 // Thruster levels (owner 09-24): Seed of Life rings power them up; each level is faster and more nimble.
 const THRUSTERS = [null,
@@ -43,7 +61,7 @@ const LASER_LIFE = 0.9;
 const AIM_CONE = Math.cos(THREE.MathUtils.degToRad(7));
 const MAX_SHIELD = 6;
 const INVULN = 0.7;
-const SHOULDER = new THREE.Vector3(-0.42, 0.52, -2.15); // behind his right shoulder (his right = -X), feet toward us
+const SHOULDER = new THREE.Vector3(-0.38, 0.45, -1.75); // behind his right shoulder (his right = -X), feet toward us; owner 09-24: a little tighter for precise control
 const DOUBLE_TAP = 0.3;
 const TWIRL_TIME = 0.55; // one stylish barrel roll on a hard dive or climb
 const TWIRL_TRIGGER = 0.8; // fraction of max pitch that counts as "hard"
@@ -68,10 +86,26 @@ export class FlightBattle {
     this.hyper = new HyperLoop(this.root);
     this.sparks = new Sparks(this.root);
     this.missiles = new Missiles(this.root, this);
+    this.fx = new KillFX(this.root);
+    this.shake = new Shake();
+    this.backBlast = new BackBlast();
+    this.wake = new Wake(this.root);
+    this.freeze = 0; // hit-stop, real seconds
+    this.slowmo = 0; // boss-death slow motion, real seconds
+    this.popups = []; // { pos, text, big } drained by the HUD each frame
+    this.intro = null; // boss entrance cutscene
+    this.finale = null; // battle body cutscene
+    this.winDelay = 0;
+    this.boomT = -1; // one death sound per burst, not five stacked
+    this.swarm.onKill = (bot, rammed) => this.#onKill(bot, rammed);
+    this.swarm.onEnrage = (bot) => this.#onEnrage(bot);
+    if (opts.skin === "battle") applyBattleBody(this.pilot);
     this.impactT = 0; // debounce: one spark shower + clang per contact
     this.blastT = 0; // after a hyper-loop blast, hold the burst speed for a beat
     this.swarm.blocked = (p) => Boolean(this.arena.vehicleAt?.(p) || (p.y < 400 && this.arena.towerAt(p)));
-    this.arena.ready.then(() => {
+    this.built = !this.arena.ready; // zones without an async build are ready at once
+    this.arena.ready?.then(() => {
+      this.built = true; // main.js holds the sim (and hides the half-built city) until this flips
       if (this.arena.truckRider) this.power.riderSource = () => this.arena.truckRider();
     });
     this.mission = null;
@@ -80,14 +114,8 @@ export class FlightBattle {
     if (zone === "oakland") {
       this.day = new DayCycle({
         onPhase: (name, clock, jumped) => hooks.onPhase?.(name, clock, jumped),
-        onMidBoss: () => {
-          this.boss = this.swarm.spawnBoss(this.pos, MID_BOSS);
-          hooks.onBoss(this.boss.name);
-        },
-        onFinalBoss: () => {
-          this.boss = this.swarm.spawnBoss(this.pos);
-          hooks.onBoss(this.boss.name);
-        },
+        onMidBoss: () => this.#bossArrives(this.swarm.spawnBoss(this.pos, MID_BOSS)),
+        onFinalBoss: () => this.#bossArrives(this.swarm.spawnBoss(this.pos)),
         onCheckpoint: (cp) => hooks.onCheckpoint?.(cp),
         snapshot: () => ({ delivered: this.mission ? { ...this.mission.delivered } : { data: 0, part: 0 }, thrust: this.thrust, blaster: this.power.level, score: this.score }),
       });
@@ -101,17 +129,22 @@ export class FlightBattle {
         this.mission = new OaklandMission(this.root, this.arena, this, {
           onPickup: (kind, n) => hooks.onMission?.("pickup", { kind, n }),
           onFull: () => hooks.onMission?.("full"),
-          onDeliver: (state) => hooks.onMission?.("deliver", state),
+          onDeliver: (state) => {
+            hooks.onMission?.("deliver", state);
+            this.#armorUp(); // every battle part darkens + golds + bulks his armour (owner 09-24)
+          },
           onBoss: (name) => hooks.onBoss(name),
           onComplete: () => {
-            hooks.onMission?.("complete", { score: this.score });
             this.power.level = 5; // the battle body: blasters maxed, shield full
             this.shield = MAX_SHIELD;
+            this.finale = new Finale(this); // the warehouse cutscene, then the "complete" card
+            hooks.onMission?.("finale");
           },
         });
         if (this.resume) {
           this.mission.restore(this.resume.delivered);
           this.day.jumpTo(this.resume.phase);
+          this.#armorUp();
         }
       });
     }
@@ -177,9 +210,21 @@ export class FlightBattle {
       this.swarm.spawnWave(this.pos, lineup, this.wave);
       this.hooks.onWave(this.wave, lineupNames(lineup));
     } else {
-      this.boss = this.swarm.spawnBoss(this.pos);
-      this.hooks.onBoss(this.boss.name);
+      this.#bossArrives(this.swarm.spawnBoss(this.pos));
     }
+  }
+
+  /** The frame entry point: hit-stop freezes, a boss death plays in slow motion, then a normal update. */
+  step(dt) {
+    if (this.freeze > 0) {
+      this.freeze -= dt;
+      return;
+    }
+    if (this.slowmo > 0) {
+      this.slowmo -= dt;
+      dt *= SLOWMO_SCALE;
+    }
+    this.update(dt);
   }
 
   update(dt) {
@@ -189,18 +234,30 @@ export class FlightBattle {
     }
     this.t += dt;
     this.dt = dt;
+    for (const q of this.fx.update(dt)) { // boss death chain blasts
+      this.shake.add(q.final ? 1 : 0.3);
+      sfx.explode(q.final ? "boss" : "shadow");
+    }
+    if (this.finale) return this.#cutscene(dt, () => this.#updateFinale(dt));
+    if (this.intro) return this.#cutscene(dt, () => this.#updateIntro(dt));
     this.#boostState();
     if (this.fight.active) {
       this.fight.update(dt); // FIGHT MODE owns movement, pose and camera
+      this.shake.apply(this.camera, dt, this.t);
+      this.camBase = null; // back in the air, flight smooths from wherever the fight cam left it
     } else {
-      this.hyper.listen(this, this.t);
-      if (!this.hyper.update(dt, this)) this.#steer(dt); // the hyper loop owns pitch while it runs
-      this.#megaInput();
+      const refused = this.backBlast.listen(this);
+      if (typeof refused === "string") this.hooks.warn(refused);
+      if (!this.backBlast.active) this.hyper.listen(this, this.t);
+      const spinning = this.backBlast.update(dt, this, (dir) => this.#spinFire(dir));
+      if (!spinning && !this.hyper.update(dt, this)) this.#steer(dt); // the hyper loop / back blast own pitch while they run
+      if (!spinning) this.#megaInput();
       this.#combos(dt);
       this.#fly(dt);
+      this.wake.update(dt, this); // low + fast over water: spray + foam
       this.fight.tryLand(); // F near the street
     }
-    this.#shoot(dt);
+    if (!this.backBlast.active) this.#shoot(dt);
     this.#updateLasers(dt);
     this.#fireMissile();
     this.missiles.update(dt);
@@ -245,7 +302,9 @@ export class FlightBattle {
     const climb = (input.held("KeyS", "ArrowDown") ? 1 : 0) - (input.held("KeyW", "ArrowUp") ? 1 : 0);
     // Rates ease in and out, so a tap is a small precise correction and a hold is a full carve.
     const inverted = Math.cos(this.pitch) < 0; // over the top of a loop: keep left/right screen-correct
-    this.yawRate = THREE.MathUtils.damp(this.yawRate, (inverted ? -turn : turn) * YAW_RATE * agility, response, dt);
+    const hi = this.driftAmount; // 0 at cruise … 1 flat out: softer, floatier turns
+    const turnScale = THREE.MathUtils.lerp(1, HIGH_SPEED_TURN, hi);
+    this.yawRate = THREE.MathUtils.damp(this.yawRate, (inverted ? -turn : turn) * YAW_RATE * agility * turnScale, response * THREE.MathUtils.lerp(1, 0.6, hi), dt);
     this.pitchRate = THREE.MathUtils.damp(this.pitchRate, climb * PITCH_RATE * agility, response, dt);
     this.yaw += this.yawRate * dt;
     // Owner 09-24: a held climb goes all the way over — full loops (hold W) and outside loops (hold S).
@@ -331,7 +390,7 @@ export class FlightBattle {
     this.blastT = this.braking ? 0 : Math.max(0, this.blastT - dt); // the brake also kills a hyper blast
     if (this.blastT === 0) this.speed = THREE.MathUtils.damp(this.speed, top, this.braking ? BRAKE_DAMP : this.stealth ? 5 : 3, dt);
     applyDeflect(this, dt); // an impact eases him off course over a third of a second
-    this.vel.copy(this.forward()).multiplyScalar(this.speed);
+    this.#driftVelocity(dt);
     const prev = this.pos.clone();
     if (!this.striking) this.pos.addScaledVector(this.vel, dt); // the strike owns his position
     const floor = this.arena.floor ?? FLOOR;
@@ -365,21 +424,44 @@ export class FlightBattle {
       forward: this.forward(),
       swarm: this.swarm,
       onKill: (_bot, points) => (this.score += points),
-      onFire: (kills) => this.hooks.onMega(kills),
+      onFire: (kills) => {
+        this.shake.add(0.8);
+        this.hooks.onMega(kills);
+      },
     });
     this.pilot.update(dt, {
-      pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: this.bank, boosting: boosting || this.mega.busy, braking: this.braking,
-      thrustColor: this.stealth ? 0xffffff : lv.color, stealth: this.stealth,
-      spin: spin + this.twirlAngle + this.moves.spin, t: this.t, blink: this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 1,
+      pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: this.bank, boosting: boosting || this.mega.busy || this.backBlast.active, braking: this.braking,
+      thrustColor: this.stealth ? 0xffffff : lv.color, stealth: this.stealth, upright: this.backBlast.active,
+      spin: spin + this.twirlAngle + this.moves.spin + this.backBlast.angle, t: this.t, blink: this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 1,
     });
     this.invuln = Math.max(0, this.invuln - dt);
+  }
+
+  /** 0 at cruise … 1 at DRIFT_FULL speed. */
+  get driftAmount() {
+    return THREE.MathUtils.clamp((this.speed - DRIFT_FROM) / (DRIFT_FULL - DRIFT_FROM), 0, 1);
+  }
+
+  /** Air drift: velocity swings onto the nose quickly at cruise, lazily flat out — he slides through fast turns. */
+  #driftVelocity(dt) {
+    const want = this.forward().multiplyScalar(this.speed);
+    const scripted = this.striking || this.hyper.active || this.blastT > 0 || this.backBlast.active || this.braking || this.mega.busy;
+    if (!this.driftVel || scripted) this.driftVel = want.clone();
+    else {
+      const grip = THREE.MathUtils.lerp(GRIP_LOW, GRIP_HIGH, this.driftAmount);
+      this.driftVel.lerp(want, 1 - Math.exp(-grip * dt));
+      if (this.driftVel.lengthSq() > 1e-6) this.driftVel.setLength(this.speed);
+    }
+    this.vel.copy(this.driftVel);
   }
 
   /** Ricochet + sparks + clang; damage only when it was near head-on. */
   #impact(normal, prev, contact) {
     const { headOn } = ricochet(this, normal, prev);
+    this.driftVel = null; // a ricochet snaps velocity to the new heading — never slide INTO the wall
     if (this.impactT > 0) return;
     this.impactT = 0.4;
+    this.shake.add(headOn ? 0.6 : 0.25);
     this.sparks.burst(contact, normal, headOn ? 1.4 : 0.8);
     sfx.clang(headOn);
     if (headOn) this.#takeHit(1);
@@ -405,6 +487,12 @@ export class FlightBattle {
     const from = this.pilot.punch(this.side);
     const target = this.swarm.aimTarget(this.pos, fwd, AIM_CONE);
     const aim = this.fight.active ? this.fight.aim(from) : target ? target.obj.position.clone().sub(from).normalize() : fwd;
+    this.#bolts(from, aim, cfg.dmg);
+    sfx.laser(this.power.level);
+  }
+
+  /** One volley at the current blaster level (spread and all) from `from` along `aim`. */
+  #bolts(from, aim, dmg) {
     const { geo, mat, glowGeo, glowMat, radius } = this.power.bolt();
     for (const dir of this.power.spreadDirs(aim)) {
       const mesh = new THREE.Mesh(geo, mat);
@@ -412,9 +500,17 @@ export class FlightBattle {
       mesh.position.copy(from);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
       this.root.add(mesh);
-      this.lasers.push({ mesh, dir, life: LASER_LIFE, dmg: cfg.dmg, r: radius });
+      this.lasers.push({ mesh, dir, life: LASER_LIFE, dmg, r: radius });
     }
-    sfx.laser(this.power.level);
+  }
+
+  /** BACK BLAST volley: alternate fists, outward along the spin; the cannon sound on every other shot. */
+  #spinFire(dir) {
+    this.side = 1 - Math.max(0, this.side);
+    const from = this.pilot.punch(this.side);
+    this.#bolts(from, dir, this.power.config.dmg);
+    this.spinShots = (this.spinShots ?? 0) + 1;
+    if (this.spinShots % 2) sfx.laser(this.power.level);
   }
 
   #updateLasers(dt) {
@@ -433,7 +529,8 @@ export class FlightBattle {
   }
 
   #takeHit(n) {
-    if (this.invuln > 0 || this.mega.busy || this.hyper.active || this.moves.untouchable || this.twirlT > TWIRL_TIME * 0.2) return; // untouchable mid move
+    if (this.invuln > 0 || this.mega.busy || this.hyper.active || this.backBlast.active || this.moves.untouchable || this.twirlT > TWIRL_TIME * 0.2) return; // untouchable mid move
+    this.shake.add(0.45);
     this.shield -= n;
     this.invuln = INVULN;
     this.power.levelDown();
@@ -458,20 +555,117 @@ export class FlightBattle {
   }
 
   #progress() {
-    if (this.zone === "oakland") { // Oakland is won at NIGHT: the Serpent Priest goes down
-      if (this.boss?.final && !this.boss.alive && !this.done) {
-        this.done = true;
-        this.hooks.onWin(this.score);
-      }
-      return;
-    }
-    if (this.done || this.swarm.alive.length) return;
-    if (this.boss) {
+    if (this.boss?.final && !this.boss.alive && !this.done) { // the Serpent Priest is down: let his death play, then win
+      this.winDelay -= this.dt;
+      if (this.winDelay > 0) return;
       this.done = true;
       this.hooks.onWin(this.score);
       return;
     }
+    if (this.zone === "oakland") return; // Oakland is won at NIGHT, above
+    if (this.done || this.swarm.alive.length || this.boss) return;
     this.#nextWave();
+  }
+
+  // ------------------------------------------------------------ kills, bosses, cutscenes
+
+  #onKill(bot, rammed) {
+    const pos = bot.obj.position.clone();
+    if (bot.boss) {
+      this.fx.bossDeath(pos, "boss", bot.scale);
+      sfx.explode("boss");
+      this.shake.add(1);
+      this.freeze = BOSS_HIT_STOP;
+      this.slowmo = BOSS_SLOWMO;
+      this.popups.push({ pos, text: `+${bot.score}`, big: true });
+      this.hooks.onBossDown?.(bot.name);
+      if (bot.final) {
+        this.winDelay = WIN_DELAY;
+        for (const b of this.swarm.alive) this.swarm.kill(b, true); // his minions fall with him
+      }
+      return;
+    }
+    this.fx.explode(pos, bot.faction, bot.scale);
+    if (this.t - this.boomT > 0.06) { // a mega blast kills five at once: one death sound, not a stack
+      this.boomT = this.t;
+      sfx.explode(bot.faction);
+    }
+    this.shake.add(rammed ? 0.45 : 0.16 + bot.scale * 0.03);
+    this.freeze = Math.max(this.freeze, HIT_STOP);
+    if (!rammed) this.popups.push({ pos, text: `+${bot.score}`, big: false });
+  }
+
+  /** Half health: red pulse, alarm + roar, and he calls his own faction in. */
+  #onEnrage(bot) {
+    const at = bot.obj.position.clone();
+    this.fx.pulse(at, 0xff3b3b, bot.scale * 7);
+    this.shake.add(0.5);
+    sfx.enrage();
+    this.swarm.spawnWave(at, { [bot.final ? "acolyte" : "palantir"]: 4 }, 3);
+    this.hooks.onEnrage?.(bot.name);
+  }
+
+  /** Boss entrance: he rises out of a shockwave while the camera cuts to him; the fight holds for the intro. */
+  #bossArrives(bot) {
+    this.boss = bot;
+    bot.frozen = true;
+    this.intro = { bot, t: 0 };
+    this.fx.pulse(bot.obj.position, bot.final ? 0x7dff3a : 0x5fd8ff, bot.scale * 8);
+    this.shake.add(0.6);
+    sfx.roar();
+    this.hooks.onBoss(bot.name, bot.final);
+  }
+
+  /** Cutscene frame: the world idles, the effects play, no input, no damage. */
+  #cutscene(dt, body) {
+    sfx.engine.set({ on: false });
+    this.arena.update(dt, this.t);
+    this.sparks.update(dt);
+    this.#updateLasers(dt);
+    body();
+  }
+
+  #updateIntro(dt) {
+    const { bot } = this.intro;
+    this.intro.t += dt;
+    const k = Math.min(1, this.intro.t / 1.1);
+    bot.obj.scale.setScalar(bot.scale * (0.15 + 0.85 * (1 - (1 - k) ** 3))); // he RISES
+    bot.obj.userData.animate?.(this.t);
+    const bp = bot.obj.position;
+    const toward = this.pos.clone().sub(bp).setY(0).normalize();
+    const side = new THREE.Vector3(-toward.z, 0, toward.x);
+    const dist = bot.scale * 5.5;
+    const want = bp.clone().addScaledVector(toward, dist).addScaledVector(side, dist * 0.35 * Math.sin(this.intro.t * 0.8)).add(new THREE.Vector3(0, bot.scale * 0.9, 0));
+    this.camera.position.lerp(want, 1 - Math.exp(-dt * 5));
+    this.camera.up.set(0, 1, 0);
+    this.camera.lookAt(bp);
+    this.shake.apply(this.camera, dt, this.t);
+    this.pilot.update(dt, { pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: 0, boosting: false, spin: 0, t: this.t, blink: false });
+    if (this.intro.t < BOSS_INTRO) return;
+    bot.frozen = false;
+    bot.obj.scale.setScalar(bot.scale);
+    this.intro = null;
+    this.invuln = 1.2; // a beat to get your bearings as the camera swings back
+    this.camBase = null;
+  }
+
+  #updateFinale(dt) {
+    if (this.finale.update(dt)) return;
+    this.finale = null;
+    this.camBase = null;
+    this.hooks.onMission?.("complete", { score: this.score });
+  }
+
+  /** Battle parts delivered so far → how far his armour has turned black-grey + gold and bulked up. */
+  #armorUp() {
+    if (!this.mission) return;
+    const before = this.pilot.armor?.k ?? 0;
+    setArmorProgress(this.pilot, this.mission.delivered.part / (TOTAL / 2));
+    if ((this.pilot.armor?.k ?? 0) > before && !this.resume) { // a new piece bolted on: gold flash
+      this.fx.pulse(this.pos.clone().add(new THREE.Vector3(0, 1, 0)), 0xd4a73a, 5);
+      this.shake.add(0.2);
+      sfx.snap(3);
+    }
   }
 
   #placeCamera(dt) {
@@ -480,16 +674,26 @@ export class FlightBattle {
     const pull = this.moves.busy ? 2.4 : 1 + drift * 0.9; // widen out so the whole comet / loop reads
     const offset = SHOULDER.clone().multiplyScalar(pull).add(new THREE.Vector3(-drift * 2.0, drift * 0.8, 0));
     const want = this.pos.clone().add(offset.applyQuaternion(q));
+    // BACK BLAST: pull wide and ORBIT with the spin (a little ahead of him so you see the fists firing outward)
+    const orbit = this.backBlast.cam;
+    if (orbit > 0.001) {
+      const a = this.yaw + Math.PI + this.backBlast.angle * 0.85;
+      const ring = this.pos.clone().add(new THREE.Vector3(Math.sin(a) * 6.5, 2.2, Math.cos(a) * 6.5));
+      want.lerp(ring, orbit);
+    }
     want.y = Math.max(want.y, (this.arena.floor ?? 0) - 1.2); // never dip under the street and see the sky through it
-    this.camera.position.lerp(want, 1 - Math.exp(-dt * (14 - drift * 9)));
+    if (this.camBase) this.camera.position.copy(this.camBase); // smooth from the un-shaken spot
+    this.camera.position.lerp(want, 1 - Math.exp(-dt * (14 - drift * 9 - orbit * 6)));
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
     const ahead = this.pos.clone().addScaledVector(this.forward(), 30).addScaledVector(up, 0.6);
-    const look = ahead.lerp(this.pos, drift * 0.9); // drift cam watches HIM through the loop, not the sky ahead
-    this.camera.up.lerp(up, 1 - Math.exp(-dt * 10)).normalize(); // roll with him — no flip at the top of a loop
+    const look = ahead.lerp(this.pos, Math.max(drift * 0.9, orbit)); // drift / orbit cams watch HIM, not the sky ahead
+    this.camera.up.lerp(orbit > 0.5 ? new THREE.Vector3(0, 1, 0) : up, 1 - Math.exp(-dt * 10)).normalize(); // roll with him — no flip at the top of a loop
     this.camera.lookAt(look);
     this.stealthFov = THREE.MathUtils.damp(this.stealthFov ?? 0, this.stealth ? 14 : this.boosting ? 4 * this.thrust : 0, 4, dt);
-    this.camera.fov = 70 + this.moves.fovKick + this.stealthFov + drift * 8;
+    this.camera.fov = 70 + this.moves.fovKick + this.stealthFov + drift * 8 + orbit * 10;
     this.camera.updateProjectionMatrix();
+    this.camBase = this.camera.position.clone();
+    this.shake.apply(this.camera, dt, this.t);
   }
 
   /** Screen-space helpers for the HUD. */
@@ -516,6 +720,9 @@ export class FlightBattle {
       bossName: this.boss?.name ?? "",
       boss: Boolean(this.boss),
       bossHp: this.boss ? Math.max(0, this.boss.hp / this.boss.maxHp) : 0,
+      bossBar: this.boss && this.boss.alive && !this.intro ? { name: this.boss.name, hp: Math.max(0, this.boss.hp / this.boss.maxHp), enraged: Boolean(this.boss.enraged) } : null,
+      backBlast: this.power.level >= 2 ? (this.backBlast.cooldown > 0 ? this.backBlast.cooldown : 0) : -1,
+      cutscene: Boolean(this.intro || this.finale),
       left: this.swarm.alive.length,
       score: this.score,
       shield: this.shield,

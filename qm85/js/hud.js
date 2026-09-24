@@ -4,6 +4,8 @@ let toastTimer = 0;
 let subTimer = 0;
 let flightSig = "";
 let nowTimer = 0;
+let bossSig = "";
+let bossTimer = 0;
 
 function setCard(html, button, onClick) {
   const card = $("card");
@@ -45,7 +47,7 @@ export const hud = {
        <p><b>OAKLAND MISSION:</b> the dark companies scattered QM85's <b>data drives</b> and <b>battle parts</b> across
        real Oakland. Fly in, land, grab them on foot and walk them into the <b>QMM WAREHOUSE</b> — Rob &amp; Mahal are waiting.</p>
        <p class="controls"><b>FLIGHT:</b> ↑ dive · ↓ climb · ←/→ turn · hold SPACE boost · click / L = plasma punches · hold SHIFT = AIRBRAKE (flare + hover, then F to land) ·
-       Q = HEAT-SEEKING MISSILE · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off (on a FULL bar the blast is the COSMIC PLASMA STRIKE) · double-tap SPACE (full bar) = MEGA BLAST · double-tap ←/→ = barrel roll, switch mid-roll = hard bank the other way · double-tap ↑/↓ at LV1 = twirl + power thrust<br>
+       Q = HEAT-SEEKING MISSILE · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off (on a FULL bar the blast is the COSMIC PLASMA STRIKE) · double-tap SPACE (full bar) = MEGA BLAST · double-tap ←/→ = barrel roll, switch mid-roll = hard bank the other way · double-tap ↑/↓ at LV1 = twirl + power thrust · <b>B = BACK BLAST</b> (blaster LV2+): an upright 360° spin firing all around — for when they're on your tail<br>
        <b>FIGHT MODE:</b> fly low + <b>F</b> to land · W/S walk · A/D turn · click / L = blasters fire UP · SPACE jump · <b>F</b> = back to flight</p>
        </div></details>
        <button id="card-cyber" type="button" class="secondary">CYBERSPACE BATTLE</button>
@@ -92,11 +94,13 @@ export const hud = {
 
   flight(s) {
     const m = s.mission;
-    const sig = `${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${Math.round(s.bossHp * 40)}|${s.blaster}|${s.missiles}|${s.onFoot}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}`;
+    const bb = s.backBlast < 0 ? "" : s.backBlast > 0 ? Math.ceil(s.backBlast) : "READY";
+    const sig = `${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${s.blaster}|${s.missiles}|${s.onFoot}|${bb}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}`;
     if (sig !== flightSig) {
       flightSig = sig;
-      const stage = s.boss ? `<span class="boss">${s.bossName} ${"█".repeat(Math.ceil(s.bossHp * 20))}</span>`
-        : m ? `<span>HOSTILES ${s.left}</span>` : `<span>WAVE ${s.wave}/3</span><span>HOSTILES ${s.left}</span>`;
+      // the boss's health lives in the big bar now (#bossbar); the stats line keeps the head count
+      const stage = m || s.boss ? `<span>HOSTILES ${s.left}</span>` : `<span>WAVE ${s.wave}/3</span><span>HOSTILES ${s.left}</span>`;
+      const back = bb === "" ? "" : `<span class="bb${bb === "READY" ? "" : " cool"}">BACK BLAST ${bb === "READY" ? "READY <i>B</i>" : `${bb}s`}</span>`;
       const clock = s.day ? `<span class="clock">${s.day.clock} · ${s.day.phase}</span>` : "";
       const mission = m
         ? `<span class="mission">DATA ${m.data}/${m.total / 2} · PARTS ${m.part}/${m.total / 2} · CARRYING ${m.carrying}/3</span>` +
@@ -106,7 +110,7 @@ export const hud = {
         `${clock}${stage}<span>SCORE ${s.score}</span>` +
         `<span class="shield">SHIELD ${"▮".repeat(Math.max(0, s.shield))}${"▯".repeat(Math.max(0, s.maxShield - s.shield))}</span>` +
         `<span class="blaster">BLASTER LV${s.blaster} ${"◆".repeat(s.blaster)}${"◇".repeat(5 - s.blaster)}</span>` +
-        `<span class="missiles">MISSILES ${"▲".repeat(s.missiles)}${"△".repeat(s.missilesMax - s.missiles)} <i>Q</i></span>` +
+        `<span class="missiles">MISSILES ${"▲".repeat(s.missiles)}${"△".repeat(s.missilesMax - s.missiles)} <i>Q</i></span>${back}` +
         `<div id="fuel" class="meter"><span>THRUSTERS</span><div class="bar"><i></i></div></div>` + mission;
     }
     this.fuel(s.fuel, s.megaReady, s.stealth ? "STEALTH MODE" : `THRUSTERS LV${s.thrust}${s.thrust === 3 ? " · BOOST ON A FULL BAR = STEALTH" : ""}`);
@@ -184,11 +188,53 @@ export const hud = {
     nowTimer = setTimeout(() => el.classList.remove("on"), 4500);
   },
 
-  hitFlash() {
+  hitFlash(rage = false) {
     const f = $("flash");
     f.classList.remove("on");
+    f.classList.toggle("rage", rage);
     void f.offsetWidth; // restart the animation
     f.classList.add("on");
+  },
+
+  /** state = { name, hp (0..1), enraged } or null to hide. */
+  bossBar(state) {
+    const el = $("bossbar");
+    if (!state) {
+      if (!el.hidden) el.hidden = true;
+      bossSig = "";
+      return;
+    }
+    const sig = `${state.name}|${state.hp.toFixed(3)}|${state.enraged}`;
+    if (sig === bossSig) return;
+    bossSig = sig;
+    el.hidden = false;
+    el.querySelector("b").textContent = state.name;
+    el.classList.toggle("enraged", state.enraged);
+    const k = `scaleX(${Math.max(0, state.hp)})`;
+    el.querySelector(".hp").style.transform = k;
+    el.querySelector(".chip").style.transform = k; // same target, but it eases in late: the white chunk you just took off
+  },
+
+  /** Boss entrance: letterbox + slammed name card for the length of the intro. */
+  bossIntro(name, line, ms = 2500) {
+    const el = $("bosscard");
+    el.querySelector("h2").textContent = name;
+    el.querySelector("p").textContent = line;
+    el.hidden = true;
+    void el.offsetWidth; // restart the CSS animations
+    el.hidden = false;
+    clearTimeout(bossTimer);
+    bossTimer = setTimeout(() => (el.hidden = true), ms);
+  },
+
+  /** +SCORE text rising from where an enemy died (screen pixels). */
+  popup(x, y, text, big = false) {
+    const el = document.createElement("div");
+    el.className = big ? "popup big" : "popup";
+    el.textContent = text;
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    $("popups").append(el);
+    setTimeout(() => el.remove(), big ? 1900 : 1000);
   },
 
   fuel(f, megaReady = false, label = "THRUSTERS") {

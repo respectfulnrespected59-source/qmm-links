@@ -87,9 +87,11 @@ function curbFace(path, offset, h) {
 }
 
 /** Street-tree spots every ~24 m along the through roads, on the sidewalk, clear of buildings and water. */
-export function streetTreeSpots(roads, blocked) {
+/** limit: stop once this many spots are found — same spots, same order, without testing the rest of the city (boot 09-24). */
+export function streetTreeSpots(roads, blocked, limit = Infinity) {
   const out = [];
   for (const r of roads) {
+    if (out.length >= limit) break;
     if (!["primary", "secondary", "tertiary", "residential"].includes(r.k) || r.p.length < 2) continue;
     const off = (ROAD_WIDTH[r.k] ?? 6.5) / 2 + 1.6;
     let carry = 0;
@@ -102,7 +104,7 @@ export function streetTreeSpots(roads, blocked) {
         for (const side of [1, -1]) {
           const x = x1 + (x2 - x1) * k - (z2 - z1) / len * off * side;
           const z = z1 + (z2 - z1) * k + (x2 - x1) / len * off * side;
-          if (!blocked(new THREE.Vector3(x, 1, z))) out.push([x, z]);
+          if (out.length < limit && !blocked(new THREE.Vector3(x, 1, z))) out.push([x, z]);
         }
       }
       carry = (carry + len) % 24;

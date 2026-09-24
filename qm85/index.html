@@ -20,7 +20,9 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--text); font-family: Inter, sans-serif; }
     #stage canvas { display: block; }
-    #loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 18px Orbitron, sans-serif; letter-spacing: .15em; color: var(--violet); }
+    #loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 18px Orbitron, sans-serif; letter-spacing: .15em; color: var(--violet); z-index: 7;
+      background: linear-gradient(rgba(7, 2, 15, .72), rgba(7, 2, 15, .92)), url("assets/cover_small.jpg?v=qm85sheet") center / cover #07020f; /* covers the half-built city */
+      text-shadow: 0 0 14px rgba(155, 77, 255, .8); }
     #card { position: fixed; inset: 0; margin: auto; width: min(720px, calc(100% - 32px)); height: fit-content; max-height: calc(100% - 32px); overflow: auto;
       background: rgba(10, 4, 24, .92); border: 2px solid var(--gold); border-radius: 18px; padding: 24px; text-align: center;
       box-shadow: 0 0 40px rgba(155, 77, 255, .45); }
@@ -132,8 +134,37 @@
     #waypoint::after { content: attr(data-dist); position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font: 600 11px Orbitron, sans-serif; color: var(--gold); white-space: nowrap; }
     .meter.stealth span { color: #9fe8ff; text-shadow: 0 0 12px #9fe8ff; }
     .meter.stealth .bar i { background: linear-gradient(90deg, #9fe8ff, #ffffff); }
+    /* BOSS BAR (audit pick #2): a real health bar top-centre; the white "chip" trails the damage */
+    #bossbar { position: fixed; bottom: 64px; left: 50%; /* bottom-centre: the top-left stats wrap onto several lines */ transform: translateX(-50%); width: min(620px, calc(100% - 32px)); pointer-events: none; z-index: 3; text-align: center; }
+    #bossbar b { display: block; font: 900 clamp(13px, 1.8vw, 17px) Orbitron, sans-serif; letter-spacing: .22em; color: #ffcf5a; text-shadow: 0 0 10px #000, 0 0 16px rgba(255, 60, 60, .5); margin-bottom: 5px; }
+    #bossbar .track { position: relative; height: 14px; border: 2px solid var(--gold); border-radius: 8px; background: rgba(10, 4, 24, .8); overflow: hidden; box-shadow: 0 0 16px rgba(212, 167, 58, .4); }
+    #bossbar .chip, #bossbar .hp { position: absolute; left: 0; top: 0; bottom: 0; right: 0; transform-origin: left; }
+    #bossbar .chip { background: #fff; transition: transform .6s ease-out .25s; }
+    #bossbar .hp { background: linear-gradient(90deg, #7dff3a, #d4a73a); transition: transform .12s linear; }
+    #bossbar.enraged .hp { background: linear-gradient(90deg, #ff2f4f, #ff8a2a); animation: rage .5s ease-in-out infinite alternate; }
+    #bossbar.enraged b::after { content: " · ENRAGED"; color: #ff4d6d; }
+    @keyframes rage { from { filter: brightness(1); } to { filter: brightness(1.6); } }
+    /* BOSS ENTRANCE: letterbox bars + a big name card */
+    #bosscard { position: fixed; inset: 0; pointer-events: none; z-index: 5; display: grid; place-items: center; }
+    #bosscard::before, #bosscard::after { content: ""; position: absolute; left: 0; right: 0; height: 11vh; background: #000; animation: bars .35s ease-out both; }
+    #bosscard::before { top: 0; }
+    #bosscard::after { bottom: 0; }
+    @keyframes bars { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    #bosscard div { text-align: center; animation: slam .5s cubic-bezier(.2, 1.4, .4, 1) both .2s; }
+    #bosscard h2 { margin: 0; font: 900 clamp(28px, 6.5vw, 76px) Orbitron, sans-serif; letter-spacing: .12em; color: #ffcf5a; text-shadow: 0 0 24px rgba(255, 60, 60, .8), 0 4px 0 #000; }
+    #bosscard p { margin: 6px 0 0; font: 700 clamp(11px, 1.6vw, 16px) Orbitron, sans-serif; letter-spacing: .3em; color: #ffb3c0; text-shadow: 0 2px 6px #000; }
+    @keyframes slam { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: scale(1); } }
+    #flash.rage { background: radial-gradient(transparent 35%, rgba(255, 30, 50, .6)); }
+    /* +SCORE popups where the enemy died */
+    #popups { position: fixed; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+    .popup { position: absolute; left: 0; top: 0; font: 900 16px Orbitron, sans-serif; color: #ffcf5a; text-shadow: 0 0 8px #000, 0 0 12px rgba(155, 77, 255, .8);
+      animation: pop .9s ease-out forwards; white-space: nowrap; }
+    .popup.big { font-size: 34px; color: #fff3c4; animation-duration: 1.8s; }
+    @keyframes pop { 0% { opacity: 0; translate: -50% 0; scale: .6; } 15% { opacity: 1; scale: 1.15; } 100% { opacity: 0; translate: -50% -60px; scale: 1; } }
+    #stats .bb { color: #c58bff; }
+    #stats .bb.cool { opacity: .5; }
     [hidden] { display: none !important; }
-    @media (prefers-reduced-motion: reduce) { #toast, #subtitle { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { #toast, #subtitle { transition: none; } .popup, #bosscard div { animation-duration: .01s; } }
   </style>
 </head>
 <body>
@@ -143,6 +174,9 @@
   <div id="lock" hidden></div>
   <div id="pointer" hidden></div>
   <div id="flash"></div>
+  <div id="popups"></div>
+  <div id="bossbar" hidden><b></b><div class="track"><i class="chip"></i><i class="hp"></i></div></div>
+  <div id="bosscard" hidden><div><h2></h2><p></p></div></div>
   <div id="prompt" hidden></div>
   <div id="waypoint" hidden></div>
   <div id="credit" hidden></div>

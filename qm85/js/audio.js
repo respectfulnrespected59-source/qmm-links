@@ -218,8 +218,93 @@ function plasmaCannon(level) {
   grit.stop(t + len);
 }
 
+/** Noise through a filter whose cutoff sweeps f0 -> f1 (explosions, roars, debris). */
+function sweptNoise(dur, vol, { type = "lowpass", f0 = 4000, f1 = 200, q = 0.8, delay = 0, decay = 0.3 } = {}) {
+  const a = ac();
+  const t = a.currentTime + delay;
+  const len = Math.floor(a.sampleRate * dur);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (a.sampleRate * decay));
+  const src = a.createBufferSource();
+  src.buffer = buf;
+  const filt = a.createBiquadFilter();
+  filt.type = type;
+  filt.Q.value = q;
+  filt.frequency.setValueAtTime(f0, t);
+  filt.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t + dur);
+  const g = a.createGain();
+  g.gain.value = vol;
+  src.connect(filt).connect(g).connect(out());
+  src.start(t);
+}
+
+/** Every faction dies with its own voice (owner 09-24 audit: kills were one generic boom). */
+const DEATH = {
+  virus: () => { // wet goo pop + bubbling
+    sweptNoise(0.35, 0.3, { f0: 1800, f1: 160, decay: 0.08 });
+    tone(240, 0.22, { type: "sine", slide: -190, vol: 0.14 });
+    [520, 380, 610].forEach((f, i) => tone(f, 0.06, { type: "sine", slide: -200, vol: 0.05, delay: 0.06 + i * 0.05 }));
+  },
+  palantir: () => { // electric short-out, the eye pops, then a falling whine
+    for (let i = 0; i < 5; i++) tone(1400 + Math.random() * 2200, 0.04, { type: "square", vol: 0.035, delay: i * 0.035 });
+    sweptNoise(0.45, 0.24, { type: "bandpass", f0: 5000, f1: 400, q: 2, decay: 0.15 });
+    tone(1600, 0.6, { type: "sawtooth", slide: -1450, vol: 0.05, delay: 0.08 });
+  },
+  shadow: () => { // jet breaking up: sub boom + roaring debris
+    tone(80, 0.8, { type: "sine", slide: -50, vol: 0.3 });
+    sweptNoise(1.1, 0.34, { f0: 6000, f1: 150, decay: 0.35 });
+    tone(2600, 0.05, { type: "square", slide: -2200, vol: 0.05 });
+  },
+  acolyte: () => { // the robe tears, a hollow cursed bell rings out
+    sweptNoise(0.6, 0.26, { type: "bandpass", f0: 900, f1: 250, q: 1.5, decay: 0.2 });
+    [330, 333, 495].forEach((f) => tone(f, 0.9, { type: "triangle", vol: 0.05 }));
+  },
+  boss: () => { // a building-sized detonation
+    tone(55, 1.8, { type: "sine", slide: -30, vol: 0.45 });
+    sweptNoise(2.2, 0.45, { f0: 7000, f1: 90, decay: 0.7 });
+    tone(3000, 0.08, { type: "square", slide: -2700, vol: 0.07 });
+  },
+};
+
 export const sfx = {
   engine,
+  explode: (kind = "virus") => (DEATH[kind] ?? DEATH.virus)(),
+  // BOSS ENTRANCE: two detuned low saws growling through a lowpass that opens and closes, over a rumble
+  roar: () => {
+    const a = ac();
+    const t = a.currentTime;
+    const lp = a.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.Q.value = 6;
+    lp.frequency.setValueAtTime(180, t);
+    lp.frequency.exponentialRampToValueAtTime(1400, t + 0.5);
+    lp.frequency.exponentialRampToValueAtTime(140, t + 1.7);
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.9);
+    lp.connect(g).connect(out());
+    for (const [f, det] of [[62, 0], [62, 9], [124, -5]]) {
+      const o = a.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.linearRampToValueAtTime(f * 0.8, t + 1.8);
+      o.detune.value = det * 10;
+      o.connect(lp);
+      o.start(t);
+      o.stop(t + 2);
+    }
+    sweptNoise(1.8, 0.16, { f0: 600, f1: 80, decay: 0.8 });
+  },
+  enrage: () => { [880, 660, 880, 660].forEach((f, i) => tone(f, 0.14, { type: "square", vol: 0.06, delay: i * 0.16 })); sfx.roar(); },
+  snap: (i = 0) => { tone(1800 + i * 90, 0.08, { type: "triangle", slide: -900, vol: 0.06 }); tone(140, 0.12, { type: "square", slide: -60, vol: 0.08 }); },
+  transform: () => {
+    tone(110, 1.6, { type: "sawtooth", slide: 1700, vol: 0.07 });
+    [392, 523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.35, { type: "triangle", vol: 0.05, delay: 1.2 + i * 0.07 }));
+    tone(60, 1.4, { type: "sine", slide: -30, vol: 0.4, delay: 1.6 });
+    sweptNoise(1.6, 0.35, { f0: 8000, f1: 120, decay: 0.5, delay: 1.6 });
+  },
   // HYPER BOOST: a deep boom that drops away under a sharp supersonic crack
   sonicBoom: () => {
     const a = ac();

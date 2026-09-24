@@ -22,7 +22,7 @@ const AIR_TOPUP_EVERY = 14;
 const rand = (a, b) => a + Math.random() * (b - a);
 const glow = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
 
-function dataDrive() {
+export function dataDrive() {
   const g = new THREE.Group();
   g.add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 0.8),
     new THREE.MeshStandardMaterial({ color: 0x1a1030, metalness: 0.8, roughness: 0.25, emissive: 0x6a2cc8, emissiveIntensity: 0.5 })));
@@ -37,7 +37,7 @@ function dataDrive() {
   return g;
 }
 
-function battlePart() {
+export function battlePart() {
   const g = new THREE.Group();
   const gold = new THREE.MeshStandardMaterial({ color: 0xd4a73a, metalness: 1, roughness: 0.25, emissive: 0x4a3208, emissiveIntensity: 0.6 });
   g.add(new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), gold)); // gear body
@@ -84,6 +84,7 @@ export class OaklandMission {
 
   /** Rob & Mahal at the door, facing the street. */
   #crew() {
+    this.crew = []; // the finale makes them cheer
     for (const [name, dx] of [["rob", -9], ["mahal", 9]]) {
       const who = spawn(name);
       who.position.set(DOOR.x + dx, 0, DOOR.z - 3);
@@ -92,6 +93,7 @@ export class OaklandMission {
         if (o.isMesh) o.castShadow = true;
       });
       this.root.add(who);
+      this.crew.push(who);
     }
     this.doorGlow = new THREE.Mesh(new THREE.TorusGeometry(DOOR_RADIUS, 0.18, 8, 48), glow(0xffcf5a, 0.8));
     this.doorGlow.rotation.x = Math.PI / 2;

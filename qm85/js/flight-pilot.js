@@ -178,13 +178,13 @@ export class Pilot {
     return this.charge.getWorldPosition(new THREE.Vector3());
   }
 
-  update(dt, { pos, yaw, pitch, bank, boosting, spin, t, blink, grounded = false, walk = 0, thrustColor = 0xc58bff, stealth = false, braking = false }) {
+  update(dt, { pos, yaw, pitch, bank, boosting, spin, t, blink, grounded = false, walk = 0, thrustColor = 0xc58bff, stealth = false, braking = false, upright = false }) {
     this.flameMat.color.setHex(thrustColor);
     this.frame.position.copy(pos);
     this.frame.rotation.set(-pitch, yaw, bank);
     this.spin.rotation.y = spin;
-    // FIGHT MODE stands him up; flight tips him into the Superman pose
-    this.lean.rotation.x = THREE.MathUtils.damp(this.lean.rotation.x, grounded ? 0 : LEAN, 10, dt);
+    // FIGHT MODE and the BACK BLAST stand him up; flight tips him into the Superman pose
+    this.lean.rotation.x = THREE.MathUtils.damp(this.lean.rotation.x, grounded || upright ? 0 : LEAN, upright ? 18 : 10, dt);
     this.aimHold = Math.max(0, (this.aimHold ?? 0) - dt);
     this.arms.forEach((arm, i) => {
       const side = i === 0 ? -1 : 1; // right arm sits at -X

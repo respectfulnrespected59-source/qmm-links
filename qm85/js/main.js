@@ -17,6 +17,12 @@ import { touch } from "./touch.js";
 import { tutorial } from "./tutorial.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
+import { battleBodyUnlocked, chosenSkin, chooseSkin } from "./battle-body.js";
+
+const BOSS_LINES = {
+  "THE OVERSEER": "THE EYE THAT RUNS THE DRONES",
+  "THE SERPENT PRIEST": "HE CAME FOR THE BATTLE BODY",
+};
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, touch.enabled ? 1.5 : 2)); // phones: DPR 3 at full res would crawl
@@ -128,7 +134,12 @@ function startFlight(zone = game.zone, resume = null) {
   game.flight = new FlightBattle(scene, camera, {
     onPower: ({ level, source }) => hud.toast(`BLASTER LV${level}${source === "box" ? " — BLASTER BOX" : ""}`),
     onWave: (n, names) => hud.toast(`WAVE ${n} — ${names}`),
-    onBoss: (name) => hud.toast(`${name} HAS RISEN`),
+    onBoss: (name) => hud.bossIntro(name, BOSS_LINES[name] ?? "HAS RISEN"),
+    onBossDown: (name) => hud.toast(`${name} DESTROYED`),
+    onEnrage: (name) => {
+      hud.hitFlash(true);
+      hud.toast(`${name} IS ENRAGED — HE CALLED HIS BOTS IN`);
+    },
     onHit: () => hud.hitFlash(),
     onMove(kind) {
       tutorial.note(kind);
@@ -153,9 +164,13 @@ function startFlight(zone = game.zone, resume = null) {
       if (kind === "pickup") hud.toast(`${data.kind === "data" ? "DATA DRIVE" : "BATTLE PART"} SECURED — CARRYING ${data.n}/3`);
       if (kind === "full") hud.toast("HANDS FULL — GET THESE TO THE WAREHOUSE");
       if (kind === "deliver") hud.toast(`DELIVERED — BATTLE BODY ${Math.round(data.progress * 100)}% · THEY'RE COMING FOR YOU`);
-      if (kind === "complete") {
+      if (kind === "finale") hud.toast("BATTLE BODY — ASSEMBLING");
+      if (kind === "complete") { // after the warehouse cutscene: fight the rest of the night IN the battle body
         game.mode = "card";
-        hud.card("BATTLE BODY COMPLETE", `Every data drive and battle part is inside the QMM Warehouse. Rob and Mahal bolt the last plate on — QM85 doesn't flicker out anymore. Score: ${data.score}. When the time is right, he's ready.`, "RUN IT BACK", () => startFlight("oakland"));
+        hud.card("BATTLE BODY ONLINE", `Every data drive and battle part is inside the QMM Warehouse. Rob and Mahal bolt the last plate on — QM85 doesn't flicker out anymore. Blasters maxed, shield full. Score: ${data.score}. The Serpent Priest is still out there. Unlocked: the BATTLE BODY skin on the home screen.`, "FINISH THE NIGHT", () => {
+          game.mode = "flight";
+          hud.show("flight", "OAKLAND MISSION — BATTLE BODY");
+        });
       }
     },
     onWin(score) {
@@ -175,7 +190,7 @@ function startFlight(zone = game.zone, resume = null) {
       }
       hud.card("SHOT DOWN", `The invaders got a lock on him. Score: ${score}. Small, yes. Harmless, no. Run it back.`, "FLY AGAIN", () => startFlight());
     },
-  }, zone, { resume });
+  }, zone, { resume, skin: chosenSkin() });
   scene.background = game.flight.background;
   scene.fog = game.flight.fog;
   film.enabled = true;
@@ -236,7 +251,22 @@ function screenMark(p) {
 
 function flightHud() {
   const f = game.flight;
-  hud.flight(f.stats);
+  const stats = f.stats;
+  hud.flight(stats);
+  hud.bossBar(stats.bossBar);
+  for (const p of f.popups.splice(0)) { // +SCORE where each enemy died
+    const s = toScreen(p.pos);
+    if (!s.behind) hud.popup(s.x, s.y, p.text, p.big);
+  }
+  const hudEl = document.getElementById("hud");
+  if (hudEl.hidden !== stats.cutscene) hudEl.hidden = stats.cutscene; // cutscenes play clean: no stats, reticle or arrow
+  document.getElementById("reticle").hidden = stats.cutscene;
+  if (stats.cutscene) {
+    hud.targeting(toScreen(f.reticleWorld()), null);
+    hud.waypoint(null);
+    hud.prompt("");
+    return;
+  }
   const wp = f.mission?.waypoint();
   hud.waypoint(wp ? { ...screenMark(wp.clone().setY(Math.max(wp.y, 2))), dist: wp.distanceTo(f.pos) } : null);
   const reticle = toScreen(f.reticleWorld());
@@ -264,9 +294,21 @@ const clock = new THREE.Clock();
 // Auto-quality for integrated GPUs: if flight runs under TARGET_FPS, render fewer pixels (never below MIN_RATIO).
 const TARGET_FPS = 24;
 const MIN_RATIO = 0.75; // never blur below this (UHD pass, owner 09-24)
-const quality = { frames: 0, start: performance.now() };
+const RAISE_FPS = 30; // comfortably above the 24 floor: give sharpness back
+const QUALITY_GRACE = 4; // seconds after the city is built before we judge the frame rate (shader warm-up)
+const quality = { frames: 0, start: performance.now(), since: 0 };
 function autoQuality() {
   if (game.lockQuality) return; // perf probes pin the pixel ratio
+  const f = game.flight;
+  // owner 09-24 "takes a long time to clearly display the level": the 1-fps frames WHILE the city builds used to
+  // drop the pixel ratio for the whole run, and it never came back. Judge only a built, warmed-up city.
+  if (!f?.built) {
+    quality.since = performance.now();
+    quality.frames = 0;
+    quality.start = performance.now();
+    return;
+  }
+  if (performance.now() - quality.since < QUALITY_GRACE * 1000) return;
   quality.frames += 1;
   const elapsed = (performance.now() - quality.start) / 1000; // real time: the game dt is capped, so it hides slow frames
   if (elapsed < 2.5) return;
@@ -274,12 +316,25 @@ function autoQuality() {
   quality.frames = 0;
   quality.start = performance.now();
   const current = renderer.getPixelRatio();
-  if (fps < TARGET_FPS && current > MIN_RATIO) {
-    const next = Math.max(MIN_RATIO, current * 0.85);
-    renderer.setPixelRatio(next);
-    composer.setPixelRatio(next);
-    sizeFxaa();
-  }
+  const top = Math.min(devicePixelRatio, f.arena.pixelRatio ?? 2);
+  let next = current;
+  if (fps < TARGET_FPS && current > MIN_RATIO) next = Math.max(MIN_RATIO, current * 0.85);
+  else if (fps > RAISE_FPS && current < top) next = Math.min(top, current * 1.12);
+  if (next === current) return;
+  renderer.setPixelRatio(next);
+  composer.setPixelRatio(next);
+  sizeFxaa();
+}
+
+/** While the zone builds: hold the sim and show progress instead of a frozen half-built city. */
+function buildingScreen(f) {
+  const el = document.getElementById("loading");
+  const building = !f.built;
+  if (el.hidden === !building) return building;
+  el.hidden = !building;
+  if (building) el.textContent = game.zone === "oakland" ? "BUILDING REAL OAKLAND…" : "BOOTING CYBERSPACE…";
+  document.getElementById("hud").hidden = building;
+  return building;
 }
 function frame() {
   const dt = Math.min(clock.getDelta(), 1 / 20);
@@ -289,8 +344,14 @@ function frame() {
     requestAnimationFrame(frame);
     return;
   }
+  if (game.mode === "flight" && buildingScreen(game.flight)) {
+    autoQuality(); // keeps its clock reset while building
+    input.endFrame();
+    requestAnimationFrame(frame);
+    return;
+  }
   if (game.mode === "flight") {
-    game.flight.update(dt);
+    game.flight.step(dt); // hit-stop + boss-death slow motion live in step()
     const day = game.flight.day;
     if (day && scene.fog) { // night mode: haze and sky go deep blue-black, exposure lifts so the streets stay readable
       scene.fog.color.copy(game.flight.arena.haze).lerp(NIGHT_HAZE, day.night01);
@@ -310,6 +371,24 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
+/** Home screen: once the battle body is earned, a toggle to fly in it from the start. */
+function skinToggle() {
+  if (!battleBodyUnlocked()) return;
+  const actions = document.getElementById("actions");
+  if (!actions) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "secondary";
+  const label = () => (btn.textContent = `SKIN: ${chosenSkin() === "battle" ? "BATTLE BODY" : "CLASSIC"}`);
+  label();
+  btn.addEventListener("click", () => {
+    chooseSkin(chosenSkin() === "battle" ? "classic" : "battle");
+    label();
+    btn.blur();
+  });
+  actions.append(btn);
+}
+
 // ------------------------------------------------------------ boot
 async function boot() {
   try {
@@ -327,6 +406,7 @@ async function boot() {
     sfx.unlock();
     startFlight(forced ?? zone);
   });
+  skinToggle();
   requestAnimationFrame(frame);
 }
 

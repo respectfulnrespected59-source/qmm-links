@@ -62,11 +62,71 @@ function fleet(root, models, count, { dynamic } = {}) {
   });
   const set = (slot, m) => {
     for (const im of meshes[slot.ti]) im.setMatrixAt(slot.i, m);
+    slot.onSet?.(m); // tagged trucks: their graffiti panels ride along
   };
   const flush = () => meshes.flat().forEach((im) => {
     im.instanceMatrix.needsUpdate = true;
   });
   return { slots, set, flush };
+}
+
+// GRAFFITI (owner 09-24: "feel free to spray paint a truck or two"): the QMM wildstyle + QM85 murals, cropped tight
+// to the piece and feathered at the edges so it reads sprayed onto the box, not a poster of a brick wall.
+// Box-truck cargo box in the truck's local frame (nose +Z): centre (0, 2.73, -1.0), 2.4 wide × 5.0 long × 2.8 tall.
+const CARGO = { y: 2.73, z: -1.0, halfW: 1.2, len: 5.0, h: 2.8 };
+const TAGGED_MOVING = 2;
+const TAGGED_PARKED = 1;
+
+function graffitiTexture(name, crop) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = 1024;
+      c.height = 576;
+      const g = c.getContext("2d");
+      const [sx, sy, sw, sh] = crop.map((v, i) => v * (i % 2 ? img.height : img.width));
+      g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      // feather: fade every edge out so the paint dissolves into the truck's white box
+      g.globalCompositeOperation = "destination-in";
+      for (const [x0, y0, x1, y1] of [[0, 0, c.width, 0], [0, 0, 0, c.height]]) {
+        const lin = g.createLinearGradient(x0, y0, x1 || x0, y1 || y0);
+        lin.addColorStop(0, "rgba(0,0,0,0)");
+        lin.addColorStop(0.1, "rgba(0,0,0,1)");
+        lin.addColorStop(0.9, "rgba(0,0,0,1)");
+        lin.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = lin;
+        g.fillRect(0, 0, c.width, c.height);
+      }
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      resolve(t);
+    };
+    img.onerror = () => resolve(null);
+    img.src = `assets/art/${name}.jpg`;
+  });
+}
+
+/** Two side panels (mirrored so the lettering reads on both sides) that follow a truck slot's matrix. */
+function tagTruck(root, slot, tex) {
+  const group = new THREE.Group();
+  group.matrixAutoUpdate = false;
+  group.userData.dynamic = true; // oakland-lod.js must never re-tile a moving decal
+  const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.55, metalness: 0.1, polygonOffset: true, polygonOffsetFactor: -2 });
+  const geo = new THREE.PlaneGeometry(CARGO.len * 0.94, CARGO.h * 0.9);
+  for (const side of [1, -1]) {
+    const panel = new THREE.Mesh(geo, mat);
+    panel.position.set(side * (CARGO.halfW + 0.07), CARGO.y, CARGO.z); // clear of the model's cargo stripe
+    panel.rotation.y = side * Math.PI / 2; // faces outward; each side reads front-to-back correctly
+    group.add(panel);
+  }
+  root.add(group);
+  slot.onSet = (m) => {
+    group.matrix.copy(m);
+    group.matrixWorldNeedsUpdate = true;
+  };
+  return group;
 }
 
 function lanesOf(roads) {
@@ -84,8 +144,16 @@ function lanesOf(roads) {
 
 /** Moving traffic + parked cars. `blocked(pos)` keeps parked cars out of buildings. */
 export async function addVehicles(root, roads, blocked) {
-  const models = await Promise.all(TYPES.map((t) => loadModel(t.file).catch(() => null)));
+  const [models, tags] = await Promise.all([
+    Promise.all(TYPES.map((t) => loadModel(t.file).catch(() => null))),
+    Promise.all([graffitiTexture("mural_tag", [0.03, 0.08, 0.94, 0.84]), graffitiTexture("mural_qm85", [0.1, 0.05, 0.88, 0.88])]),
+  ]);
   if (models.some((mdl) => !mdl)) return { update() {}, stats: { vehicles: 0 } };
+  const pieces = tags.filter(Boolean);
+  const tagFirst = (slots, n) => {
+    if (!pieces.length) return;
+    slots.filter((s) => s.ti === 2).slice(0, n).forEach((s, i) => tagTruck(root, s, pieces[i % pieces.length])); // ti 2 = box truck
+  };
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const one = new THREE.Vector3(1, 1, 1);
@@ -94,6 +162,7 @@ export async function addVehicles(root, roads, blocked) {
 
   // parked: along residential/secondary curbs, never inside a building
   const still = fleet(root, models, PARKED);
+  tagFirst(still.slots, TAGGED_PARKED);
   let placed = 0;
   const curbs = roads.filter((r) => PARK_ON.has(r.k) && r.p.length > 1);
   for (let tries = 0; curbs.length && placed < still.slots.length && tries < PARKED * 6; tries++) {
@@ -119,6 +188,7 @@ export async function addVehicles(root, roads, blocked) {
   const lanes = lanesOf(roads);
   if (!lanes.length) return { update() {}, stats: { vehicles: placed, parked: placed } };
   const moving = fleet(root, models, MOVING, { dynamic: true });
+  tagFirst(moving.slots, TAGGED_MOVING);
   const cars = moving.slots.map((slot) => {
     const lane = lanes[Math.floor(Math.random() * lanes.length)];
     const truck = slot.ti >= 2;

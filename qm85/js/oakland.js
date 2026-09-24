@@ -16,6 +16,7 @@ import { WAREHOUSE } from "./oakland-mission.js";
 
 export const OAKLAND_RADIUS = 3800; // minimum play radius; widened to reach the Bay Bridge once the shoreline is known
 const ARENA_CLEAR = 170; // real buildings under the QMM Arena lot are cleared
+const STREET_TREES = 4000;
 const SEAL_TOWERS = 12;
 const RING_COUNT = 24;
 const GRID = 60; // collision hash cell (m)
@@ -35,27 +36,87 @@ function buildRings(root) {
   });
 }
 
-/** QMM seals on the tallest real towers — normal-blended so they read in daylight. */
+/** Canvas name bar under each sign: gold wordmark on black. */
+function nameBarTexture() {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 160;
+  const g = c.getContext("2d");
+  g.fillStyle = "#0b0812";
+  g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = "#d4a73a";
+  g.lineWidth = 6;
+  g.strokeRect(10, 10, c.width - 20, c.height - 20);
+  g.font = "900 78px Orbitron, Arial Black, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.shadowColor = "rgba(255, 190, 80, .9)";
+  g.shadowBlur = 18;
+  g.fillStyle = "#ffd27a";
+  g.fillText("QUANTUM MELANIN MEDIA", c.width / 2, c.height / 2 + 4);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+/**
+ * QMM signs on the tallest real towers (owner 09-24: "gotta look more like real signs"). Each is a real sign
+ * assembly bolted to the wall: a deep black metal cabinet on four brackets, a gold trim frame, the lit seal face,
+ * a QUANTUM MELANIN MEDIA name bar and a gooseneck lamp on top. Every part of every sign is merged per material,
+ * so 48 signs cost 6 draw calls.
+ */
 function buildSeals(root, buildings, sealTex) {
-  const boards = [];
+  const parts = { cabinet: [], trim: [], bracket: [], face: [], name: [], lamp: [] };
+  const put = (list, geo, matrix, x, y, z) => list.push(geo.clone().translate(x, y, z).applyMatrix4(matrix));
   for (const b of [...buildings].sort((p, q) => q.h - p.h).slice(0, SEAL_TOWERS)) {
-    const xs = b.p.map((p) => p[0]);
-    const zs = b.p.map((p) => p[1]);
-    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-    const hw = (Math.max(...xs) - Math.min(...xs)) / 2;
-    const hd = (Math.max(...zs) - Math.min(...zs)) / 2;
-    const size = Math.min(26, Math.min(hw, hd) * 1.6);
-    for (const [dx, dz, ry] of [[0, hd + 1, 0], [0, -hd - 1, Math.PI], [hw + 1, 0, Math.PI / 2], [-hw - 1, 0, -Math.PI / 2]]) {
-      const mat = new THREE.MeshBasicMaterial({ map: sealTex, transparent: true, opacity: 0.92, depthWrite: false, side: THREE.DoubleSide });
-      const seal = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
-      seal.position.set(cx + dx, b.h * 0.78, cz + dz);
-      seal.rotation.y = ry;
-      root.add(seal);
-      boards.push({ mat, phase: rand(0, 6) });
+    const { x: cx, z: cz, hw, hd } = boxOf(b);
+    const S = Math.min(24, Math.min(hw, hd) * 1.45); // seal size
+    const m = S * 0.05; // margin
+    const nameH = S * 0.18;
+    const W = S + 2 * m;
+    const H = S + nameH + 3 * m;
+    const depth = Math.max(0.5, S * 0.04);
+    const standoff = 0.9; // brackets hold the cabinet this far off the wall
+    const cab = new THREE.BoxGeometry(W, H, depth);
+    const trimH = new THREE.BoxGeometry(W + 0.4, S * 0.025 + 0.12, 0.18);
+    const trimV = new THREE.BoxGeometry(S * 0.025 + 0.12, H + 0.4, 0.18);
+    const bracket = new THREE.BoxGeometry(0.22, 0.22, standoff + 0.2);
+    const face = new THREE.PlaneGeometry(S, S);
+    const name = new THREE.PlaneGeometry(S, nameH);
+    const arm = new THREE.BoxGeometry(0.14, 0.14, S * 0.16);
+    const head = new THREE.BoxGeometry(S * 0.55, 0.28, 0.45);
+    for (const [dx, dz, ry] of [[0, hd, 0], [0, -hd, Math.PI], [hw, 0, Math.PI / 2], [-hw, 0, -Math.PI / 2]]) {
+      // local frame: the wall is z = 0, the sign faces +Z
+      const mtx = new THREE.Matrix4().compose(new THREE.Vector3(cx + dx, b.h * 0.76, cz + dz),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(1, 1, 1));
+      const front = standoff + depth; // z of the cabinet's face
+      put(parts.cabinet, cab, mtx, 0, 0, standoff + depth / 2);
+      for (const sy of [1, -1]) put(parts.trim, trimH, mtx, 0, sy * (H / 2 + 0.1), front + 0.02);
+      for (const sx of [1, -1]) put(parts.trim, trimV, mtx, sx * (W / 2 + 0.1), 0, front + 0.02);
+      for (const sx of [1, -1]) for (const sy of [1, -1]) put(parts.bracket, bracket, mtx, sx * W * 0.36, sy * H * 0.34, (standoff + 0.2) / 2 - 0.05);
+      put(parts.face, face, mtx, 0, H / 2 - m - S / 2, front + 0.03);
+      put(parts.name, name, mtx, 0, -H / 2 + m + nameH / 2, front + 0.03);
+      put(parts.bracket, arm, mtx, 0, H / 2 + 0.35, front + S * 0.08); // gooseneck arm reaching out over the face
+      put(parts.lamp, head, mtx, 0, H / 2 + 0.3, front + S * 0.16);
     }
   }
-  return boards;
+  if (!parts.face.length) return [];
+  const mats = {
+    cabinet: new THREE.MeshStandardMaterial({ color: 0x121016, metalness: 0.8, roughness: 0.35 }),
+    trim: new THREE.MeshStandardMaterial({ color: 0xd4a73a, metalness: 1, roughness: 0.25, emissive: 0x3a2600, emissiveIntensity: 0.4 }),
+    bracket: new THREE.MeshStandardMaterial({ color: 0x2a2a30, metalness: 0.9, roughness: 0.45 }),
+    face: new THREE.MeshBasicMaterial({ map: sealTex, transparent: true, alphaTest: 0.35, depthWrite: false }), // a lit sign glows day and night
+    name: new THREE.MeshBasicMaterial({ map: nameBarTexture() }),
+    lamp: new THREE.MeshBasicMaterial({ color: 0xfff1c8 }),
+  };
+  const meshes = Object.entries(parts).map(([k, list]) => {
+    const mesh = new THREE.Mesh(mergeGeometries(list), mats[k]);
+    mesh.castShadow = k === "cabinet";
+    root.add(mesh);
+    return mesh;
+  });
+  return meshes;
 }
 
 /** Lake Merritt's necklace of lights along the big shoreline. */
@@ -143,6 +204,10 @@ export function buildOakland(root) {
       fetch("assets/oakland.json").then((r) => r.json()),
       new Promise((resolve) => new THREE.TextureLoader().load("assets/art/qmm_seal.png", resolve, undefined, () => resolve(null))),
     ]).then(async ([city, seal]) => {
+      const timings = {}; // boot profile (owner 09-24: 'boots up REALLY SLOWLY'): ms per build stage
+      let lapT = performance.now();
+      const lap = (name) => { const now = performance.now(); timings[name] = Math.round(now - lapT); lapT = now; };
+      lap("fetch");
       arena.attribution = city.attribution;
       const ARENA_AT = [1750, 1850];
       city.buildings = city.buildings.filter((b) => Math.hypot(b.p[0][0] - ARENA_AT[0], b.p[0][1] - ARENA_AT[1]) > ARENA_CLEAR
@@ -159,10 +224,13 @@ export function buildOakland(root) {
         }
       }
       const shoreX = bounds.minX - 120; // the Bay starts just past the westernmost real building
+      arena.shoreX = shoreX; // the water wake needs to know where the Bay begins
       const hillsX = bounds.maxX + 250;
       arena.radius = Math.max(OAKLAND_RADIUS, -shoreX + 1900); // the Bay Bridge must stay reachable
+      lap("render");
       const look = await renderRealisticOakland(world, city, arena.radius);
       arena.envScene = look.envScene;
+      lap("landmarks");
       const marks = await addLandmarks(world, city, { shoreX });
       arenaHit = marks.arenaHit;
       const water = await waterMaterial();
@@ -171,12 +239,19 @@ export function buildOakland(root) {
       hills(world, hillsX);
       sfSkyline(world, look.textures.glass);
       const drift = clouds(root, look.sunDir); // clouds drift: kept out of the baked world
+      lap("prefiller");
       const filler = fillerCity(world, { bounds, shoreX, hillsX, avoid: [[...marks.arenaPos, 260]], lowTex: look.textures.lowrise, midTex: look.textures.midrise });
+      lap("filler");
       const marked = roadMarkings(world, city.roads, mergeGeometries);
+      lap("markings");
       sidewalks(world, city.roads, mergeGeometries);
+      lap("sidewalks");
       buildingTrim(world, city.buildings);
+      lap("trim");
       const signals = intersections(root, city.roads, mergeGeometries); // lit heads animate: outside the baked world
+      lap("signals");
       const clutter = rooftopClutter(world, city.buildings);
+      lap("clutter");
       const blink = antennas(world, city.buildings);
       const tribune = tribuneCrown(world, city.buildings, marks.crown);
       portCranes(world, marks.crane, shoreX, bounds.minZ + 300).forEach((c) => {
@@ -195,8 +270,10 @@ export function buildOakland(root) {
       ticks = [(dt) => water.tick(dt), (dt) => drift(dt), (dt, t) => blink(t), (dt, t) => signals(t)];
       arena.follow = look.follow;
       arena.setTime = look.setTime;
+      lap("details");
       const meshes = bakeStatic(world);
       Object.assign(marks.stats, { meshesBefore: meshes.before, meshesAfter: meshes.after, chunks: look.chunks, filler, marked, clutter, tribune, shoreX: Math.round(shoreX), radius: Math.round(arena.radius) });
+      lap("bake");
       necklace(world, city.water);
       if (seal) {
         seal.colorSpace = THREE.SRGBColorSpace;
@@ -212,14 +289,17 @@ export function buildOakland(root) {
         index(c);
         indexGround(c);
       });
-      const lining = streetTreeSpots(city.roads, (p) => arena.groundBlocked(p) || arena.isWater(p.x, p.z));
-      Object.assign(marks.stats, { streetTrees: trees(root, { trees: lining.slice(0, 4000), parks: [], water: [] }, { shadows: false }) });
+      lap("colliders");
+      const lining = streetTreeSpots(city.roads, (p) => arena.groundBlocked(p) || arena.isWater(p.x, p.z), STREET_TREES);
+      Object.assign(marks.stats, { streetTrees: trees(root, { trees: lining, parks: [], water: [] }, { shadows: false }) });
+      lap("trees");
       const traffic = await addVehicles(root, city.roads, (p) => arena.groundBlocked(p));
       updateTraffic = traffic.update;
       arena.setTraffic = traffic.setDensity;
       arena.vehicleAt = traffic.vehicleAt ?? (() => null);
       arena.truckRider = traffic.truckRider ?? (() => null);
       Object.assign(marks.stats, traffic.stats);
+      lap("vehicles");
       const lod = cullingTiles(root); // AFTER everything static is in: split city-wide meshes into culling tiles
       Object.assign(marks.stats, { lodSplit: lod.stats.split, lodTiles: lod.stats.tiles });
       arena.follow = (pos) => {
@@ -227,6 +307,7 @@ export function buildOakland(root) {
         lod.update(pos);
         traffic.setFocus?.(pos);
       };
+      lap("lod");
       lod.update(arena.start.pos);
       for (const ring of rings) { // lift any ring that landed inside a real building
         let t = arena.towerAt(ring.obj.position);
@@ -236,7 +317,8 @@ export function buildOakland(root) {
         }
       }
       arena.rooftops = arena.rooftops.filter((r) => inside(r.x, r.z, r.p) && !arena.towerAt(new THREE.Vector3(r.x, Math.max(r.h + 2.5, 12), r.z)));
-      return { buildings: city.buildings.length, roads: city.roads.length, ...look.stats, ...marks.stats };
+      lap("finish");
+      return { buildings: city.buildings.length, roads: city.roads.length, timings, ...look.stats, ...marks.stats };
     }),
     update(dt, t) {
       for (const ring of rings) {
