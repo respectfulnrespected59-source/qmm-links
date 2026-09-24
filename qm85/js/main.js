@@ -14,6 +14,7 @@ import { sfx } from "./audio.js";
 import { FlightBattle } from "./flight.js";
 import { hud } from "./hud.js";
 import { touch } from "./touch.js";
+import { tutorial } from "./tutorial.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
 
@@ -130,6 +131,7 @@ function startFlight(zone = game.zone, resume = null) {
     onBoss: (name) => hud.toast(`${name} HAS RISEN`),
     onHit: () => hud.hitFlash(),
     onMove(kind) {
+      tutorial.note(kind);
       if (kind === "perfect") hud.toast("PERFECT — POWER THRUST");
       if (kind === "strike") hud.toast("COSMIC PLASMA STRIKE");
       if (kind === "hyper") hud.toast("HYPER LOOP — PICK A DIRECTION");
@@ -207,6 +209,8 @@ function startFlight(zone = game.zone, resume = null) {
   });
   hud.show("flight", zone === "oakland" ? "OAKLAND MISSION" : "FLIGHT BATTLE — CYBERSPACE");
   game.mode = "flight";
+  tutorial.start(zone, game.tutorialForced); // first flight ever, or the home screen's TUTORIAL button
+  game.tutorialForced = false;
 }
 
 /** World point -> screen pixels; `behind` when it is behind the camera. */
@@ -294,7 +298,10 @@ function frame() {
       renderer.toneMappingExposure = day.exposure;
     }
     autoQuality();
-    if (game.mode === "flight") flightHud();
+    if (game.mode === "flight") {
+      flightHud();
+      tutorial.update(game.flight, dt);
+    }
   }
   touch.setVisible(game.mode === "flight" && !game.paused);
   film.uniforms.time.value = clock.elapsedTime;

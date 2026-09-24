@@ -79,6 +79,14 @@
     @keyframes hit { from { opacity: 1; } to { opacity: 0; } }
     #stats .blaster { color: #ffb338; }
     #stats .missiles { color: #ff8a5a; }
+    /* TUTORIAL step card (tutorial.js) */
+    #tutor { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); width: max-content; max-width: min(640px, calc(100% - 32px)); padding: 6px 16px; text-align: center; /* bottom strip: clear of the HUD, QM85 and the land prompt */
+      background: rgba(10, 4, 24, .82); border: 2px solid var(--gold); border-radius: 12px; box-shadow: 0 0 24px rgba(212, 167, 58, .35); z-index: 4; pointer-events: none; }
+    #tutor[hidden] { display: none; }
+    #tutor b { display: block; font: 900 11px Orbitron, sans-serif; letter-spacing: .16em; color: var(--gold); margin-bottom: 2px; }
+    #tutor span { font: 600 13px Orbitron, sans-serif; letter-spacing: .03em; color: var(--text); }
+    #tutor i { display: block; margin-top: 2px; font: 500 10px Orbitron, sans-serif; letter-spacing: .12em; color: rgba(217, 168, 255, .6); font-style: normal; }
+    @media (pointer: coarse) { #tutor { bottom: 56px; left: 16px; transform: none; max-width: calc(100% - 240px); } #tutor i { display: none; } } /* phone: bottom-left, clear of the button pad */
     #stats .missiles i { font-style: normal; opacity: .6; font-size: 11px; }
     /* MOBILE FIT: virtual stick (left) + buttons (right); only built on touch devices (touch.js) */
     #touch { position: fixed; inset: 0; pointer-events: none; z-index: 6; font-family: Orbitron, sans-serif; }

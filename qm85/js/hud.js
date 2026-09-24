@@ -48,12 +48,18 @@ export const hud = {
        Q = HEAT-SEEKING MISSILE · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off (on a FULL bar the blast is the COSMIC PLASMA STRIKE) · double-tap SPACE (full bar) = MEGA BLAST · double-tap ←/→ = barrel roll, switch mid-roll = hard bank the other way · double-tap ↑/↓ at LV1 = twirl + power thrust<br>
        <b>FIGHT MODE:</b> fly low + <b>F</b> to land · W/S walk · A/D turn · click / L = blasters fire UP · SPACE jump · <b>F</b> = back to flight</p>
        </div></details>
-       <button id="card-cyber" type="button" class="secondary">CYBERSPACE BATTLE</button>`,
+       <button id="card-cyber" type="button" class="secondary">CYBERSPACE BATTLE</button>
+       <button id="card-tutor" type="button" class="secondary">TUTORIAL</button>`,
       "OAKLAND MISSION",
       () => onFlight("oakland"),
     );
     $("card").classList.add("home");
-    $("actions").append($("card-go"), $("card-cyber")); // both choices on one row over the art
+    $("actions").append($("card-go"), $("card-cyber"), $("card-tutor")); // all choices on one row over the art
+    $("card-tutor").addEventListener("click", () => {
+      $("card").hidden = true;
+      window.__qm85.tutorialForced = true; // startFlight reads it once
+      onFlight("oakland");
+    });
     $("card-cyber").addEventListener("click", () => {
       $("card").hidden = true;
       onFlight("cyber");

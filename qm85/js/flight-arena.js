@@ -19,6 +19,35 @@ const HAZE = 0x23272a; // charcoal haze (owner 09-24: "too purple pinky... add d
 const rand = (a, b) => a + Math.random() * (b - a);
 const loader = new THREE.TextureLoader();
 
+/**
+ * Re-paint a loaded texture toward grey-green (owner 09-24: "a little more grey and green in the cyber world"):
+ * desaturate by `amount`, then lean the remaining colour to matrix green. The painted art is violet/orange neon;
+ * tints on the material can't get past that, so the pixels themselves are shifted once at load.
+ */
+function greyGreen(tex, amount = 0.7, green = 1.12) {
+  const img = tex.image;
+  const c = document.createElement("canvas");
+  c.width = img.width;
+  c.height = img.height;
+  const g = c.getContext("2d");
+  g.drawImage(img, 0, 0);
+  const id = g.getImageData(0, 0, c.width, c.height);
+  const d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
+    d[i] = Math.min(255, (d[i] + (lum - d[i]) * amount) * 0.9);
+    d[i + 1] = Math.min(255, (d[i + 1] + (lum - d[i + 1]) * amount) * green);
+    d[i + 2] = Math.min(255, (d[i + 2] + (lum - d[i + 2]) * amount) * 0.8);
+  }
+  g.putImageData(id, 0, 0);
+  const out = new THREE.CanvasTexture(c);
+  out.colorSpace = tex.colorSpace;
+  out.anisotropy = tex.anisotropy;
+  out.wrapS = tex.wrapS;
+  out.wrapT = tex.wrapT;
+  return out;
+}
+
 /** Load a texture; resolves null (keeps the fallback look) if the file is missing. */
 function loadArt(name) {
   return new Promise((resolve) => {
@@ -47,7 +76,7 @@ function buildTowers(root) {
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
     mesh.position.set(x, h / 2, z);
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), i % 4 === 0 ? edgeGold : i % 3 === 0 ? edgeGreen : edgeViolet);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), i % 4 === 0 ? edgeGold : i % 2 === 0 ? edgeGreen : edgeViolet); // half the towers wear matrix-green edges
     mesh.add(edges);
     root.add(mesh);
     towers.push({ x, z, hw: w / 2, hd: d / 2, h, w, mesh });
@@ -76,7 +105,7 @@ function skinTowers(towers, edgeMats, facade) {
     map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
     map.repeat.set(Math.max(1, t.w / 10), Math.max(1, t.h / 16));
     map.needsUpdate = true;
-    Object.assign(t.mesh.material, { map, emissiveMap: map, color: new THREE.Color([0xb9c4bd, 0xa9adad, 0x9fd6ae, 0xc8c2d6][Math.abs(Math.round(t.x + t.z)) % 4]), metalness: 0.6, roughness: 0.35 }) // per-tower tint: grey-green / steel grey / matrix green / a little of the old lilac;
+    Object.assign(t.mesh.material, { map, emissiveMap: map, color: new THREE.Color([0xb9c4bd, 0xa9adad, 0x9fd6ae, 0xb3bcb6][Math.abs(Math.round(t.x + t.z)) % 4]), metalness: 0.6, roughness: 0.35 }) // per-tower tint: grey-green / steel grey / matrix green / a little of the old lilac;
     t.mesh.material.emissive.copy(t.mesh.material.color); // the WINDOW GLOW takes the tint too (emissive ignores `color`)
     t.mesh.material.emissiveIntensity = 0.38; // lit windows glow, dark glass stays dark — softened 09-24
     t.mesh.material.needsUpdate = true;
@@ -137,17 +166,18 @@ export function buildArena(root) {
     /** Resolves once the photoreal art is on (or known missing). */
     ready: Promise.all([loadArt("sky"), loadArt("facade"), loadArt("ground")]).then(([sky, facade, ground]) => {
       if (sky) {
-        skinSky(root, sky);
+        skinSky(root, greyGreen(sky, 0.55, 1.08)); // the painted neon horizon goes overcast-grey with a green cast
         arena.skyTexture = sky;
         root.traverse((o) => {
           if (o.material?.wireframe && o !== edge) o.visible = false; // the floating wire cubes: line-frame only
         });
       }
       if (facade) {
-        skinTowers(towers, edgeMats, facade);
-        skinLowrise(details, facade);
+        const steel = greyGreen(facade, 0.7, 1.12);
+        skinTowers(towers, edgeMats, steel);
+        skinLowrise(details, steel);
       }
-      if (ground) skinGround(root, ground, grid);
+      if (ground) skinGround(root, greyGreen(ground, 0.75, 1.15), grid);
       return { sky: Boolean(sky), facade: Boolean(facade), ground: Boolean(ground) };
     }),
     update(dt, t) {
