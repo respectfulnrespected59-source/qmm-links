@@ -8,7 +8,7 @@ import { input } from "./input.js";
 const DEAD = 0.28; // stick travel (0..1) before a direction counts
 const RADIUS = 52; // px of stick travel
 
-const isTouchDevice = () => matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+const isTouchDevice = () => matchMedia("(pointer: coarse)").matches; // a touchscreen LAPTOP keeps the keyboard layout until a finger is used
 
 const BUTTONS = [
   { id: "boost", label: "BOOST", code: "Space", hold: true },
@@ -25,6 +25,10 @@ class TouchLayer {
     this.root = null;
     this.stick = { id: null, ox: 0, oy: 0, held: new Set() };
     if (this.enabled) this.#build();
+    else addEventListener("touchstart", () => { // first real finger on a mouse-first device: bring the pad up
+      this.enabled = true;
+      this.#build();
+    }, { once: true, passive: true });
   }
 
   #build() {
