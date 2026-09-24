@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QM85: Quantum Run — Quantum Melanin Media</title>
+  <meta name="description" content="QM85, QMM's little robot, flies and fights through real Oakland to bring his data and battle parts home to the QMM Warehouse.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    :root { --violet: #9b4dff; --gold: #d4a73a; --ink: #07020f; --text: #efe6ff; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--text); font-family: Inter, sans-serif; }
+    #stage canvas { display: block; }
+    #loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 18px Orbitron, sans-serif; letter-spacing: .15em; color: var(--violet); }
+    #card { position: fixed; inset: 0; margin: auto; width: min(720px, calc(100% - 32px)); height: fit-content; max-height: calc(100% - 32px); overflow: auto;
+      background: rgba(10, 4, 24, .92); border: 2px solid var(--gold); border-radius: 18px; padding: 24px; text-align: center;
+      box-shadow: 0 0 40px rgba(155, 77, 255, .45); }
+    /* HOME: the owner's QM85 character sheet IS the title screen (at 1036×476 a stacked card hid it above the fold) */
+    #card.home { width: 100%; max-height: 100%; height: 100%; margin: 0; padding: 16px 28px 18px; border: none; border-radius: 0; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; box-shadow: none;
+      background: linear-gradient(to top, rgba(8, 5, 16, .96) 0, rgba(8, 5, 16, .55) 38%, rgba(8, 5, 16, 0) 68%),
+        url("assets/cover.jpg?v=qm85sheet") center / cover no-repeat #08050f; }
+    #card.home h1 { font-size: clamp(26px, 5vw, 54px); margin: 0 0 4px; text-shadow: 0 0 18px rgba(155, 77, 255, .8), 0 2px 6px #000; }
+    #card.home .tag { margin: 0 0 10px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #e9dcff; text-shadow: 0 1px 4px #000; }
+    #card.home .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    #card.home .actions button { margin: 0; }
+    #card.home .howto { margin-top: 10px; max-width: 760px; font-size: 13px; }
+    #card.home .howto summary { cursor: pointer; font: 700 12px Orbitron, sans-serif; letter-spacing: .12em; color: var(--gold); list-style: none; }
+    #card.home .howto summary::before { content: "▸ "; }
+    #card.home .howto[open] summary::before { content: "▾ "; }
+    #card.home .howto .body { max-height: min(46vh, 300px); overflow: auto; margin-top: 6px; padding: 10px 14px; background: rgba(10, 4, 24, .85);
+      border: 1px solid rgba(212, 167, 58, .45); border-radius: 10px; }
+    #card.home .howto p { margin: 6px 0; line-height: 1.5; }
+    #card h1, #card h2 { font-family: Orbitron, sans-serif; letter-spacing: .06em; margin: 14px 0 8px; color: var(--gold); }
+    #card h1 span { color: var(--violet); }
+    #card p { line-height: 1.55; margin: 8px 0; }
+    #card .controls { font-size: 13px; opacity: .8; }
+    #card button { margin-top: 14px; font: 900 16px Orbitron, sans-serif; letter-spacing: .12em; padding: 14px 28px; border-radius: 12px; cursor: pointer;
+      color: #fff; background: linear-gradient(135deg, #6a1fd6, var(--violet)); border: 2px solid var(--gold); }
+    #card button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    #hud { position: fixed; top: 14px; left: 16px; right: 16px; pointer-events: none; font-family: Orbitron, sans-serif; }
+    #level-title { font-size: 14px; color: var(--gold); letter-spacing: .12em; }
+    #stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 6px; font-size: 15px; text-shadow: 0 0 8px var(--violet); }
+    #stats .shield { color: #bff6ff; }
+    #stats .hint { font-family: Inter, sans-serif; font-size: 12px; opacity: .75; }
+    #toast { position: fixed; top: 22%; left: 50%; transform: translate(-50%, -10px); font: 900 clamp(16px, 3vw, 28px) Orbitron, sans-serif; color: var(--gold);
+      text-shadow: 0 0 18px var(--violet); opacity: 0; transition: .25s; pointer-events: none; text-align: center; width: calc(100% - 32px); }
+    #toast.on { opacity: 1; transform: translate(-50%, 0); }
+    #subtitle { position: fixed; bottom: 9%; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .65); padding: 8px 16px; border-radius: 8px;
+      font-size: 17px; opacity: 0; transition: .25s; pointer-events: none; max-width: calc(100% - 32px); }
+    #subtitle.on { opacity: 1; }
+    .meter { flex-basis: 100%; display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .meter .bar { width: 200px; height: 10px; border: 1px solid var(--violet); border-radius: 6px; overflow: hidden; }
+    .meter .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--violet), #d9b8ff); }
+    .meter .bar.low i { background: #ff4d6d; }
+    .meter.ready span { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+    .meter.ready .bar { border-color: var(--gold); box-shadow: 0 0 12px var(--gold); }
+    .meter.ready .bar i { background: linear-gradient(90deg, var(--violet), var(--gold)); }
+    #card button.secondary { background: transparent; margin-left: 10px; }
+    #stats .boss { color: #8ff3ff; letter-spacing: -1px; }
+    #reticle, #lock, #pointer { position: fixed; left: 0; top: 0; pointer-events: none; }
+    #reticle { width: 50px; height: 50px; margin: -25px 0 0 -25px; /* owner 09-24: the circle was a little too small */ border: 2px solid rgba(217, 168, 255, .9); border-radius: 50%;
+      box-shadow: 0 0 10px var(--violet); }
+    #reticle::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; background: var(--gold); border-radius: 50%; }
+    #lock { width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 2px dashed #8ff3ff; }
+    #pointer { width: 0; height: 0; margin: -10px 0 0 -10px; border-left: 20px solid #8ff3ff; border-top: 10px solid transparent; border-bottom: 10px solid transparent;
+      transform-origin: 0 10px; }
+    #flash { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(transparent 50%, rgba(255, 40, 80, .55)); opacity: 0; }
+    #flash.on { animation: hit .45s ease-out; }
+    @keyframes hit { from { opacity: 1; } to { opacity: 0; } }
+    #stats .blaster { color: #ffb338; }
+    #credit { position: fixed; right: 12px; bottom: 8px; font-size: 11px; opacity: .7; pointer-events: none; }
+    #controls { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 5; }
+    #controls button { font: 600 13px Orbitron, sans-serif; color: var(--text); background: rgba(10, 4, 24, .75); border: 1px solid var(--violet);
+      border-radius: 10px; padding: 8px 12px; cursor: pointer; letter-spacing: .08em; }
+    #controls button:hover { border-color: var(--gold); color: var(--gold); }
+    #controls button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    #pause { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; background: rgba(7, 2, 15, .6);
+      font: 900 clamp(28px, 6vw, 64px) Orbitron, sans-serif; color: var(--gold); letter-spacing: .15em; z-index: 4; }
+    .pause-actions { display: flex; gap: 14px; justify-content: center; margin-top: 26px; }
+    .pause-actions button { font: 900 16px Orbitron, sans-serif; letter-spacing: .12em; padding: 14px 26px; border-radius: 12px; cursor: pointer;
+      color: #fff; background: linear-gradient(135deg, #6a1fd6, var(--violet)); border: 2px solid var(--gold); }
+    .pause-actions #btn-menu { background: transparent; }
+    .pause-actions button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    #pause small { display: block; margin-top: 14px; font: 600 14px Inter, sans-serif; color: var(--text); letter-spacing: .05em; }
+    #nowplaying { position: fixed; left: 16px; bottom: 12px; font: 600 12px Orbitron, sans-serif; color: var(--gold); opacity: 0;
+      transition: opacity .6s; pointer-events: none; letter-spacing: .1em; }
+    #nowplaying.on { opacity: .9; }
+    #stats .mission { color: #ffcf5a; }
+    #stats .clock { color: #fff; letter-spacing: .12em; }
+    .meter.body .bar i { background: linear-gradient(90deg, #6a1fd6, var(--gold)); }
+    #prompt { position: fixed; bottom: 16%; left: 50%; transform: translateX(-50%); font: 900 16px Orbitron, sans-serif; letter-spacing: .08em;
+      color: var(--gold); background: rgba(10, 4, 24, .7); border: 1px solid var(--gold); padding: 8px 16px; border-radius: 10px; pointer-events: none; }
+    #waypoint { position: fixed; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none;
+      background: var(--gold); transform-origin: 11px 11px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); box-shadow: 0 0 12px var(--gold); }
+    #waypoint.edge { clip-path: polygon(0 0, 100% 50%, 0 100%, 25% 50%); }
+    #waypoint::after { content: attr(data-dist); position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font: 600 11px Orbitron, sans-serif; color: var(--gold); white-space: nowrap; }
+    .meter.stealth span { color: #9fe8ff; text-shadow: 0 0 12px #9fe8ff; }
+    .meter.stealth .bar i { background: linear-gradient(90deg, #9fe8ff, #ffffff); }
+    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { #toast, #subtitle { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="hud" hidden><div id="level-title"></div><div id="stats"></div></div>
+  <div id="reticle" hidden></div>
+  <div id="lock" hidden></div>
+  <div id="pointer" hidden></div>
+  <div id="flash"></div>
+  <div id="prompt" hidden></div>
+  <div id="waypoint" hidden></div>
+  <div id="credit" hidden></div>
+  <div id="controls">
+    <button id="btn-pause" type="button" title="Pause (P / Esc)">II PAUSE</button>
+    <button id="btn-mute" type="button" title="Mute everything (M)">SOUND ON</button>
+    <button id="btn-vol" type="button" title="Music volume (N)">MUSIC</button>
+  </div>
+  <div id="pause" hidden>PAUSED<small>P / ESC to resume · M mute · N music volume</small>
+    <div class="pause-actions">
+      <button id="btn-resume" type="button">▶ RESUME</button>
+      <button id="btn-menu" type="button">⌂ MAIN MENU</button>
+    </div>
+  </div>
+  <div id="nowplaying"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="subtitle" aria-live="polite"></div>
+  <div id="loading">BOOTING QM85...</div>
+  <div id="card" hidden></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

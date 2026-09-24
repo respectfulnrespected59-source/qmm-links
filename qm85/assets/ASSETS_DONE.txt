@@ -1,0 +1,70 @@
+{
+ "exports": [
+  {
+   "file": "qm85.glb",
+   "bytes": 1104008
+  },
+  {
+   "file": "rob.glb",
+   "bytes": 685560
+  },
+  {
+   "file": "mahal.glb",
+   "bytes": 656824
+  },
+  {
+   "file": "portal.glb",
+   "bytes": 189552
+  },
+  {
+   "file": "shard.glb",
+   "bytes": 6420
+  },
+  {
+   "file": "orb.glb",
+   "bytes": 166204
+  },
+  {
+   "file": "sentinel.glb",
+   "bytes": 28788
+  },
+  {
+   "file": "platform.glb",
+   "bytes": 25700
+  },
+  {
+   "file": "firewall.glb",
+   "bytes": 14024
+  },
+  {
+   "file": "desk.glb",
+   "bytes": 13096
+  },
+  {
+   "file": "chips.glb",
+   "bytes": 30452
+  },
+  {
+   "file": "cookie.glb",
+   "bytes": 20900
+  },
+  {
+   "file": "stranger.glb",
+   "bytes": 164952
+  }
+ ],
+ "cast": {
+  "qm85": {
+   "tris_before": 1483188,
+   "tris_after": 24000
+  },
+  "rob": {
+   "tris_before": 1415752,
+   "tris_after": 16000
+  },
+  "mahal": {
+   "tris_before": 1391490,
+   "tris_after": 15999
+  }
+ }
+}

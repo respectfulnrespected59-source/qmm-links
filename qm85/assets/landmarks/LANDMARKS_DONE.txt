@@ -1,0 +1,13 @@
+{
+ "bay_bridge.glb": 113508,
+ "golden_gate.glb": 88940,
+ "qmm_arena.glb": 511640,
+ "hoop.glb": 89680,
+ "port_crane.glb": 22044,
+ "tribune_crown.glb": 176732,
+ "qmm_warehouse.glb": 202676,
+ "car_sedan.glb": 66524,
+ "car_suv.glb": 68196,
+ "car_boxtruck.glb": 82108,
+ "car_semi.glb": 118272
+}
