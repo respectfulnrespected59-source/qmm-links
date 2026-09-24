@@ -27,6 +27,14 @@ addEventListener("mousemove", (e) => {
 addEventListener("contextmenu", (e) => e.preventDefault());
 
 export const input = {
+  /** Touch layer (touch.js): synthesize a key press / release. */
+  press(code) {
+    if (!held.has(code)) pressed.add(code);
+    held.add(code);
+  },
+  release(code) {
+    held.delete(code);
+  },
   held: (...codes) => codes.some((c) => held.has(c)),
   pressed: (...codes) => codes.some((c) => pressed.has(c)),
   /** Horizontal right-drag since the last frame, in pixels. */

@@ -22,9 +22,9 @@ const DOUBLE_TAP = 0.28;
 const TWIRL_TIME = 0.5;
 const SIDE_TWIRL_TIME = 0.64; // left/right rolls turn slower (owner 09-24: "dial back the boosted twirl roll... so the player isn't so dizzy")
 const JINK = 14; // m/s sideways kick on a twirl
-const SIDE_JINK = 10;
+const SIDE_JINK = 0; // owner 09-24: a side twirl is a ROLL, not a shove ("rocket thrust straight into a bldg")
 const THRUST = 42; // m/s burst on a direction switch
-const SIDE_THRUST = 30; // a sideways reversal shoves less than a vertical one
+const SIDE_THRUST = 0; // a sideways reversal banks hard the other way instead of shoving (ctx.bankTo)
 const IMPULSE_DECAY = 5; // per second
 const SIDE_IMPULSE_DECAY = 6.5; // ...and settles sooner
 const isSide = (dir) => dir === "left" || dir === "right";
@@ -161,8 +161,9 @@ export class Maneuvers {
       this.#startStrike(vec, ctx);
       return;
     }
-    this.impulse.copy(vec).multiplyScalar(isSide(dir) ? SIDE_THRUST : THRUST);
-    this.fovKick = isSide(dir) ? 7 : 12; // a softer lens punch on sideways reversals
+    if (isSide(dir)) ctx.bankTo?.(dir); // roll, then a crisp bank the other way — no lateral rocket
+    else this.impulse.copy(vec).multiplyScalar(THRUST);
+    this.fovKick = isSide(dir) ? 5 : 12; // a softer lens punch on sideways reversals
     sfx.thrust();
     ctx.onMove(perfect ? "perfect" : "thrust");
   }

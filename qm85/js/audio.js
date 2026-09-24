@@ -165,6 +165,8 @@ export const sfx = {
   orb: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.2, { type: "triangle", delay: i * 0.07 })),
   blast: () => tone(900, 0.18, { type: "sawtooth", slide: -700, vol: 0.06 }),
   boom: () => noise(0.35, 0.18),
+  // MISSILE launch: a whoosh of noise under a rising-then-falling whistle
+  missile: () => { noise(0.5, 0.16); tone(900, 0.45, { type: "sine", slide: -600, vol: 0.06 }); tone(180, 0.3, { type: "sawtooth", slide: 220, vol: 0.05 }); },
   hurt: () => tone(200, 0.3, { type: "sawtooth", slide: -140, vol: 0.1 }),
   gate: () => [300, 450, 600].forEach((f, i) => tone(f, 0.3, { type: "sine", delay: i * 0.1, vol: 0.1 })),
   portal: () => tone(200, 1.2, { type: "sine", slide: 1400, vol: 0.12 }),

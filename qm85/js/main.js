@@ -13,11 +13,12 @@ import { input } from "./input.js";
 import { sfx } from "./audio.js";
 import { FlightBattle } from "./flight.js";
 import { hud } from "./hud.js";
+import { touch } from "./touch.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, touch.enabled ? 1.5 : 2)); // phones: DPR 3 at full res would crawl
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap; // PCFSoft cost ~half the frame rate on the integrated GPU; PCF + radius is close enough
@@ -257,8 +258,8 @@ const NIGHT_HAZE = new THREE.Color(0x0b0d1a);
 const clock = new THREE.Clock();
 
 // Auto-quality for integrated GPUs: if flight runs under TARGET_FPS, render fewer pixels (never below MIN_RATIO).
-const TARGET_FPS = 28;
-const MIN_RATIO = 0.6;
+const TARGET_FPS = 24;
+const MIN_RATIO = 0.75; // never blur below this (UHD pass, owner 09-24)
 const quality = { frames: 0, start: performance.now() };
 function autoQuality() {
   if (game.lockQuality) return; // perf probes pin the pixel ratio
@@ -295,6 +296,7 @@ function frame() {
     autoQuality();
     if (game.mode === "flight") flightHud();
   }
+  touch.setVisible(game.mode === "flight" && !game.paused);
   film.uniforms.time.value = clock.elapsedTime;
   if (game.mode !== "loading") composer.render();
   input.endFrame();

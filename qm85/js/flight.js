@@ -12,6 +12,7 @@ import { EnemySwarm } from "./flight-enemies.js";
 import { Pilot } from "./flight-pilot.js";
 import { MegaBlast } from "./flight-mega.js";
 import { Maneuvers } from "./flight-moves.js";
+import { Missiles, MISSILE_MAX } from "./flight-missiles.js";
 import { FightMode } from "./flight-ground.js";
 import { HyperLoop } from "./flight-hyperloop.js";
 import { surfaceNormal, ricochet, applyDeflect, Sparks } from "./flight-impact.js";
@@ -64,6 +65,7 @@ export class FlightBattle {
     this.fight = new FightMode(this);
     this.hyper = new HyperLoop(this.root);
     this.sparks = new Sparks(this.root);
+    this.missiles = new Missiles(this.root, this);
     this.impactT = 0; // debounce: one spark shower + clang per contact
     this.blastT = 0; // after a hyper-loop blast, hold the burst speed for a beat
     this.swarm.blocked = (p) => Boolean(this.arena.vehicleAt?.(p) || (p.y < 400 && this.arena.towerAt(p)));
@@ -198,6 +200,8 @@ export class FlightBattle {
     }
     this.#shoot(dt);
     this.#updateLasers(dt);
+    this.#fireMissile();
+    this.missiles.update(dt);
     this.sparks.update(dt);
     const lvTop = THRUSTERS[this.thrust].boost * STEALTH.speed;
     sfx.engine.set({ on: !this.fight.active && !this.done, speed01: this.speed / lvTop, boosting: this.boosting || this.blastT > 0, level: this.thrust, stealth: this.stealth });
@@ -261,6 +265,10 @@ export class FlightBattle {
     this.striking = this.moves.update({
       t: this.t, dt, pos: this.pos, yaw: this.yaw, fuel: this.fuel, swarm: this.swarm,
       noVertical: this.thrust >= 2, // past LV1, double-tap ↑/↓ is the HYPER LOOP, not a twirl
+      bankTo: (dir) => { // a side switch snaps the turn rate the new way (owner: "smoothly rolling then quickly banking")
+        const lv = THRUSTERS[this.thrust];
+        this.yawRate = (dir === "left" ? 1 : -1) * YAW_RATE * (this.stealth ? STEALTH.agility : lv.agility) * 1.25;
+      },
       spendFuel: () => (this.fuel = 0),
       onKill: (_bot, points) => (this.score += points),
       onMove: (kind) => this.hooks.onMove(kind),
@@ -368,6 +376,15 @@ export class FlightBattle {
     this.sparks.burst(contact, normal, headOn ? 1.4 : 0.8);
     sfx.clang(headOn);
     if (headOn) this.#takeHit(1);
+  }
+
+  /** Q / E (or the MISSILE touch button): one heat-seeker at the hottest hostile ahead. */
+  #fireMissile() {
+    if (!input.pressed("KeyQ", "KeyE") || this.mega.busy) return;
+    const fwd = this.fight.active ? this.fight.aim(this.pos) : this.forward();
+    const result = this.missiles.fire(this.pos.clone(), fwd);
+    if (result === "empty") this.hooks.warn?.("MISSILES RELOADING");
+    else if (result === "no target") this.hooks.warn?.("NO LOCK — NOTHING AHEAD");
   }
 
   #shoot(dt) {
@@ -498,6 +515,8 @@ export class FlightBattle {
       maxShield: MAX_SHIELD,
       fuel: this.fuel,
       blaster: this.power.level,
+      missiles: this.missiles.ammo,
+      missilesMax: MISSILE_MAX,
       thrust: this.thrust,
       stealth: this.stealth,
       megaReady: this.fuel >= MEGA_READY && !this.mega.busy,

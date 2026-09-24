@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>QM85: Quantum Run — Quantum Melanin Media</title>
   <meta name="description" content="QM85, QMM's little robot, flies and fights through real Oakland to bring his data and battle parts home to the QMM Warehouse.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -78,6 +78,23 @@
     #flash.on { animation: hit .45s ease-out; }
     @keyframes hit { from { opacity: 1; } to { opacity: 0; } }
     #stats .blaster { color: #ffb338; }
+    #stats .missiles { color: #ff8a5a; }
+    #stats .missiles i { font-style: normal; opacity: .6; font-size: 11px; }
+    /* MOBILE FIT: virtual stick (left) + buttons (right); only built on touch devices (touch.js) */
+    #touch { position: fixed; inset: 0; pointer-events: none; z-index: 6; font-family: Orbitron, sans-serif; }
+    #touch[hidden] { display: none; }
+    #stick { position: absolute; left: 0; bottom: 0; width: 50%; height: 62%; pointer-events: auto; touch-action: none; }
+    #stick span { position: absolute; left: 16px; bottom: 34px; font-size: 10px; letter-spacing: .12em; color: rgba(217, 168, 255, .55); }
+    #stick .ring { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border: 2px solid rgba(217, 168, 255, .55); border-radius: 50%; display: none; }
+    #stick .ring.live { display: block; }
+    #stick .knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(155, 77, 255, .55); border: 2px solid var(--gold); }
+    #tbuttons { position: absolute; right: 14px; bottom: 16px; display: grid; grid-template-columns: repeat(2, 84px); gap: 10px; pointer-events: auto; touch-action: none; }
+    #tbuttons .tb { height: 58px; border-radius: 14px; border: 2px solid var(--violet); background: rgba(10, 4, 24, .7); color: var(--text); font: 800 11px Orbitron, sans-serif; letter-spacing: .1em; touch-action: none; user-select: none; -webkit-user-select: none; }
+    #tbuttons .tb.on { background: rgba(155, 77, 255, .65); border-color: var(--gold); }
+    #tbuttons .tb-boost { grid-column: span 2; height: 66px; border-color: var(--gold); color: var(--gold); }
+    #tbuttons .tb-fire { border-color: #ffb338; color: #ffb338; }
+    #tbuttons .tb-missile { border-color: #ff8a5a; color: #ff8a5a; }
+    @media (pointer: coarse) { #controls button { padding: 10px 12px; } #card.home .howto .body { max-height: 40vh; } }
     #credit { position: fixed; right: 12px; bottom: 8px; font-size: 11px; opacity: .7; pointer-events: none; }
     #controls { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 5; }
     #controls button { font: 600 13px Orbitron, sans-serif; color: var(--text); background: rgba(10, 4, 24, .75); border: 1px solid var(--violet);

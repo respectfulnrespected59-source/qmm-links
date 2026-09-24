@@ -86,7 +86,7 @@ export const hud = {
 
   flight(s) {
     const m = s.mission;
-    const sig = `${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${Math.round(s.bossHp * 40)}|${s.blaster}|${s.onFoot}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}`;
+    const sig = `${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${Math.round(s.bossHp * 40)}|${s.blaster}|${s.missiles}|${s.onFoot}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}`;
     if (sig !== flightSig) {
       flightSig = sig;
       const stage = s.boss ? `<span class="boss">${s.bossName} ${"█".repeat(Math.ceil(s.bossHp * 20))}</span>`
@@ -100,6 +100,7 @@ export const hud = {
         `${clock}${stage}<span>SCORE ${s.score}</span>` +
         `<span class="shield">SHIELD ${"▮".repeat(Math.max(0, s.shield))}${"▯".repeat(Math.max(0, s.maxShield - s.shield))}</span>` +
         `<span class="blaster">BLASTER LV${s.blaster} ${"◆".repeat(s.blaster)}${"◇".repeat(5 - s.blaster)}</span>` +
+        `<span class="missiles">MISSILES ${"▲".repeat(s.missiles)}${"△".repeat(s.missilesMax - s.missiles)} <i>Q</i></span>` +
         `<div id="fuel" class="meter"><span>THRUSTERS</span><div class="bar"><i></i></div></div>` + mission;
     }
     this.fuel(s.fuel, s.megaReady, s.stealth ? "STEALTH MODE" : `THRUSTERS LV${s.thrust}${s.thrust === 3 ? " · BOOST ON A FULL BAR = STEALTH" : ""}`);

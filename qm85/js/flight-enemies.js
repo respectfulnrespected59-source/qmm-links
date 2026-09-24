@@ -93,10 +93,18 @@ export class EnemySwarm {
       const orbit = new THREE.Vector3(Math.cos(b.phase) * b.orbit, b.ground ? 0 : Math.sin(b.phase * 1.3) * 6 + 3, Math.sin(b.phase) * b.orbit);
       const goal = target.clone().add(orbit);
       if (b.ground) goal.y = b.groundY; // squads walk the street
+      else { // owner 09-24: bots dipping under the roof line when he stands on a rooftop = "spawning under me"
+        const roof = player.arena?.roofAt?.(goal);
+        if (roof) goal.y = Math.max(goal.y, roof.y + 5);
+      }
       const step = goal.sub(b.obj.position);
       const len = step.length();
       if (len > 0.1) b.obj.position.addScaledVector(step.divideScalar(len), Math.min(len, b.speed * dt));
       b.obj.position.y = b.ground ? b.groundY : Math.max(3, b.obj.position.y);
+      if (!b.ground) {
+        const under = player.arena?.roofAt?.(b.obj.position);
+        if (under) b.obj.position.y = Math.max(b.obj.position.y, under.y + 3);
+      }
       if (b.ground) b.obj.lookAt(target.x, b.obj.position.y, target.z); // stay upright on foot
       else b.obj.lookAt(target);
       b.obj.userData.animate?.(t + b.phase);

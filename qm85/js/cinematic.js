@@ -6,9 +6,9 @@ const FilmShader = {
   uniforms: {
     tDiffuse: { value: null },
     time: { value: 0 },
-    grain: { value: 0.07 },
+    grain: { value: 0.022 }, // UHD pass (owner 09-24: "a little bit grainy")
     vignette: { value: 0.55 },
-    aberration: { value: 0.0012 },
+    aberration: { value: 0.0005 },
     grade: { value: 1 }, // 1 = QMM violet/gold grade (cyberspace), 0 = true colours (realistic Oakland)
     realistic: { value: 0 }, // 1 = filmic S-curve contrast, warm highlights, cool shadows (Oakland)
   },
