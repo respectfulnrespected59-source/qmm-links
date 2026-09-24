@@ -1,6 +1,8 @@
 // Evasive combo system for FLIGHT BATTLE.
 //   Double-tap a direction (WASD / arrows)      -> TWIRL: barrel roll + quick jink that way, untouchable.
-//   Press a DIFFERENT direction while twirling  -> POWER THRUST: a hard burst that way (chainable).
+//   Press a DIFFERENT direction while twirling  -> up/down: POWER THRUST that way; left/right: a crisp BANK (no shove).
+//   The COSMIC PLASMA STRIKE (full bar) fires ONLY out of a HYPER LOOP blast (owner 09-24: "ONLY do the boost bar
+//   hyper speed after the LOOP, not the roll") — never off a roll, which used to rocket him into buildings.
 //   ...and land it late in the twirl on a FULL bar -> COSMIC PLASMA STRIKE: QM85 goes super-mode
 //      (gold + burnt-orange plasma with black streaks — owner 09-23: offset all the purple) and rockets THROUGH the enemy that way, wrecking
 //      everything on the path.
@@ -104,6 +106,13 @@ export class Maneuvers {
    */
   update(ctx) {
     const { dt } = ctx;
+    if (ctx.strikeNow && !this.strike) { // a hyper-loop blast on a full bar becomes the COSMIC STRIKE
+      ctx.clearStrike();
+      if (ctx.fuel >= ULTRA_FUEL) {
+        ctx.spendFuel();
+        this.#startStrike(ctx.strikeNow, ctx);
+      }
+    }
     this.#readTaps(ctx);
     if (this.twirl) {
       this.twirl.t += dt;
@@ -156,11 +165,6 @@ export class Maneuvers {
     const vec = this.#dirVector(dir, ctx.yaw);
     this.comboDir = dir;
     this.comboUntil = ctx.t + COMBO_GRACE + 0.2; // chains keep flowing
-    if (perfect && ctx.fuel >= ULTRA_FUEL) {
-      ctx.spendFuel();
-      this.#startStrike(vec, ctx);
-      return;
-    }
     if (isSide(dir)) ctx.bankTo?.(dir); // roll, then a crisp bank the other way — no lateral rocket
     else this.impulse.copy(vec).multiplyScalar(THRUST);
     this.fovKick = isSide(dir) ? 5 : 12; // a softer lens punch on sideways reversals

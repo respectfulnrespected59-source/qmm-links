@@ -270,6 +270,8 @@ export class FlightBattle {
     this.striking = this.moves.update({
       t: this.t, dt, pos: this.pos, yaw: this.yaw, fuel: this.fuel, swarm: this.swarm,
       noVertical: this.thrust >= 2, // past LV1, double-tap ↑/↓ is the HYPER LOOP, not a twirl
+      strikeNow: this.pendingStrike, // set by the hyper loop's blast-out (flight-hyperloop.js)
+      clearStrike: () => { this.pendingStrike = null; },
       bankTo: (dir) => { // a side switch snaps the turn rate the new way (owner: "smoothly rolling then quickly banking")
         const lv = THRUSTERS[this.thrust];
         this.yawRate = (dir === "left" ? 1 : -1) * YAW_RATE * (this.stealth ? STEALTH.agility : lv.agility) * 1.25;

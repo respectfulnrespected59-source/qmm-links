@@ -112,6 +112,7 @@ export class HyperLoop {
     f.bank = c === "left" ? -0.9 : c === "right" ? 0.9 : 0;
     f.speed = f.thrustBoost * BLAST_SPEED;
     f.blastT = 1.1;
+    f.pendingStrike = f.forward(); // full bar? flight-moves turns this blast into the COSMIC STRIKE
     f.moves.fovKick = 20;
     this.state = "idle";
     sfx.sonicBoom();
