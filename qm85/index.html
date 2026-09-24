@@ -163,6 +163,34 @@
     @keyframes pop { 0% { opacity: 0; translate: -50% 0; scale: .6; } 15% { opacity: 1; scale: 1.15; } 100% { opacity: 0; translate: -50% -60px; scale: 1; } }
     #stats .bb { color: #c58bff; }
     #stats .bb.cool { opacity: .5; }
+    #tutor .tutor-skip { pointer-events: auto; display: inline-block; margin-top: 4px; padding: 3px 10px; font: 800 10px Orbitron, sans-serif; letter-spacing: .12em;
+      color: var(--gold); background: rgba(10, 4, 24, .8); border: 1px solid var(--gold); border-radius: 8px; cursor: pointer; }
+    /* PHONES (owner 09-24 screenshots): the stats ran under the top buttons, the tutorial sat on the stick and had no
+       way out, and the stick was invisible until touched. Compact HUD, visible resting stick, tutorial between the
+       stick and the buttons, prompts above it. */
+    @media (pointer: coarse) {
+      #hud { top: 6px; left: 10px; right: 312px; } /* a little air before the top buttons */
+      #level-title { font-size: 10px; }
+      #stats { font-size: 11px; gap: 2px 10px; margin-top: 2px; }
+      .meter { font-size: 9px; gap: 6px; }
+      .meter .bar { width: 110px; height: 7px; }
+      #controls { top: 6px; right: 8px; gap: 5px; }
+      #controls button { padding: 6px 8px; font-size: 10px; }
+      #stick .ring { display: block; opacity: .5; transition: opacity .15s; }
+      #stick .ring.live { opacity: 1; }
+      #stick span { left: 30px; bottom: 6px; font-size: 9px; }
+      #tutor { top: auto; bottom: 44px; left: 50%; transform: translateX(-50%); width: min(430px, calc(100% - 420px)); max-width: none; padding: 5px 12px; } /* fixed width so long steps WRAP */
+      #tutor span { font-size: 11px; }
+      #prompt { bottom: 112px; font-size: 12px; padding: 6px 12px; }
+      #bossbar { bottom: 8px; width: min(420px, calc(100% - 440px)); }
+      #toast { top: 30%; }
+    }
+    @media (pointer: coarse) and (orientation: portrait) {
+      #hud { top: 46px; right: 10px; } /* the three top buttons span the width: stats go under them */
+      #tutor { bottom: 318px; left: 16px; right: 16px; width: auto; transform: none; max-width: none; } /* above the stick + buttons; wraps */
+      #prompt { bottom: 390px; max-width: calc(100% - 32px); }
+      #bossbar { bottom: 300px; width: calc(100% - 32px); }
+    }
     [hidden] { display: none !important; }
     @media (prefers-reduced-motion: reduce) { #toast, #subtitle { transition: none; } .popup, #bosscard div { animation-duration: .01s; } }
   </style>

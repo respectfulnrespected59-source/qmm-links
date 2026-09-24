@@ -8,6 +8,7 @@ import { hud } from "./hud.js";
 
 const DONE_KEY = "qm85_tutorial_done";
 const MIN_STEP_TIME = 1.2; // a step is shown at least this long before it can clear (no instant skips)
+const GIVE_UP_AFTER = 20; // owner 09-24 (phone): a step nobody can finish must not sit on screen forever
 
 const STEPS = [
   {
@@ -28,7 +29,7 @@ const STEPS = [
   {
     id: "missile", key: "Q — HEAT-SEEKING MISSILE. Face a drone (it locks the nearest one ahead), 3 in the rack", pad: "MISSILE — face a drone (it locks the nearest one ahead), 3 in the rack",
     reset: (s, f) => { s.ammo0 = f.missiles.ammo; },
-    done: (s, f) => f.missiles.ammo < s.ammo0,
+    done: (s, f) => f.missiles.ammo < s.ammo0 || input.pressed("KeyQ", "KeyE"), // trying counts: no drone ahead = no lock, but he learned the button
   },
   {
     id: "roll", key: "double-tap ← or → — BARREL ROLL (untouchable while rolling)", pad: "flick the stick left or right TWICE — barrel roll",
@@ -48,14 +49,22 @@ const STEPS = [
   },
 ];
 
+let skipRequested = false;
+
 function el() {
   let e = document.getElementById("tutor");
   if (e) return e;
   e = document.createElement("div");
   e.id = "tutor";
   e.hidden = true;
-  e.innerHTML = `<b></b><span></span><i>T = skip</i>`;
+  // phones have no T key: a real SKIP button (the card itself stays click-through so it never blocks flying)
+  e.innerHTML = `<b></b><span></span><i>T = skip</i><button type="button" class="tutor-skip">SKIP TUTORIAL</button>`;
   document.body.appendChild(e);
+  e.querySelector(".tutor-skip").addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    skipRequested = true;
+  });
   return e;
 }
 
@@ -110,15 +119,17 @@ class Tutorial {
   update(f, dt) {
     if (!this.active || !f) return;
     this.shownFor += dt;
-    if (input.pressed("KeyT")) {
+    if (input.pressed("KeyT") || skipRequested) {
+      skipRequested = false;
       this.#finish(true);
       return;
     }
     const step = this.steps[this.i];
     const did = step.done(this.state, f, dt); // runs every frame so hold-timers count from the moment the step shows
     if (did) this.state.did = true;
-    if (this.shownFor >= MIN_STEP_TIME && this.state.did) {
-      hud.toast("✓ " + step.id.toUpperCase());
+    const gaveUp = !this.state.did && this.shownFor >= GIVE_UP_AFTER;
+    if ((this.shownFor >= MIN_STEP_TIME && this.state.did) || gaveUp) {
+      hud.toast(gaveUp ? `${step.id.toUpperCase()} — TRY IT LATER` : "✓ " + step.id.toUpperCase());
       this.i += 1;
       if (this.i >= this.steps.length) this.#finish(false);
       else this.#enter(f);

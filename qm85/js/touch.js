@@ -43,6 +43,8 @@ class TouchLayer {
     this.knob = root.querySelector(".knob");
     this.ring = root.querySelector(".ring");
     const zone = root.querySelector("#stick");
+    this.zone = zone;
+    this.#home(); // owner 09-24: the stick must be SEEN before you touch it, or it looks like there isn't one
     zone.addEventListener("pointerdown", (e) => this.#stickDown(e));
     zone.addEventListener("pointermove", (e) => this.#stickMove(e));
     for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) zone.addEventListener(ev, (e) => this.#stickUp(e));
@@ -70,9 +72,18 @@ class TouchLayer {
     this.stick.ox = e.clientX;
     this.stick.oy = e.clientY;
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* synthetic events have no active pointer */ }
-    this.ring.style.left = `${e.clientX}px`;
-    this.ring.style.top = `${e.clientY}px`;
+    // the ring lives INSIDE the stick zone: place it in zone coordinates, not screen coordinates — the zone
+    // starts 38% down, so screen coords put the ring ~140 px under the thumb, often off the bottom edge
+    const r = this.zone.getBoundingClientRect();
+    this.ring.style.left = `${e.clientX - r.left}px`;
+    this.ring.style.top = `${e.clientY - r.top}px`;
     this.ring.classList.add("live");
+  }
+
+  /** Resting spot: bottom-left, clear of the screen edge and the thumb's natural reach. */
+  #home() {
+    this.ring.style.left = "86px";
+    this.ring.style.top = "calc(100% - 92px)";
   }
 
   #stickMove(e) {
@@ -94,6 +105,7 @@ class TouchLayer {
     this.stick.id = null;
     this.knob.style.transform = "";
     this.ring.classList.remove("live");
+    this.#home(); // springs back to its resting spot
     this.#dirs({});
   }
 

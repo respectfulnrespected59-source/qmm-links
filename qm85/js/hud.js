@@ -1,4 +1,6 @@
 // All on-screen text: menu, story cards, counters, toasts, Rob's subtitles, build bar.
+import { touch } from "./touch.js";
+
 const $ = (id) => document.getElementById(id);
 let toastTimer = 0;
 let subTimer = 0;
@@ -114,7 +116,10 @@ export const hud = {
         `<div id="fuel" class="meter"><span>THRUSTERS</span><div class="bar"><i></i></div></div>` + mission;
     }
     this.fuel(s.fuel, s.megaReady, s.stealth ? "STEALTH MODE" : `THRUSTERS LV${s.thrust}${s.thrust === 3 ? " · BOOST ON A FULL BAR = STEALTH" : ""}`);
-    this.prompt(s.onFoot ? (m?.carrying ? "FOLLOW THE GOLD ARROW TO THE WAREHOUSE · SPACE JUMP · F = FLY" : "FIGHT MODE · SPACE JUMP · F = FLY") : s.canLand ? (s.landOnRoof ? "F — LAND ON THE ROOF" : "F — LAND (FIGHT MODE)") : s.braking ? "AIRBRAKE — GET UNDER 45 M TO LAND" : "");
+    // phones have no F / SPACE keys: say which BUTTON to tap (owner 09-24 on mobile)
+    const k = touch.enabled ? { jump: "JUMP", fly: "LAND / FLY", land: "TAP LAND / FLY" } : { jump: "SPACE JUMP", fly: "F = FLY", land: "F" };
+    this.prompt(s.onFoot ? (m?.carrying ? `FOLLOW THE GOLD ARROW TO THE WAREHOUSE · ${k.jump} · ${k.fly}` : `FIGHT MODE · ${k.jump} · ${k.fly}`)
+      : s.canLand ? (s.landOnRoof ? `${k.land} — LAND ON THE ROOF` : `${k.land} — LAND (FIGHT MODE)`) : s.braking ? "AIRBRAKE — GET UNDER 45 M TO LAND" : "");
   },
 
   /** Crosshair + a bracket on the nearest bot, or an edge arrow toward it when it's off screen. */
