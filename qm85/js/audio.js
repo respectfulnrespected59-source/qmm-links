@@ -126,6 +126,98 @@ const engine = {
   },
 };
 
+let drive = null; // shared distortion curve for the blaster growl
+let cannonNoise = null;
+function driveCurve() {
+  if (drive) return drive;
+  drive = new Float32Array(1024);
+  for (let i = 0; i < 1024; i++) {
+    const x = (i / 1023) * 2 - 1;
+    drive[i] = Math.tanh(x * 6) * 0.9; // hard-ish saturation: a snarl, not a buzz
+  }
+  return drive;
+}
+
+/** One blaster shot. Level 1..5 = deeper, longer, heavier. Kept short so rapid fire never smears. */
+function plasmaCannon(level) {
+  const a = ac();
+  const t = a.currentTime;
+  const k = (level - 1) / 4; // 0..1
+  const len = 0.2 + k * 0.1;
+  const bus = a.createGain();
+  bus.gain.value = 0.72; // headroom: four layers stacked over the music
+  bus.connect(out());
+  // 1. CRACK: a bright noise snap, high-passed, 25 ms
+  if (!cannonNoise) { // built once: rapid fire must not generate noise every shot
+    cannonNoise = a.createBuffer(1, Math.ceil(a.sampleRate * 0.35), a.sampleRate);
+    const d = cannonNoise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const nBuf = cannonNoise;
+  const crack = a.createBufferSource();
+  crack.buffer = nBuf;
+  const hp = a.createBiquadFilter();
+  hp.type = "highpass";
+  hp.frequency.value = 2200;
+  const cg = a.createGain();
+  cg.gain.setValueAtTime(0.28, t);
+  cg.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+  crack.connect(hp).connect(cg).connect(bus);
+  crack.start(t);
+  crack.stop(t + 0.04);
+  // 2. GROWL: two detuned saws through the distortion, pitch diving, low-pass closing
+  const shaper = a.createWaveShaper();
+  shaper.curve = driveCurve();
+  shaper.oversample = "2x";
+  const lp = a.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.Q.value = 6;
+  lp.frequency.setValueAtTime(4200, t);
+  lp.frequency.exponentialRampToValueAtTime(260, t + len);
+  const gg = a.createGain();
+  gg.gain.setValueAtTime(0.0001, t);
+  gg.gain.exponentialRampToValueAtTime(0.16 + k * 0.05, t + 0.008);
+  gg.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  shaper.connect(lp).connect(gg).connect(bus);
+  for (const det of [-14, 11]) {
+    const o = a.createOscillator();
+    o.type = "sawtooth";
+    o.detune.value = det;
+    o.frequency.setValueAtTime(420 - k * 140, t);
+    o.frequency.exponentialRampToValueAtTime(55 - k * 12, t + len);
+    o.connect(shaper);
+    o.start(t);
+    o.stop(t + len + 0.02);
+  }
+  // 3. SUB PUNCH: a sine kick you feel more than hear
+  const sub = a.createOscillator();
+  sub.type = "sine";
+  sub.frequency.setValueAtTime(130 - k * 20, t);
+  sub.frequency.exponentialRampToValueAtTime(38, t + 0.16 + k * 0.06);
+  const sg = a.createGain();
+  sg.gain.setValueAtTime(0.0001, t);
+  sg.gain.exponentialRampToValueAtTime(0.42 + k * 0.12, t + 0.006);
+  sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.2 + k * 0.08);
+  sub.connect(sg).connect(bus);
+  sub.start(t);
+  sub.stop(t + 0.32);
+  // 4. GRIT TAIL: band-passed noise that decays after the shot (the "debris")
+  const grit = a.createBufferSource();
+  grit.buffer = nBuf;
+  const bp = a.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.Q.value = 0.8;
+  bp.frequency.setValueAtTime(1600, t);
+  bp.frequency.exponentialRampToValueAtTime(300, t + len);
+  const tg = a.createGain();
+  tg.gain.setValueAtTime(0.0001, t);
+  tg.gain.exponentialRampToValueAtTime(0.07 + k * 0.05, t + 0.02);
+  tg.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  grit.connect(bp).connect(tg).connect(bus);
+  grit.start(t);
+  grit.stop(t + len);
+}
+
 export const sfx = {
   engine,
   // HYPER BOOST: a deep boom that drops away under a sharp supersonic crack
@@ -175,12 +267,8 @@ export const sfx = {
   caught: () => [400, 300, 200].forEach((f, i) => tone(f, 0.2, { type: "square", delay: i * 0.12, vol: 0.09 })),
   build: () => tone(110, 0.08, { type: "square", vol: 0.04 }),
   // owner 09-23: "a more powerful blasting sound" — a crack, a body and a sub thump, all heavier per level
-  laser: (level = 1) => {
-    tone(1400 - level * 120, 0.08, { type: "square", slide: -1000, vol: 0.03 });
-    tone(320 - level * 30, 0.16 + level * 0.02, { type: "sawtooth", slide: -220, vol: 0.05 + level * 0.012 });
-    tone(90, 0.14 + level * 0.02, { type: "sine", slide: -45, vol: 0.12 + level * 0.02 });
-    noise(0.05 + level * 0.012, 0.05 + level * 0.018);
-  },
+  // PLASMA CANNON (owner 09-24: "more dangerously destructive"): crack + distorted growl + sub punch + grit tail.
+  laser: (level = 1) => plasmaCannon(level),
   enemyShot: () => tone(520, 0.14, { type: "sine", slide: -300, vol: 0.04 }),
   powerUp: () => [392, 523, 659, 880, 1175].forEach((f, i) => tone(f, 0.16, { type: "square", delay: i * 0.05, vol: 0.05 })),
   thrust: () => { noise(0.25, 0.14); tone(260, 0.3, { type: "sawtooth", slide: 500, vol: 0.05 }); },
