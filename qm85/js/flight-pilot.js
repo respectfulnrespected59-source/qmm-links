@@ -178,7 +178,7 @@ export class Pilot {
     return this.charge.getWorldPosition(new THREE.Vector3());
   }
 
-  update(dt, { pos, yaw, pitch, bank, boosting, spin, t, blink, grounded = false, walk = 0, thrustColor = 0xc58bff, stealth = false }) {
+  update(dt, { pos, yaw, pitch, bank, boosting, spin, t, blink, grounded = false, walk = 0, thrustColor = 0xc58bff, stealth = false, braking = false }) {
     this.flameMat.color.setHex(thrustColor);
     this.frame.position.copy(pos);
     this.frame.rotation.set(-pitch, yaw, bank);
@@ -199,11 +199,13 @@ export class Pilot {
         return;
       }
       const swim = Math.sin(t * 4 + i * Math.PI) * 0.07; // a lazy stroke while cruising
-      arm.rotation.set(ARM_REACH + swim - k * 0.12, 0, side * ARM_SPREAD);
+      if (braking) { // AIRBRAKE flare: arms swept wide and back like air brakes
+        arm.rotation.set(THREE.MathUtils.damp(arm.rotation.x, ARM_REACH + 0.75, 10, dt), 0, THREE.MathUtils.damp(arm.rotation.z, side * 1.05, 10, dt));
+      } else arm.rotation.set(ARM_REACH + swim - k * 0.12, 0, side * ARM_SPREAD);
       arm.position.copy(this.armBase[i]).add(new THREE.Vector3(0, k * PUNCH_DIST, 0));
     });
     this.bot.position.y = grounded ? -0.5 + Math.abs(Math.sin(walk)) * 0.05 : -0.5; // a little step bounce
-    const roar = stealth ? 4.2 : boosting ? 2.4 : 1; // STEALTH MODE: long plasma trails
+    const roar = braking ? 0.55 : stealth ? 4.2 : boosting ? 2.4 : 1; // STEALTH MODE: long plasma trails; the brake throttles the plume
     const flicker = () => 0.85 + Math.random() * 0.3;
     this.haloMat.color.setHex(thrustColor);
     this.streakMat.color.setHex(thrustColor);
@@ -215,7 +217,8 @@ export class Pilot {
       f.visible = !grounded;
       f.scale.set(1, r, 1);
       this.halos[i].visible = !grounded;
-      this.halos[i].scale.set(1 + (boosting ? 0.25 : 0), r * 1.05, 1 + (boosting ? 0.25 : 0));
+      const flare = braking ? 1.9 : boosting ? 1.25 : 1; // the brake splays the plume wide and short
+      this.halos[i].scale.set(flare, r * 1.05, flare);
       this.cores[i].visible = !grounded;
       this.cores[i].scale.set(1, r * 0.9 * flicker(), 1);
       this.streaks[i].visible = !grounded && this.streakMat.opacity > 0.02;

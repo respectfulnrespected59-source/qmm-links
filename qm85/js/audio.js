@@ -106,7 +106,7 @@ const engine = {
     this.crackleAt = 0;
   },
   /** speed01 0..1 of this level's top boost; call every flight frame. on=false fades it out. */
-  set({ on, speed01 = 0, boosting = false, level = 1, stealth = false }) {
+  set({ on, speed01 = 0, boosting = false, level = 1, stealth = false, braking = false }) {
     if (!ctx && !on) return;
     if (!this.nodes) this.build();
     const n = this.nodes;
@@ -118,7 +118,7 @@ const engine = {
     n.rumbleGain.gain.setTargetAtTime(0.16 + drive * 0.1 + level * 0.02 + (boosting ? 0.14 : 0), t, boosting ? 0.06 : 0.15); // boost SLAMS in (owner: more intensity on boost)
     n.roarBP.frequency.setTargetAtTime(260 + drive * 380 + (boosting ? 260 : 0) + level * 40, t, 0.12);
     n.roarGain.gain.setTargetAtTime((stealth ? 0.03 : 0.05) + drive * 0.05 + (boosting ? 0.17 : 0), t, boosting ? 0.05 : 0.12);
-    n.hissGain.gain.setTargetAtTime(stealth ? 0.035 : boosting ? 0.02 : 0, t, 0.2);
+    n.hissGain.gain.setTargetAtTime(braking ? 0.05 : stealth ? 0.035 : boosting ? 0.02 : 0, t, braking ? 0.05 : 0.2); // AIRBRAKE = a hard hiss of bleed air
     if (t > this.crackleAt) { // random pops in the roar
       this.crackleAt = t + 0.05 + Math.random() * 0.12;
       n.crackle.gain.setTargetAtTime(0.7 + Math.random() * 0.6, t, 0.02);

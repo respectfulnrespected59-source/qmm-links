@@ -32,6 +32,8 @@ const PITCH_RATE = 1.3;
 const PITCH_MAX = 1.05;
 const STEER_RESPONSE = 7; // how fast turn/pitch rates ease toward the stick (higher = snappier)
 const BANK_MAX = 0.95; // full-rate turn banks ~55 degrees
+const BRAKE_SPEED = 3.5; // AIRBRAKE (owner 09-24, mobile landings): hold X = flare and hover at this speed
+const BRAKE_DAMP = 7;
 const FLOOR = 10; // just above the low-rise rooftops (flight-details LOWRISE_MAX)
 const CEILING = 110;
 const FUEL_DRAIN = 0.32;
@@ -204,7 +206,7 @@ export class FlightBattle {
     this.missiles.update(dt);
     this.sparks.update(dt);
     const lvTop = THRUSTERS[this.thrust].boost * STEALTH.speed;
-    sfx.engine.set({ on: !this.fight.active && !this.done, speed01: this.speed / lvTop, boosting: this.boosting || this.blastT > 0, level: this.thrust, stealth: this.stealth });
+    sfx.engine.set({ on: !this.fight.active && !this.done, speed01: this.speed / lvTop, boosting: this.boosting || this.blastT > 0, level: this.thrust, stealth: this.stealth, braking: this.braking });
     this.arena.update(dt, this.t);
     this.arena.follow?.(this.pos); // realistic zones keep sun shadows centred on QM85
     if (this.day) {
@@ -223,7 +225,10 @@ export class FlightBattle {
 
   /** Boost + STEALTH MODE state, decided once per frame before steering. */
   #boostState() {
-    const want = input.held("Space") && this.fuel > 0 && !this.mega.busy && !this.fight.active;
+    const brake = input.held("KeyX", "ControlLeft", "ControlRight") && !this.mega.busy && !this.fight.active && !this.hyper.active && !this.moves.busy;
+    if (brake !== this.braking) this.hooks.onBrake?.(brake);
+    this.braking = brake;
+    const want = !brake && input.held("Space") && this.fuel > 0 && !this.mega.busy && !this.fight.active;
     if (want && !this.boosting) this.stealth = this.thrust === 3 && this.fuel >= MEGA_READY; // must START on a full bar
     if (!want && this.stealth) this.hooks.onStealth?.(false);
     else if (want && this.stealth && !this.boosting) this.hooks.onStealth?.(true);
@@ -246,7 +251,7 @@ export class FlightBattle {
     // Owner 09-24: a held climb goes all the way over — full loops (hold W) and outside loops (hold S).
     this.pitch += this.pitchRate * dt;
     this.pitch = Math.atan2(Math.sin(this.pitch), Math.cos(this.pitch)); // keep in (-π, π]
-    if (!climb && Math.abs(this.pitch) < PITCH_MAX) this.pitch = THREE.MathUtils.damp(this.pitch, 0, 0.9, dt); // only near level
+    if (!climb && Math.abs(this.pitch) < PITCH_MAX) this.pitch = THREE.MathUtils.damp(this.pitch, 0, this.braking ? 5 : 0.9, dt); // only near level; the brake levels him fast
     // Bank follows the ACTUAL turn rate (not the key), so it rolls in and out with the carve.
     this.bank = THREE.MathUtils.damp(this.bank, -(this.yawRate / (YAW_RATE * agility)) * BANK_MAX * (this.stealth ? STEALTH.bank : 1), 9 * (this.stealth ? 1.6 : 1), dt);
     this.#twirl(dt, climb);
@@ -320,9 +325,9 @@ export class FlightBattle {
     const lv = THRUSTERS[this.thrust];
     const drain = FUEL_DRAIN / (1 + 0.3 * (this.thrust - 1)); // bigger levels, bigger tank
     this.fuel = boosting ? Math.max(0, this.fuel - drain * dt) : Math.min(1, this.fuel + FUEL_REGEN * dt);
-    const top = boosting ? lv.boost * (this.stealth ? STEALTH.speed : 1) : lv.cruise;
-    this.blastT = Math.max(0, this.blastT - dt);
-    if (this.blastT === 0) this.speed = THREE.MathUtils.damp(this.speed, top, this.stealth ? 5 : 3, dt);
+    const top = this.braking ? BRAKE_SPEED : boosting ? lv.boost * (this.stealth ? STEALTH.speed : 1) : lv.cruise;
+    this.blastT = this.braking ? 0 : Math.max(0, this.blastT - dt); // the brake also kills a hyper blast
+    if (this.blastT === 0) this.speed = THREE.MathUtils.damp(this.speed, top, this.braking ? BRAKE_DAMP : this.stealth ? 5 : 3, dt);
     applyDeflect(this, dt); // an impact eases him off course over a third of a second
     this.vel.copy(this.forward()).multiplyScalar(this.speed);
     const prev = this.pos.clone();
@@ -361,7 +366,7 @@ export class FlightBattle {
       onFire: (kills) => this.hooks.onMega(kills),
     });
     this.pilot.update(dt, {
-      pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: this.bank, boosting: boosting || this.mega.busy,
+      pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: this.bank, boosting: boosting || this.mega.busy, braking: this.braking,
       thrustColor: this.stealth ? 0xffffff : lv.color, stealth: this.stealth,
       spin: spin + this.twirlAngle + this.moves.spin, t: this.t, blink: this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 1,
     });
@@ -522,6 +527,7 @@ export class FlightBattle {
       megaReady: this.fuel >= MEGA_READY && !this.mega.busy,
       onFoot: this.fight.active,
       canLand: this.fight.canLand,
+      braking: this.braking,
       landOnRoof: this.fight.landOnRoof,
       altitude: this.pos.y,
       day: this.day && { phase: this.day.phase, clock: this.day.clock, night: this.day.night01 },

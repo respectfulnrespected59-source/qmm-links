@@ -1,7 +1,7 @@
 // MOBILE FIT (owner 09-24: "make sure its mobile fitted"): a touch layer that drives the same key codes the
 // keyboard does, so every move works on a phone. Left half of the screen = a virtual stick (flight-sim: push
 // UP to dive, DOWN to climb; flick twice = twirl, flick ↑↑/↓↓ at LV2+ = hyper loop). Right side = buttons:
-// BOOST (hold; tap twice on a full bar = MEGA), FIRE (hold), MISSILE, LAND/FLY, JUMP. Shown only when the
+// BOOST (hold; tap twice on a full bar = MEGA), AIRBRAKE (hold: flare + hover, then LAND), FIRE (hold), MISSILE, LAND/FLY, JUMP. Shown only when the
 // device has a coarse pointer (a finger) and the game is in flight.
 import { input } from "./input.js";
 
@@ -12,6 +12,7 @@ const isTouchDevice = () => matchMedia("(pointer: coarse)").matches || navigator
 
 const BUTTONS = [
   { id: "boost", label: "BOOST", code: "Space", hold: true },
+  { id: "brake", label: "AIRBRAKE", code: "KeyX", hold: true },
   { id: "fire", label: "FIRE", code: "ShiftLeft", hold: true },
   { id: "missile", label: "MISSILE", code: "KeyQ", hold: false },
   { id: "land", label: "LAND / FLY", code: "KeyF", hold: false },
