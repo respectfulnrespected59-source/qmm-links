@@ -44,9 +44,9 @@ export const hud = {
        the Shadow Ops military, and the Serpent Priests with their robed acolyte bots.</p>
        <p><b>OAKLAND MISSION:</b> the dark companies scattered QM85's <b>data drives</b> and <b>battle parts</b> across
        real Oakland. Fly in, land, grab them on foot and walk them into the <b>QMM WAREHOUSE</b> — Rob &amp; Mahal are waiting.</p>
-       <p class="controls"><b>FLIGHT:</b> ↑ dive · ↓ climb · ←/→ turn · hold SPACE boost · SHIFT/L plasma punches ·
-       hold X = AIRBRAKE (flare + hover, then F to land) · Q = HEAT-SEEKING MISSILE · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off · double-tap SPACE (full bar) = MEGA BLAST · double-tap a direction = twirl, switch mid-twirl = power thrust / COSMIC STRIKE<br>
-       <b>FIGHT MODE:</b> fly low + <b>F</b> to land · W/S walk · A/D turn · SHIFT/L blasters fire UP · SPACE jump · <b>F</b> = back to flight</p>
+       <p class="controls"><b>FLIGHT:</b> ↑ dive · ↓ climb · ←/→ turn · hold SPACE boost · click / L = plasma punches · hold SHIFT = AIRBRAKE (flare + hover, then F to land) ·
+       Q = HEAT-SEEKING MISSILE · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off · double-tap SPACE (full bar) = MEGA BLAST · double-tap a direction = twirl, switch mid-twirl = power thrust / COSMIC STRIKE<br>
+       <b>FIGHT MODE:</b> fly low + <b>F</b> to land · W/S walk · A/D turn · click / L = blasters fire UP · SPACE jump · <b>F</b> = back to flight</p>
        </div></details>
        <button id="card-cyber" type="button" class="secondary">CYBERSPACE BATTLE</button>`,
       "OAKLAND MISSION",

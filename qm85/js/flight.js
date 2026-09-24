@@ -225,7 +225,7 @@ export class FlightBattle {
 
   /** Boost + STEALTH MODE state, decided once per frame before steering. */
   #boostState() {
-    const brake = input.held("KeyX", "ControlLeft", "ControlRight") && !this.mega.busy && !this.fight.active && !this.hyper.active && !this.moves.busy;
+    const brake = input.held("ShiftLeft", "ShiftRight", "KeyX", "ControlLeft", "ControlRight") && !this.mega.busy && !this.fight.active && !this.hyper.active && !this.moves.busy;
     if (brake !== this.braking) this.hooks.onBrake?.(brake);
     this.braking = brake;
     const want = !brake && input.held("Space") && this.fuel > 0 && !this.mega.busy && !this.fight.active;
@@ -395,7 +395,7 @@ export class FlightBattle {
   #shoot(dt) {
     this.cooldown = Math.max(0, this.cooldown - dt);
     if (this.mega.busy || this.cooldown > 0) return;
-    if (!input.held("ShiftLeft", "ShiftRight", "KeyL", "Mouse0")) return; // F is the flight/FIGHT switch now
+    if (!input.held("KeyL", "Mouse0")) return; // click / trackpad / L fire; SHIFT is the AIRBRAKE (owner 09-24)
     const cfg = this.power.config;
     this.cooldown = cfg.gap;
     this.side = 1 - Math.max(0, this.side); // alternate fists: 0 = right, 1 = left

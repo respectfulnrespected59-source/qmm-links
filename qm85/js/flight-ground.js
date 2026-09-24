@@ -1,7 +1,7 @@
 // FIGHT MODE — QM85 on his feet in Oakland (owner 09-24: "upon landing pressing (F) takes u outta flight mode
 // and into FIGHT mode where on the ground his blasters shoot up as he's walking, but pressin (f) again puts him
 // back into flight-mode and jumping initiates flight").
-//   F (flying low)  -> drop to the street        W/S walk · A/D turn · SHIFT/L blasters (aimed UP at the drones)
+//   F (flying low)  -> drop to the street        W/S walk · A/D turn · click / L blasters (aimed UP at the drones) · SHIFT = airbrake in the air
 //   SPACE = jump (owner 09-24)   ·   F = blast back into the air (the ONLY way to take off)
 //   ROOFTOPS (owner 09-24: "i still couldnt land on rooftops"): F over a real building lands on its roof; the roof
 //   edge is a wall (he can't walk off), the Merkabas up there are walkable pickups, F flies again.

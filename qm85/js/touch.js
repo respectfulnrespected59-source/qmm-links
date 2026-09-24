@@ -13,7 +13,7 @@ const isTouchDevice = () => matchMedia("(pointer: coarse)").matches; // a touchs
 const BUTTONS = [
   { id: "boost", label: "BOOST", code: "Space", hold: true },
   { id: "brake", label: "AIRBRAKE", code: "KeyX", hold: true },
-  { id: "fire", label: "FIRE", code: "ShiftLeft", hold: true },
+  { id: "fire", label: "FIRE", code: "KeyL", hold: true },
   { id: "missile", label: "MISSILE", code: "KeyQ", hold: false },
   { id: "land", label: "LAND / FLY", code: "KeyF", hold: false },
   { id: "jump", label: "JUMP", code: "Space", hold: false },
