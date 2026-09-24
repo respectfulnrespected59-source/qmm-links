@@ -34,7 +34,7 @@ function softTexture(inner, outer) {
 }
 
 function rooftops(root, towers) {
-  const spireMat = new THREE.MeshStandardMaterial({ color: 0x1a1426, metalness: 0.9, roughness: 0.3 });
+  const spireMat = new THREE.MeshStandardMaterial({ color: 0x1b1e21, metalness: 0.9, roughness: 0.3 }); // gunmetal
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4a73a, metalness: 1, roughness: 0.25, emissive: 0x3a2a08 });
   const beaconTex = softTexture("rgba(255,255,255,1)", "rgba(255,255,255,0)");
   const beacons = [];
@@ -50,7 +50,7 @@ function rooftops(root, towers) {
       root.add(crown);
     }
     const beacon = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: beaconTex, color: i % 2 ? 0xb57bff : 0xffcf5a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      map: beaconTex, color: i % 3 === 0 ? 0x35ff6a : i % 3 === 1 ? 0xb57bff : 0xffcf5a, // green / violet / gold transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
     }));
     beacon.position.set(t.x, t.h + h + 0.3, t.z);
     beacon.scale.setScalar(2.2);
@@ -64,7 +64,7 @@ function pillars(root, towers) {
   const out = [];
   towers.forEach((t, i) => {
     if (i % PILLAR_EVERY) return;
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 400, 16, 1, true), glow(0xb9a4e8, 0.1)); // pale lavender, not hard violet
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 400, 16, 1, true), glow(i % 2 ? 0x7dffa0 : 0xc4ccc8, 0.09)); // matrix green and steel-white pillars
     beam.position.set(t.x, t.h + 200, t.z);
     beam.material.fog = false;
     root.add(beam);
@@ -97,7 +97,7 @@ function traffic(root) {
   const geo = new THREE.BoxGeometry(0.35, 0.18, 1.6);
   const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false });
   const mesh = new THREE.InstancedMesh(geo, mat, total);
-  const palette = [new THREE.Color(0xffe2c4), new THREE.Color(0xcdb8f0), new THREE.Color(0xf4f1ea), new THREE.Color(0xf6c9b2)]; // warm-soft traffic
+  const palette = [new THREE.Color(0xffe2c4), new THREE.Color(0xb8ffc8), new THREE.Color(0xf4f1ea), new THREE.Color(0xcdb8f0)]; // warm, matrix green, white, soft violet
   const lanes = [];
   for (let l = 0; l < TRAFFIC_LANES; l++) {
     lanes.push({ r: rand(40, 190), y: rand(8, 60), speed: rand(0.05, 0.12) * (l % 2 ? 1 : -1), tilt: rand(-0.08, 0.08) });
@@ -130,7 +130,7 @@ function traffic(root) {
 }
 
 function haze(root) {
-  const tex = softTexture("rgba(120,70,200,0.55)", "rgba(40,10,80,0)");
+  const tex = softTexture("rgba(70,110,90,0.5)", "rgba(20,30,25,0)"); // grey-green haze puffs
   const banks = [];
   for (let i = 0; i < HAZE_BANKS; i++) {
     const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: rand(0.25, 0.5), depthWrite: false, blending: THREE.AdditiveBlending });
@@ -155,7 +155,7 @@ function lowrise(root, towers) {
       cells.push([x, z]);
     }
   }
-  const mat = new THREE.MeshStandardMaterial({ color: 0x2a2440, metalness: 0.5, roughness: 0.45, emissive: 0x0c0618 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x2b2f33, metalness: 0.55, roughness: 0.45, emissive: 0x06120a }); // dark grey low-rise
   const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), mat, cells.length);
   const m = new THREE.Matrix4();
   cells.forEach(([x, z], i) => {
@@ -177,8 +177,8 @@ export function skinLowrise(details, facade) {
   map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
   map.repeat.set(0.5, 0.25); // a slice of the facade per block, so windows stay building-scale
   map.needsUpdate = true;
-  Object.assign(details.lowrise.mesh.material, { map, emissiveMap: map, color: new THREE.Color(0xd9d0e6) });
-  details.lowrise.mesh.material.emissive.setHex(0xffffff);
+  Object.assign(details.lowrise.mesh.material, { map, emissiveMap: map, color: new THREE.Color(0x8e9a93) });
+  details.lowrise.mesh.material.emissive.setHex(0x8fa398); // the low-rise window glow goes steel-grey too
   details.lowrise.mesh.material.emissiveIntensity = 0.45;
   details.lowrise.mesh.material.needsUpdate = true;
 }

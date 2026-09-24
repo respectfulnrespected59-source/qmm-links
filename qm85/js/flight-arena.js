@@ -14,7 +14,7 @@ const RING_COUNT = 18;
 const RING_R = 4;
 const SKY_R = 520;
 const SKY_H = 760;
-const HAZE = 0x3d3454; // softer dusk-lavender (owner 09-24: "slightly softer colors to balance out all that neon")
+const HAZE = 0x23272a; // charcoal haze (owner 09-24: "too purple pinky... add dark greys and a little matrix neon green")
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const loader = new THREE.TextureLoader();
@@ -33,6 +33,7 @@ function loadArt(name) {
 function buildTowers(root) {
   const edgeViolet = new THREE.LineBasicMaterial({ color: 0x9b4dff, transparent: true, opacity: 1 });
   const edgeGold = new THREE.LineBasicMaterial({ color: 0xd4a73a, transparent: true, opacity: 1 });
+  const edgeGreen = new THREE.LineBasicMaterial({ color: 0x35ff6a, transparent: true, opacity: 1 }); // matrix green
   const towers = [];
   for (let i = 0; i < TOWER_COUNT; i++) {
     const a = rand(0, Math.PI * 2);
@@ -41,17 +42,17 @@ function buildTowers(root) {
     const d = rand(6, 14);
     const h = rand(25, 80);
     const geo = new THREE.BoxGeometry(w, h, d);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x0b0718, metalness: 0.6, roughness: 0.4, emissive: 0x12052a });
+    const mat = new THREE.MeshStandardMaterial({ color: 0x0f1113, metalness: 0.7, roughness: 0.35, emissive: 0x061a0c });
     const mesh = new THREE.Mesh(geo, mat);
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
     mesh.position.set(x, h / 2, z);
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), i % 4 ? edgeViolet : edgeGold);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), i % 4 === 0 ? edgeGold : i % 3 === 0 ? edgeGreen : edgeViolet);
     mesh.add(edges);
     root.add(mesh);
     towers.push({ x, z, hw: w / 2, hd: d / 2, h, w, mesh });
   }
-  return { towers, edgeMats: [edgeViolet, edgeGold] };
+  return { towers, edgeMats: [edgeViolet, edgeGold, edgeGreen] };
 }
 
 function buildRings(root) {
@@ -75,8 +76,8 @@ function skinTowers(towers, edgeMats, facade) {
     map.wrapS = map.wrapT = THREE.MirroredRepeatWrapping;
     map.repeat.set(Math.max(1, t.w / 10), Math.max(1, t.h / 16));
     map.needsUpdate = true;
-    Object.assign(t.mesh.material, { map, emissiveMap: map, color: new THREE.Color(0xd9d0e6), metalness: 0.55, roughness: 0.35 }) // dusty lilac tint softens the neon windows;
-    t.mesh.material.emissive.setHex(0xffffff);
+    Object.assign(t.mesh.material, { map, emissiveMap: map, color: new THREE.Color([0xb9c4bd, 0xa9adad, 0x9fd6ae, 0xc8c2d6][Math.abs(Math.round(t.x + t.z)) % 4]), metalness: 0.6, roughness: 0.35 }) // per-tower tint: grey-green / steel grey / matrix green / a little of the old lilac;
+    t.mesh.material.emissive.copy(t.mesh.material.color); // the WINDOW GLOW takes the tint too (emissive ignores `color`)
     t.mesh.material.emissiveIntensity = 0.38; // lit windows glow, dark glass stays dark — softened 09-24
     t.mesh.material.needsUpdate = true;
   }
@@ -88,7 +89,7 @@ function skinSky(root, sky) {
   sky.repeat.set(3, 1); // mirrored three times around the ring: no seam
   const ring = new THREE.Mesh(
     new THREE.CylinderGeometry(SKY_R, SKY_R, SKY_H, 96, 1, true),
-    new THREE.MeshBasicMaterial({ map: sky, color: 0xc9c0d8, side: THREE.BackSide, fog: false, depthWrite: false }), // dimmed a touch so the painted neon sits back
+    new THREE.MeshBasicMaterial({ map: sky, color: 0x9aa4a0, side: THREE.BackSide, fog: false, depthWrite: false }), // greyed so the painted neon sky sits back in charcoal
   );
   ring.position.y = SKY_H * 0.3; // tall enough that its top edge never enters the frame
   ring.renderOrder = -1;
@@ -100,7 +101,7 @@ function skinGround(root, ground, grid) {
   ground.repeat.set(6, 6); // larger, so the street grid reads at city scale between the blocks
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(ARENA_RADIUS * 3, ARENA_RADIUS * 3),
-    new THREE.MeshStandardMaterial({ map: ground, emissiveMap: ground, emissive: 0xffffff, emissiveIntensity: 0.45, metalness: 0.5, roughness: 0.3 }),
+    new THREE.MeshStandardMaterial({ map: ground, emissiveMap: ground, color: 0xa4b3aa, emissive: 0x9fb3a6, emissiveIntensity: 0.45, metalness: 0.5, roughness: 0.3 }), // grey-green over the painted violet floor
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -0.05;
@@ -111,11 +112,11 @@ function skinGround(root, ground, grid) {
 
 export function buildArena(root) {
   const backdrop = buildBackdrop(root, "cyber");
-  const grid = new THREE.GridHelper(ARENA_RADIUS * 2.4, 90, 0xa15cff, 0x3a1670);
+  const grid = new THREE.GridHelper(ARENA_RADIUS * 2.4, 90, 0x35ff6a, 0x143d22); // matrix green floor grid
   root.add(grid);
   const edge = new THREE.Mesh(
     new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS, 160, 64, 1, true),
-    new THREE.MeshBasicMaterial({ color: 0x9b4dff, wireframe: true, transparent: true, opacity: 0.08 }),
+    new THREE.MeshBasicMaterial({ color: 0x35ff6a, wireframe: true, transparent: true, opacity: 0.06 }),
   );
   edge.position.y = 60;
   root.add(edge);
@@ -123,7 +124,7 @@ export function buildArena(root) {
   const details = buildDetails(root, towers);
   const arena = {
     radius: ARENA_RADIUS,
-    grade: 0.55, // half-strength violet/gold grade — the neon was overpowering
+    grade: 0.3, // light touch of the violet/gold grade — greys and matrix green carry the level now
     bloom: 0.5,
     start: { pos: new THREE.Vector3(0, 28, -ARENA_RADIUS + 40), yaw: 0 },
     rooftops: details.lowrise.roofs,
@@ -131,7 +132,7 @@ export function buildArena(root) {
     towers,
     rings: buildRings(root),
     haze: new THREE.Color(HAZE),
-    fogDensity: 0.0036, // a veil of soft lavender haze over the neon
+    fogDensity: 0.0036, // a veil of charcoal haze over the neon
     skyTexture: null,
     /** Resolves once the photoreal art is on (or known missing). */
     ready: Promise.all([loadArt("sky"), loadArt("facade"), loadArt("ground")]).then(([sky, facade, ground]) => {
