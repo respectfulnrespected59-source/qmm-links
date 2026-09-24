@@ -12,6 +12,22 @@ const TRACKS = [
   { file: "t15_the_lion_rises.mp3", title: "THE LION RISES" },
   { file: "t16_battle_of_kirina.mp3", title: "BATTLE OF KIRINA" },
   { file: "t18_buffalo_woman_rising.mp3", title: "BUFFALO WOMAN RISING" },
+  // owner 09-24: "add them all" — the Oakland / Bay beats from the archive, level-matched to the racing set
+  { file: "t20_oakland_aftershock.mp3", title: "OAKLAND AFTERSHOCK" },
+  { file: "t21_bay_drums_battle_flutes.mp3", title: "BAY DRUMS & BATTLE FLUTES" },
+  { file: "t22_bay_breeze_body_drop.mp3", title: "BAY BREEZE BODY DROP" },
+  { file: "t23_oakland_gold_run.mp3", title: "OAKLAND GOLD RUN" },
+  { file: "t24_desert_siege_freestyle.mp3", title: "DESERT SIEGE FREESTYLE" },
+  { file: "t25_soulful_slapper_east.mp3", title: "SOULFUL SLAPPER FROM THE EAST" },
+  { file: "t26_pyramid_corners.mp3", title: "PYRAMID CORNERS" },
+  { file: "t27_rain_on_73rd.mp3", title: "RAIN ON 73RD" },
+  { file: "t28_summer_heat.mp3", title: "SUMMER HEAT" },
+  { file: "t29_concrete_fist.mp3", title: "CONCRETE FIST" },
+  { file: "t30_resonant_strike_1.mp3", title: "RESONANT STRIKE I" },
+  { file: "t31_resonant_strike_2.mp3", title: "RESONANT STRIKE II" },
+  { file: "t32_resonant_strike_3.mp3", title: "RESONANT STRIKE III" },
+  { file: "t33_ring_of_bone_1.mp3", title: "RING OF BONE I" },
+  { file: "t34_ring_of_bone_2.mp3", title: "RING OF BONE II" },
 ];
 export const VOLUME_STEPS = [0, 0.15, 0.3, 0.45, 0.6, 0.8, 1];
 const DEFAULT_STEP = 3;
