@@ -17,7 +17,13 @@ const BUTTONS = [
   { id: "missile", label: "MISSILE", code: "KeyQ", hold: false },
   { id: "land", label: "LAND / FLY", code: "KeyF", hold: false },
   { id: "jump", label: "JUMP", code: "Space", hold: false },
+  { id: "special", label: "SPECIAL", code: "KeyH", hold: false }, // VLTRN pilots only (setSpecial): DRONE SWARM / FLAME STRIKE
 ];
+
+const GROUND_SWAP = {
+  boost: { label: "PUNCH", code: "KeyR", hold: false },
+  brake: { label: "DODGE", code: "ShiftLeft", hold: false },
+};
 
 class TouchLayer {
   constructor() {
@@ -48,18 +54,23 @@ class TouchLayer {
     zone.addEventListener("pointerdown", (e) => this.#stickDown(e));
     zone.addEventListener("pointermove", (e) => this.#stickMove(e));
     for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) zone.addEventListener(ev, (e) => this.#stickUp(e));
+    this.live = new Map(); // button id -> its CURRENT { label, code, hold } (FIGHT MODE swaps two of them)
     for (const btn of root.querySelectorAll(".tb")) {
-      const def = BUTTONS.find((b) => b.id === btn.dataset.id);
+      const base = BUTTONS.find((b) => b.id === btn.dataset.id);
+      this.live.set(base.id, { ...base, btn });
       btn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         try { btn.setPointerCapture(e.pointerId); } catch { /* synthetic events have no active pointer */ }
+        const def = this.live.get(base.id);
         btn.classList.add("on");
+        btn.dataset.pressed = def.code;
         input.press(def.code);
         if (!def.hold) setTimeout(() => input.release(def.code), 80); // a tap: down this frame, up right after
       });
       for (const ev of ["pointerup", "pointercancel"]) btn.addEventListener(ev, () => {
         btn.classList.remove("on");
-        if (def.hold) input.release(def.code);
+        const def = this.live.get(base.id);
+        if (def.hold) input.release(btn.dataset.pressed || def.code);
       });
     }
     root.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -124,6 +135,33 @@ class TouchLayer {
     }
   }
 
+  /** A VLTRN pilot's SPECIAL button, labelled with the move (null hides it). */
+  setSpecial(name) {
+    if (!this.root || this.special === name) return;
+    this.special = name;
+    this.root.classList.toggle("has-special", Boolean(name));
+    const btn = this.live?.get("special")?.btn;
+    if (btn && name) btn.textContent = name;
+  }
+
+  /** FIGHT MODE (09-25): BOOST and AIRBRAKE do nothing on foot, so they become PUNCH and DODGE.
+   *  strike: the attack button's name — "SWORD" when a VLTRN is flying (they cut, QM85 punches). */
+  setGround(on, strike = "PUNCH") {
+    const state = on ? strike : false;
+    if (!this.live || this.ground === state) return;
+    this.ground = state;
+    for (const [id, swap] of Object.entries(GROUND_SWAP)) {
+      const base = BUTTONS.find((b) => b.id === id);
+      const cur = this.live.get(id);
+      input.release(cur.code);
+      const label = id === "boost" ? strike : swap.label;
+      const next = on ? { ...base, ...swap, label, btn: cur.btn } : { ...base, btn: cur.btn };
+      this.live.set(id, next);
+      cur.btn.textContent = next.label;
+      cur.btn.classList.toggle("brawl", on);
+    }
+  }
+
   /** Show the pad only while flying (cards, menus and pause hide it). */
   setVisible(on) {
     if (!this.root) return;
@@ -132,6 +170,7 @@ class TouchLayer {
     if (!on) {
       this.#dirs({});
       for (const b of BUTTONS) input.release(b.code);
+      for (const b of this.live?.values() ?? []) input.release(b.code); // PUNCH / DODGE swaps too
     }
   }
 }

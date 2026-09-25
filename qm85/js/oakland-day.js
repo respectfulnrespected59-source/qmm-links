@@ -8,13 +8,14 @@
 import * as THREE from "three";
 
 const CP_KEY = "qm85_oakland_checkpoint";
-// clock hour at each stop, and the real seconds of play needed to reach it
+// clock hour at each stop, and the real seconds of play needed to reach it. FREE OAKLAND (09-25) stretched the day
+// 1.5x (was 150 / 300 / 380 / 430 s): six districts to liberate need the daylight.
 const STOPS = [
   { name: "DAWN", hour: 6.5, at: 0 },
-  { name: "NOON", hour: 12, at: 150 },
-  { name: "AFTERNOON", hour: 16.5, at: 300 },
-  { name: "DUSK", hour: 19.2, at: 380 },
-  { name: "NIGHT", hour: 21, at: 430 },
+  { name: "NOON", hour: 12, at: 225 },
+  { name: "AFTERNOON", hour: 16.5, at: 450 },
+  { name: "DUSK", hour: 19.2, at: 570 },
+  { name: "NIGHT", hour: 21, at: 645 },
 ];
 const CHECKPOINTS = new Set(["NOON", "NIGHT"]);
 const SUN_AZIMUTH_DAWN = 100; // the sun tracks east → west across the day
@@ -23,10 +24,23 @@ const SUN_AZIMUTH_DUSK = 250;
 const lerp = THREE.MathUtils.lerp;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
+const count = (v) => (Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
+
+/** The saved checkpoint, or null when there is none — or when it's damaged or from an older build (09-25 review: a
+ *  record missing `delivered` crashed the SHOT DOWN card on every death, and only clearing storage got out of it). */
 export function loadCheckpoint() {
   try {
-    const raw = localStorage.getItem(CP_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = JSON.parse(localStorage.getItem(CP_KEY) ?? "null");
+    if (!raw || typeof raw !== "object" || !CHECKPOINTS.has(raw.phase)) return null; // phase goes into card HTML: only known names
+    const d = raw.delivered && typeof raw.delivered === "object" ? raw.delivered : {};
+    return {
+      ...raw,
+      delivered: { data: count(d.data), part: count(d.part) },
+      thrust: Math.min(3, Math.max(1, count(raw.thrust))),
+      blaster: Math.min(5, Math.max(1, count(raw.blaster))),
+      score: count(raw.score),
+      freed: Array.isArray(raw.freed) ? raw.freed.filter((id) => typeof id === "string") : [],
+    };
   } catch {
     return null;
   }

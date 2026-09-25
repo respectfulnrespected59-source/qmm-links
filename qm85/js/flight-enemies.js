@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { FACTIONS, BOSS, MID_BOSS, ENEMY_SIZE } from "./flight-factions.js";
 import { makeGlow } from "./flight-glow.js";
+import { disposeTree } from "./dispose.js";
 import { sfx } from "./audio.js";
 
 const SHOT_SPEED = 38;
@@ -38,38 +39,50 @@ export class EnemySwarm {
     return this.bots.filter((b) => b.alive);
   }
 
-  /** lineup: { factionKey: count } */
-  spawnWave(center, lineup, level) {
+  /** lineup: { factionKey: count }. Returns the bots it made (a district tags them as its guards). */
+  spawnWave(center, lineup, level, { spread = [70, 120] } = {}) {
+    const made = [];
     for (const [key, count] of Object.entries(lineup)) {
       const f = FACTIONS[key];
       for (let i = 0; i < count; i++) {
         const a = rand(0, Math.PI * 2);
-        const r = rand(70, 120);
+        const r = rand(...spread);
         const d = this.difficulty;
         const pace = (1 + level * 0.2) * d;
-        this.#add(new THREE.Vector3(center.x + Math.cos(a) * r, rand(20, 60), center.z + Math.sin(a) * r), f.build, {
+        made.push(this.#add(new THREE.Vector3(center.x + Math.cos(a) * r, rand(20, 60), center.z + Math.sin(a) * r), f.build, {
           ...f.cfg, faction: key, speed: f.cfg.speed + level + (d - 1) * 4, orbit: f.cfg.orbit * rand(0.8, 1.2) / (0.7 + d * 0.3),
           fireGap: f.cfg.fireGap.map((g) => g / pace), hp: Math.round(f.cfg.hp * (1 + (d - 1) * 0.6)),
           volley: f.cfg.volley + (d > 1.9 && f.cfg.volley ? 1 : 0), // night: an extra round per burst
-        });
+        }));
       }
     }
+    return made;
   }
 
   /** Street-level squad (Oakland FIGHT MODE): they stand on the ground and close in on foot. */
   spawnGround(center, lineup, level) {
+    const made = [];
     for (const [key, count] of Object.entries(lineup)) {
       const f = FACTIONS[key];
       for (let i = 0; i < count; i++) {
         const a = rand(0, Math.PI * 2);
         const r = rand(35, 60);
-        this.#add(new THREE.Vector3(center.x + Math.cos(a) * r, GROUND_Y[key] ?? 1.5, center.z + Math.sin(a) * r), f.build, {
+        made.push(this.#add(new THREE.Vector3(center.x + Math.cos(a) * r, GROUND_Y[key] ?? 1.5, center.z + Math.sin(a) * r), f.build, {
           ...f.cfg, faction: key, ground: true, groundY: GROUND_Y[key] ?? 1.5,
           speed: Math.min(f.cfg.speed, 7) + level * 0.3, orbit: rand(6, 11),
           fireGap: f.cfg.fireGap.map((g) => g / (1 + level * 0.12)),
-        });
+        }));
       }
     }
+    return made;
+  }
+
+  /**
+   * A prebuilt, STATIONARY target (FREE OAKLAND relay towers): it never moves or turns, only animates, fires
+   * when QM85 is in range and can hide behind a shield. cfg needs hp, radius, fireGap, volley, score, shot, range.
+   */
+  spawnStatic(obj, cfg) {
+    return this.#add(obj.position.clone(), () => obj, { scale: 1, speed: 0, orbit: 0, ...cfg, stationary: true });
   }
 
   spawnBoss(center, def = BOSS) {
@@ -89,8 +102,28 @@ export class EnemySwarm {
     return bot;
   }
 
+  /**
+   * The dead used to stay in `bots` forever (hidden, geometry still on the GPU): a long Oakland run piled up
+   * thousands of geometries. Now a bot killed last frame leaves the scene and frees what it owns. Anything that
+   * spawn() shared from the asset cache is tagged userData.shared and left alone.
+   */
+  #bury() {
+    if (this.bots.every((b) => b.alive)) return;
+    const keep = [];
+    for (const b of this.bots) {
+      if (b.alive) {
+        keep.push(b);
+        continue;
+      }
+      this.root.remove(b.obj);
+      disposeTree(b.obj);
+    }
+    this.bots = keep;
+  }
+
   /** player: { pos, vel, center() } ; returns damage dealt to the player this frame. */
   update(dt, t, player) {
+    this.#bury();
     let damage = 0;
     const target = player.center();
     for (const b of this.bots) {
@@ -99,9 +132,31 @@ export class EnemySwarm {
         b.obj.userData.animate?.(t + b.phase);
         continue;
       }
+      if (b.patrol && this.patrolUpdate) { // a PALANTÍR SCOUT on its beat (flight-hunters.js): no chasing, no firing
+        this.patrolUpdate(b, dt, t);
+        b.flash = Math.max(0, b.flash - dt);
+        continue;
+      }
+      if (b.stationary) { // a relay tower: watch, flash when hit, fire in range — never move, never ram
+        b.obj.userData.animate?.(t, target);
+        b.flash = Math.max(0, b.flash - dt);
+        b.cd -= dt;
+        const dist = b.obj.position.distanceTo(target);
+        if (b.cd <= 0 && dist < b.range) {
+          b.cd = rand(...b.fireGap);
+          this.#fire(b, player, dist);
+        }
+        continue;
+      }
       b.phase += dt * 0.6;
       const orbit = new THREE.Vector3(Math.cos(b.phase) * b.orbit, b.ground ? 0 : Math.sin(b.phase * 1.3) * 6 + 3, Math.sin(b.phase) * b.orbit);
-      const goal = target.clone().add(orbit);
+      let goal = target.clone().add(orbit);
+      if (b.anchor) { // LANDMARK BOSSES (boss-arenas.js): perched on a tower, or leashed to the Bay Bridge
+        const c = b.anchor.center;
+        if (b.anchor.perch) goal = c.clone();
+        else if (target.distanceTo(c) > b.anchor.radius * 1.3) goal = c.clone().add(orbit.clone().multiplyScalar(3)); // patrol the span
+        else if (goal.distanceTo(c) > b.anchor.radius) goal = c.clone().add(goal.sub(c).setLength(b.anchor.radius));
+      }
       if (b.ground) goal.y = b.groundY; // squads walk the street
       else { // owner 09-24: bots dipping under the roof line when he stands on a rooftop = "spawning under me"
         const roof = player.arena?.roofAt?.(goal);
@@ -132,9 +187,9 @@ export class EnemySwarm {
         if (!b.boss) this.kill(b, true);
         continue;
       }
-      if (b.boss && !b.enraged && b.hp <= b.maxHp * 0.5) this.#enrage(b);
+      if (b.boss && !b.relay && !b.enraged && b.hp <= b.maxHp * 0.5) this.#enrage(b);
       b.cd -= dt;
-      if (b.cd <= 0 && dist < FIRE_RANGE * (b.boss ? 1.6 : 1)) {
+      if (b.cd <= 0 && dist < (b.range ?? FIRE_RANGE * (b.boss ? 1.6 : 1))) {
         b.cd = rand(...b.fireGap);
         this.#fire(b, player, dist);
       }
@@ -185,6 +240,10 @@ export class EnemySwarm {
   hitTest(a, b, dmg = 1, boltRadius = 0) {
     for (const bot of this.bots) {
       if (!bot.alive || segDist(bot.obj.position, a, b) > bot.radius + boltRadius) continue;
+      if (bot.shielded) { // the shot splashes on the relay's shield: no damage until its guards are down
+        this.onShieldHit?.(bot);
+        return bot;
+      }
       bot.hp -= dmg;
       bot.flash = 0.2;
       if (bot.hp <= 0) this.kill(bot);
@@ -215,10 +274,10 @@ export class EnemySwarm {
     let best = null;
     let bestD = Infinity;
     for (const bot of this.bots) {
-      if (!bot.alive) continue;
+      if (!bot.alive || bot.frozen) continue;
       const to = bot.obj.position.clone().sub(from);
-      const d = to.length();
-      if (d > 140 || to.normalize().dot(dir) < cosCone) continue;
+      const d = to.length() * (bot.shielded ? 3 : 1); // guards first: a shielded relay only gets the shots nobody else is in line for
+      if (d > 140 * (bot.shielded ? 3 : 1) || to.normalize().dot(dir) < cosCone) continue;
       if (d < bestD) {
         bestD = d;
         best = bot;

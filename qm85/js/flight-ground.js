@@ -8,6 +8,7 @@
 import * as THREE from "three";
 import { input } from "./input.js";
 import { sfx } from "./audio.js";
+import { GroundCombat } from "./ground-combat.js";
 
 export const LAND_ALT = 45; // must be this low to land
 const STAND_Y = 0.5; // pilot pivots at his middle; feet on the street
@@ -31,12 +32,14 @@ export class FightMode {
     this.vy = 0;
     this.floorY = 0; // street = 0, or the roof height he is standing on
     this.roof = null; // the building box under him when on a rooftop
+    this.combat = new GroundCombat(this); // 09-25: punch combo, dodge roll, ground pound, superhero landing
   }
 
   /** Where F would put him down: { y, roof } for a street or a rooftop, null when there is no room. */
   landSpot(pos = this.f.pos) {
     const a = this.f.arena;
-    if (!a.walkable) return null;
+    if (!a.walkable || this.f.race) return null; // RING RACES: no landing mid-trial
+    if (a.isWater?.(pos.x, pos.z) || (a.shoreX !== undefined && pos.x < a.shoreX)) return null; // the Bay and the lakes are not a street
     const roof = a.roofAt?.(pos);
     if (roof) return pos.y >= roof.y ? { y: roof.y, roof: roof.box } : null; // under the roof line = inside the walls
     return a.groundBlocked(pos) ? null : { y: 0, roof: null };
@@ -99,27 +102,43 @@ export class FightMode {
       this.landing = Math.max(0, this.landing - dt);
       const k = 1 - this.landing / DROP_TIME;
       f.pos.y = THREE.MathUtils.lerp(this.dropFrom, this.floorY + STAND_Y, k * k);
+      if (this.landing === 0) this.combat.landed({ fromHeight: this.dropFrom - this.floorY, heroLanding: true }); // from high up: SUPERHERO LANDING
     } else {
       if (input.pressed("KeyF")) {
         this.takeOff();
         return;
       }
-      if (input.pressed("Space") && this.hop === 0) this.vy = JUMP_V;
-      const turn = (input.held("KeyA", "ArrowLeft") ? 1 : 0) - (input.held("KeyD", "ArrowRight") ? 1 : 0);
-      const go = (input.held("KeyW", "ArrowUp") ? 1 : 0) - (input.held("KeyS", "ArrowDown") ? 0.6 : 0);
-      f.yaw += turn * TURN * dt;
-      const step = new THREE.Vector3(Math.sin(f.yaw), 0, Math.cos(f.yaw)).multiplyScalar(go * WALK * dt);
-      this.#move(step);
-      this.walk += Math.abs(go) * dt * 9;
+      const override = this.combat.update(dt); // a punch lunge or a dodge roll replaces walking this frame
+      if (input.pressed("Space") && this.hop === 0 && !this.combat.untouchable) this.vy = JUMP_V;
+      if (override) {
+        this.#move(override);
+      } else {
+        const turn = (input.held("KeyA", "ArrowLeft") ? 1 : 0) - (input.held("KeyD", "ArrowRight") ? 1 : 0);
+        const go = (input.held("KeyW", "ArrowUp") ? 1 : 0) - (input.held("KeyS", "ArrowDown") ? 0.6 : 0);
+        this.lastGo = go;
+        f.yaw += turn * TURN * dt;
+        const step = new THREE.Vector3(Math.sin(f.yaw), 0, Math.cos(f.yaw)).multiplyScalar(go * WALK * dt);
+        this.#move(step);
+        this.walk += Math.abs(go) * dt * 9;
+      }
+      this.speed = override ? 0 : Math.abs(this.lastGo ?? 0) * WALK;
+      f.pilot.setSamurai?.(f.power.level >= 3); // 3BIZZLE above LV2 on foot: TRUE SAMURAI, twin flaming blades
+      const airborne = this.hop > 0;
       this.vy -= GRAVITY * dt;
       this.hop = Math.max(0, this.hop + this.vy * dt);
-      if (this.hop === 0) this.vy = 0;
+      if (this.hop === 0) {
+        if (airborne) this.combat.landed(); // a jump (or a GROUND POUND) just touched down
+        this.vy = 0;
+      }
       f.pos.y = this.floorY + STAND_Y + this.hop;
     }
     f.vel.set(0, 0, 0);
-    f.pilot.update(dt, {
-      pos: f.pos, yaw: f.yaw, pitch: 0, bank: 0, boosting: false, spin: 0, t: f.t,
-      blink: f.invuln > 0 && Math.floor(f.invuln * 14) % 2 === 1, grounded: true, walk: this.walk,
+    const pose = this.combat.pose;
+    f.pilot.update(dt, { // all three bots share QM85's rig (09-25): they tumble, tuck and punch the same way
+      pos: f.pos, yaw: f.yaw, pitch: pose.pitch, bank: pose.bank, boosting: false, spin: 0, t: f.t,
+      blink: f.invuln > 0 && Math.floor(f.invuln * 14) % 2 === 1, grounded: true, walk: this.walk, melee: pose.melee,
+      hop: this.hop, tuck: this.combat.untouchable || pose.pounding || this.landing > 0,
+      speed: this.speed ?? 0, dodging: this.combat.untouchable ? this.combat.dodgeAxis : null,
     });
     f.invuln = Math.max(0, f.invuln - dt);
     this.#camera(dt);
@@ -163,7 +182,7 @@ export class FightMode {
     const f = this.f;
     const cam = f.camera;
     const back = new THREE.Vector3(-Math.sin(f.yaw), 0, -Math.cos(f.yaw));
-    const want = f.pos.clone().addScaledVector(back, CAM_BACK).add(new THREE.Vector3(0, CAM_UP, 0));
+    const want = f.pos.clone().addScaledVector(back, CAM_BACK).add(new THREE.Vector3(0, CAM_UP, 0)); // all three bots: 1 m minis
     cam.position.lerp(want, 1 - Math.exp(-dt * 10));
     cam.up.lerp(new THREE.Vector3(0, 1, 0), 1 - Math.exp(-dt * 10)).normalize();
     cam.lookAt(f.pos.clone().addScaledVector(back, -6).add(new THREE.Vector3(0, 1.6, 0)));

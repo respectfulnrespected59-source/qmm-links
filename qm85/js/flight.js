@@ -9,10 +9,10 @@ import { buildOakland } from "./oakland.js";
 import { PowerUps } from "./flight-powerups.js";
 import { WAVE_LINEUPS, lineupNames, MID_BOSS } from "./flight-factions.js";
 import { EnemySwarm } from "./flight-enemies.js";
-import { Pilot } from "./flight-pilot.js";
+import { Pilot, PILOT_LOOKS } from "./flight-pilot.js";
 import { MegaBlast } from "./flight-mega.js";
 import { Maneuvers } from "./flight-moves.js";
-import { Missiles, MISSILE_MAX } from "./flight-missiles.js";
+import { Missiles } from "./flight-missiles.js";
 import { FightMode } from "./flight-ground.js";
 import { HyperLoop } from "./flight-hyperloop.js";
 import { surfaceNormal, ricochet, applyDeflect, Sparks } from "./flight-impact.js";
@@ -22,6 +22,14 @@ import { KillFX, Shake } from "./flight-fx.js";
 import { BackBlast } from "./flight-backblast.js";
 import { Wake } from "./flight-wake.js";
 import { Finale, applyBattleBody, setArmorProgress } from "./battle-body.js";
+import { disposeTree, disposeTexture } from "./dispose.js";
+import { Districts } from "./oakland-districts.js";
+import { Hunters } from "./flight-hunters.js";
+import { Race } from "./race.js";
+import { Weather } from "./weather.js";
+import { TechSupport } from "./comms.js";
+import { BossArenas } from "./boss-arenas.js";
+import { VltrnSpecials, SPECIALS, CANNON } from "./vltrn-specials.js";
 
 // Air drift (owner 09-24): at high speed the turn rate softens and his velocity lags the nose, so he floats and
 // slides through sharp turns instead of snapping — fast but controllable.
@@ -36,6 +44,25 @@ const BOSS_SLOWMO = 1.6; // real seconds of slow motion when a boss dies
 const SLOWMO_SCALE = 0.3;
 const BOSS_INTRO = 2.6;
 const WIN_DELAY = 2.4; // let the boss death play before the win card
+const RELAY_SLOWMO = 0.9; // a relay falling gets a beat of slow motion too
+const DISTRICT_SCORE = 1000;
+// Owner 09-25: "make mahals vltrn8 be the quickest, mine hits the strongest and is a bit of a show off"
+const PILOT_STATS = {
+  qm85: { speed: 1, agility: 1, dmg: 1 },
+  vltrn8: { speed: 1.22, agility: 1.3, dmg: 1 }, // the quickest
+  bizzle: { speed: 0.96, agility: 1, dmg: 1.45, style: true }, // hits the strongest, flies with swagger
+};
+const STYLE_WORDS = ["FRESH!", "SHEESH!", "CLEAN!", "SHOWBOAT!", "TOO SMOOTH!", "DESTROYER DRIP!"];
+// 3BIZZLE (owner 09-25: "my blasters are supposed to be fully automatic"): a faster trigger, a tighter stream (never
+// wider than 3 bolts, so his LV5 puts no more bolts in the air than QM85's), each bolt a little lighter — he still out-hits.
+const AUTO_GAP = 0.6;
+const AUTO_DMG = 0.6;
+const AUTO_SPREAD = 3;
+// bolt glow per blaster level for Rob's and Mahal's bots (QM85 keeps the powerups' violet → gold → orange)
+const BOLT_TINT = {
+  bizzle: [null, 0xff4a3a, 0xff3b2b, 0xff5a1f, 0xff3218, 0xff2a10], // red plasma
+  vltrn8: [null, 0xc58bff, 0xd47bff, 0xe46cf0, 0xf05ce0, 0xff4fd0], // purple plasma warming to hot pink
+};
 
 // Thruster levels (owner 09-24): Seed of Life rings power them up; each level is faster and more nimble.
 const THRUSTERS = [null,
@@ -59,7 +86,7 @@ const FUEL_REGEN = 0.14;
 const LASER_SPEED = 120;
 const LASER_LIFE = 0.9;
 const AIM_CONE = Math.cos(THREE.MathUtils.degToRad(7));
-const MAX_SHIELD = 6;
+const MAX_SHIELD = 6; // base; the garage's ARMOR PLATING adds to it per run (this.maxShield)
 const INVULN = 0.7;
 const SHOULDER = new THREE.Vector3(-0.38, 0.45, -1.75); // behind his right shoulder (his right = -X), feet toward us; owner 09-24: a little tighter for precise control
 const DOUBLE_TAP = 0.3;
@@ -79,13 +106,30 @@ export class FlightBattle {
     this.arena = zone === "oakland" ? buildOakland(this.root) : buildArena(this.root);
     this.power = new PowerUps(this.root, () => this.arena.rooftops);
     this.swarm = new EnemySwarm(this.root);
-    this.pilot = new Pilot(this.root);
+    // THE ROSTER (09-25): QM85, or the VLTRN pair — VLTRN8 (Mahal's bot) / 3BIZZLE (Rob's bot)
+    this.pilotKey = opts.pilot === "mahal" ? "vltrn8" : opts.pilot ?? "qm85";
+    this.pilot = new Pilot(this.root, PILOT_LOOKS[this.pilotKey] ?? PILOT_LOOKS.qm85); // all three: QM85-family mini bots
+    this.pilot.isPlayer = true;
+    this.stats0 = PILOT_STATS[this.pilotKey] ?? PILOT_STATS.qm85;
+    this.dmgMult = this.stats0.dmg; // bolts, missiles (and the cannon), the flame strike and drone zaps all read this
+    this.specialCd = 0; // H: VLTRN8 DRONE SWARM · 3BIZZLE MISSILE CANNON (on foot: FLAME STRIKE)
+    this.cannonQueue = []; // 3BIZZLE's 3-burst: shots waiting their beat
+    const L = opts.loadout ?? {}; // THE GARAGE (09-25): permanent upgrades bought with credits
+    this.loadout = L;
+    this.maxShield = L.maxShield ?? opts.maxShield ?? MAX_SHIELD;
+    this.fuelRegenK = L.fuelRegen ?? 1;
+    this.fuelDrainK = L.fuelDrain ?? 1;
+    this.magnet = L.magnet ?? 1;
+    this.lotusT = 0; // Mahal's lotus shield: untouchable while > 0
     this.mega = new MegaBlast(this.root);
     this.moves = new Maneuvers(this.root, this.pilot.frame);
     this.fight = new FightMode(this);
     this.hyper = new HyperLoop(this.root);
     this.sparks = new Sparks(this.root);
     this.missiles = new Missiles(this.root, this);
+    this.specials = new VltrnSpecials(this);
+    this.missiles.max = this.missiles.ammo = (opts.loadout?.missiles ?? this.missiles.max) + (this.pilotKey === "bizzle" ? 3 : 0); // his missiles are signature: a bigger rack
+    this.missiles.reloadTime = opts.loadout?.reload ?? this.missiles.reloadTime;
     this.fx = new KillFX(this.root);
     this.shake = new Shake();
     this.backBlast = new BackBlast();
@@ -98,8 +142,8 @@ export class FlightBattle {
     this.winDelay = 0;
     this.boomT = -1; // one death sound per burst, not five stacked
     this.swarm.onKill = (bot, rammed) => this.#onKill(bot, rammed);
+    this.swarm.onShieldHit = (bot) => this.#onShieldHit(bot);
     this.swarm.onEnrage = (bot) => this.#onEnrage(bot);
-    if (opts.skin === "battle") applyBattleBody(this.pilot);
     this.impactT = 0; // debounce: one spark shower + clang per contact
     this.blastT = 0; // after a hyper-loop blast, hold the burst speed for a beat
     this.swarm.blocked = (p) => Boolean(this.arena.vehicleAt?.(p) || (p.y < 400 && this.arena.towerAt(p)));
@@ -109,23 +153,64 @@ export class FlightBattle {
       if (this.arena.truckRider) this.power.riderSource = () => this.arena.truckRider();
     });
     this.mission = null;
+    this.districts = null;
+    this.hunters = null;
+    this.weather = null;
+    this.comms = null;
+    this.arenas = null;
+    this.shieldPingT = 0;
     this.day = null;
     this.resume = opts.resume ?? null;
-    if (zone === "oakland") {
+    this.race = null;
+    this.raceId = opts.race ?? null; // RING RACE (09-25): a time trial — no enemies, no clock, no districts
+    if (zone === "oakland" && this.raceId) {
+      this.arena.ready.then(() => {
+        if (this.done) return;
+        this.race = new Race(this.root, this.arena, this, this.raceId, {
+          onGate: (i, total, split) => hooks.onRace?.("gate", { i, total, split }),
+          onGo: () => hooks.onRace?.("go", {}),
+          onFinish: (result) => {
+            this.done = true;
+            hooks.onRace?.("finish", result);
+          },
+        });
+        this.pos.copy(this.race.course.start.pos);
+        this.yaw = this.race.course.start.yaw;
+        this.pitch = 0;
+        this.thrust = 3; // races fly on full thrusters: boost management is the skill
+        this.fuel = 1;
+        this.speed = THRUSTERS[3].cruise;
+        this.camBase = null;
+      });
+    } else if (zone === "oakland") {
       this.day = new DayCycle({
         onPhase: (name, clock, jumped) => hooks.onPhase?.(name, clock, jumped),
-        onMidBoss: () => this.#bossArrives(this.swarm.spawnBoss(this.pos, MID_BOSS)),
-        onFinalBoss: () => this.#bossArrives(this.swarm.spawnBoss(this.pos)),
+        onMidBoss: () => { // 09-25 LANDMARK: the Overseer takes the Bay Bridge
+          const bot = this.swarm.spawnBoss(this.pos, MID_BOSS);
+          this.arenas?.placeOverseer(bot);
+          this.#bossArrives(bot);
+        },
+        onFinalBoss: () => { // 09-25 LANDMARK: the Serpent Priest perches on the Tribune Tower, pylon-shielded
+          const bot = this.swarm.spawnBoss(this.pos);
+          this.arenas?.placePriest(bot);
+          this.#bossArrives(bot);
+        },
         onCheckpoint: (cp) => hooks.onCheckpoint?.(cp),
-        snapshot: () => ({ delivered: this.mission ? { ...this.mission.delivered } : { data: 0, part: 0 }, thrust: this.thrust, blaster: this.power.level, score: this.score }),
+        snapshot: () => ({ delivered: this.mission ? { ...this.mission.delivered } : { data: 0, part: 0 }, thrust: this.thrust, blaster: this.power.level, score: this.score, freed: this.districts?.freedIds() ?? [] }),
       });
       this.arena.ready.then(() => {
         if (this.done) return;
         if (this.resume) { // continue from the checkpoint's time of day with what he'd earned
-          this.thrust = this.resume.thrust ?? 1;
-          this.power.level = this.resume.blaster ?? 1;
+          this.thrust = Math.max(this.resume.thrust ?? 1, L.thrust ?? 1);
+          this.power.level = Math.max(this.resume.blaster ?? 1, L.blaster ?? 1);
           this.score = this.resume.score ?? 0;
         }
+        this.weather = new Weather(this.root, this.arena); // 09-25: morning marine layer, dusk fog, rain nights
+        this.arenas = new BossArenas(this, { // 09-25: the bosses take the Bay Bridge + the Tribune Tower
+          onExposed: (name) => hooks.warn(`${name} IS EXPOSED — HIT HIM!`),
+          onLeaves: (name) => hooks.warn(`${name} LEFT THE TOWER — HE'S HUNTING YOU`),
+        });
+        this.districts = this.#buildDistricts(); // FREE OAKLAND (09-25): the relays hold the items
         this.mission = new OaklandMission(this.root, this.arena, this, {
           onPickup: (kind, n) => hooks.onMission?.("pickup", { kind, n }),
           onFull: () => hooks.onMission?.("full"),
@@ -136,16 +221,26 @@ export class FlightBattle {
           onBoss: (name) => hooks.onBoss(name),
           onComplete: () => {
             this.power.level = 5; // the battle body: blasters maxed, shield full
-            this.shield = MAX_SHIELD;
+            this.shield = this.maxShield;
             this.finale = new Finale(this); // the warehouse cutscene, then the "complete" card
             hooks.onMission?.("finale");
           },
-        });
+        }, this.districts);
         if (this.resume) {
+          this.districts.restore(this.resume.freed ?? []);
           this.mission.restore(this.resume.delivered);
           this.day.jumpTo(this.resume.phase);
           this.#armorUp();
         }
+        this.hunters = new Hunters(this, this.districts, { // PALANTÍR SCOUTS over every district still occupied
+          onSpotted: (name) => hooks.onHunt?.("spotted", { name }),
+          onBackup: () => hooks.onHunt?.("backup", {}),
+          onCalled: () => hooks.onHunt?.("called", {}),
+          onSilent: (pos) => {
+            this.popups.push({ pos, text: "SILENT TAKEDOWN +150", big: false });
+            hooks.onHunt?.("silent", {});
+          },
+        });
       });
     }
     this.striking = false;
@@ -158,16 +253,22 @@ export class FlightBattle {
     this.pos = this.arena.start.pos.clone();
     this.vel = new THREE.Vector3();
     this.yaw = this.arena.start.yaw;
+    // ONE BOT ON SCREEN (owner 09-25: "we CAN NOT have all 3 charecters on the screen at once"): the other two ride
+    // comms as copilots — warnings, a shield patch, Mahal's lotus (comms.js). No wingmates fly with you any more.
+    this.wingmates = [];
+    this.comms = opts.race ? null : new TechSupport(this, { say: (label, text, meta) => hooks.onComms?.(label, text, meta) }, { healEvery: L.healEvery });
+    if (opts.skin === "battle" && this.armorPilot) applyBattleBody(this.armorPilot); // the battle body is QM85's, whoever flies
     this.pitch = 0;
     this.bank = 0;
     this.yawRate = 0;
     this.pitchRate = 0;
-    this.thrust = 1;
+    this.thrust = L.thrust ?? 1;
+    this.power.level = L.blaster ?? 1;
     this.boosting = false;
     this.stealth = false;
-    this.speed = THRUSTERS[1].cruise;
+    this.speed = THRUSTERS[this.thrust].cruise;
     this.fuel = 1;
-    this.shield = MAX_SHIELD;
+    this.shield = this.maxShield;
     this.invuln = 0;
     this.cooldown = 0;
     this.side = 1;
@@ -177,7 +278,7 @@ export class FlightBattle {
     this.done = false;
     this.t = 0;
     this.outWarned = false;
-    this.#nextWave();
+    if (!this.raceId) this.#nextWave();
     this.#placeCamera(1);
   }
 
@@ -230,6 +331,7 @@ export class FlightBattle {
   update(dt) {
     if (this.done) {
       sfx.engine.set({ on: false }); // win / shot down: no thrusters humming under the card
+      sfx.rain.set(0);
       return;
     }
     this.t += dt;
@@ -240,6 +342,8 @@ export class FlightBattle {
     }
     if (this.finale) return this.#cutscene(dt, () => this.#updateFinale(dt));
     if (this.intro) return this.#cutscene(dt, () => this.#updateIntro(dt));
+    if (this.race?.holding) return this.#raceCountdown(dt);
+    const prevPos = this.pos.clone(); // for the race gates' plane-crossing test
     this.#boostState();
     if (this.fight.active) {
       this.fight.update(dt); // FIGHT MODE owns movement, pose and camera
@@ -253,11 +357,14 @@ export class FlightBattle {
       if (!spinning && !this.hyper.update(dt, this)) this.#steer(dt); // the hyper loop / back blast own pitch while they run
       if (!spinning) this.#megaInput();
       this.#combos(dt);
+      this.striking ||= this.specials.dashing; // a FLAME STRIKE owns his position while it cuts
       this.#fly(dt);
       this.wake.update(dt, this); // low + fast over water: spray + foam
       this.fight.tryLand(); // F near the street
     }
     if (!this.backBlast.active) this.#shoot(dt);
+    if (this.pilot.isVltrn) this.#special(dt);
+    this.#cannon();
     this.#updateLasers(dt);
     this.#fireMissile();
     this.missiles.update(dt);
@@ -274,9 +381,19 @@ export class FlightBattle {
     }
     const dmg = this.swarm.update(dt, this.t, this);
     if (dmg) this.#takeHit(dmg);
+    this.lotusT = Math.max(0, this.lotusT - dt);
+    this.specials.update(dt, this.t);
     this.#pickups();
     if (!this.fight.active) this.#placeCamera(dt);
     this.mission?.update(dt, this.t);
+    this.race?.update(dt, prevPos);
+    this.districts?.update(dt, this.t, this.camera);
+    this.hunters?.update(dt);
+    this.hunters?.tick(dt);
+    this.comms?.update(dt);
+    this.arenas?.update(dt, this.t);
+    this.#weather(dt);
+    this.shieldPingT = Math.max(0, this.shieldPingT - dt);
     this.#progress();
   }
 
@@ -295,7 +412,7 @@ export class FlightBattle {
 
   #steer(dt) {
     const lv = THRUSTERS[this.thrust];
-    const agility = this.stealth ? STEALTH.agility : lv.agility;
+    const agility = (this.stealth ? STEALTH.agility : lv.agility) * this.stats0.agility;
     const response = STEER_RESPONSE * (this.stealth ? STEALTH.response : lv.response);
     const turn = (input.held("KeyA", "ArrowLeft") ? 1 : 0) - (input.held("KeyD", "ArrowRight") ? 1 : 0);
     // Flight-sim stick (owner 09-24): UP pushes the nose DOWN (dive), DOWN pulls it UP (climb).
@@ -384,9 +501,9 @@ export class FlightBattle {
   #fly(dt) {
     const boosting = this.boosting;
     const lv = THRUSTERS[this.thrust];
-    const drain = FUEL_DRAIN / (1 + 0.3 * (this.thrust - 1)); // bigger levels, bigger tank
-    this.fuel = boosting ? Math.max(0, this.fuel - drain * dt) : Math.min(1, this.fuel + FUEL_REGEN * dt);
-    const top = this.braking ? BRAKE_SPEED : boosting ? lv.boost * (this.stealth ? STEALTH.speed : 1) : lv.cruise;
+    const drain = (FUEL_DRAIN * this.fuelDrainK) / (1 + 0.3 * (this.thrust - 1)); // bigger levels, bigger tank; the REACTOR CORE helps
+    this.fuel = boosting ? Math.max(0, this.fuel - drain * dt) : Math.min(1, this.fuel + FUEL_REGEN * this.fuelRegenK * dt);
+    const top = this.braking ? BRAKE_SPEED : (boosting ? lv.boost * (this.stealth ? STEALTH.speed : 1) : lv.cruise) * this.stats0.speed;
     this.blastT = this.braking ? 0 : Math.max(0, this.blastT - dt); // the brake also kills a hyper blast
     if (this.blastT === 0) this.speed = THREE.MathUtils.damp(this.speed, top, this.braking ? BRAKE_DAMP : this.stealth ? 5 : 3, dt);
     applyDeflect(this, dt); // an impact eases him off course over a third of a second
@@ -432,9 +549,24 @@ export class FlightBattle {
     this.pilot.update(dt, {
       pos: this.pos, yaw: this.yaw, pitch: this.pitch, bank: this.bank, boosting: boosting || this.mega.busy || this.backBlast.active, braking: this.braking,
       thrustColor: this.stealth ? 0xffffff : lv.color, stealth: this.stealth, upright: this.backBlast.active,
-      spin: spin + this.twirlAngle + this.moves.spin + this.backBlast.angle, t: this.t, blink: this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 1,
+      spin: (spin + this.twirlAngle + this.moves.spin) * (this.stats0.style ? 2 : 1) + this.backBlast.angle, t: this.t, blink: this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 1,
+      swagger: this.stats0.style && !boosting && !this.braking,
     });
+    this.#showOff();
     this.invuln = Math.max(0, this.invuln - dt);
+  }
+
+  /** 3BIZZLE's hip-hop flair: when a roll / twirl / hyper loop lands, he flexes (arms up) and the crowd hears a scratch. */
+  #showOff() {
+    if (!this.stats0.style) return;
+    const tricking = this.twirlT > 0 || this.moves.untouchable || this.hyper.active; // moves.busy is only the cosmic strike
+    if (this.wasTricking && !tricking) {
+      this.pilot.flex();
+      this.popups.push({ pos: this.pos.clone().add(new THREE.Vector3(0, 2.4, 0)), text: STYLE_WORDS[Math.floor(Math.random() * STYLE_WORDS.length)], big: false, style: true });
+      sfx.scratch();
+      this.styleCount = (this.styleCount ?? 0) + 1;
+    }
+    this.wasTricking = tricking;
   }
 
   /** 0 at cruise … 1 at DRIFT_FULL speed. */
@@ -467,34 +599,82 @@ export class FlightBattle {
     if (headOn) this.#takeHit(1);
   }
 
+  /** H (or SPECIAL): VLTRN8 launches her DRONE SWARM · 3BIZZLE fires his MISSILE CANNON (blaster LV2+; on foot the
+   *  FLAME STRIKE dashes through what's ahead). */
+  #special(dt) {
+    this.specialCd = Math.max(0, this.specialCd - dt);
+    if (!input.pressed("KeyH")) return;
+    this.specialTries = (this.specialTries ?? 0) + 1; // the tutorial counts the press (the cannon may refuse at LV1)
+    const base = SPECIALS[this.pilotKey];
+    const onFoot = Boolean(this.fight.active && base.foot);
+    const sp = onFoot ? base.foot : base;
+    if (this.specialCd > 0) {
+      this.hooks.warn(`${sp.name} RECHARGING — ${Math.ceil(this.specialCd)}s`);
+      return;
+    }
+    if (this.pilotKey === "vltrn8") this.specials.launchSwarm(this);
+    else if (onFoot) this.specials.flameStrike({ pos: this.pos, body: this.pilot, isPlayer: true }, this.fight.aim(this.pos));
+    else if (this.power.level < (sp.minLevel ?? 1)) { // "when my power bars lv2 or more"
+      this.hooks.warn(`${sp.name} — NEEDS BLASTER LV${sp.minLevel}`);
+      return;
+    } else if (!this.missiles.target(this.pilot.muzzle(), this.forward())) {
+      this.hooks.warn("NO LOCK — NOTHING AHEAD");
+      return;
+    } else for (let i = 0; i < CANNON.shots; i++) this.cannonQueue.push(this.t + i * CANNON.gap); // the 3-burst
+    this.specialCd = sp.cooldown;
+    this.hooks.warn(sp.name);
+  }
+
+  /** The MISSILE CANNON's burst: one real heat-seeker per beat, off the special (the Q rack is untouched). */
+  #cannon() {
+    while (this.cannonQueue.length && this.cannonQueue[0] <= this.t) {
+      this.cannonQueue.shift();
+      this.missiles.fire(this.pilot.muzzle(), this.forward(), { free: true });
+    }
+  }
+
   /** Q / E (or the MISSILE touch button): one heat-seeker at the hottest hostile ahead. */
   #fireMissile() {
     if (!input.pressed("KeyQ", "KeyE") || this.mega.busy) return;
     const fwd = this.fight.active ? this.fight.aim(this.pos) : this.forward();
     const result = this.missiles.fire(this.pos.clone(), fwd);
+    if (this.pilotKey === "bizzle" && result === "fired") this.missiles.fire(this.pos.clone(), fwd); // 3BIZZLE: a TWIN SALVO
     if (result === "empty") this.hooks.warn?.("MISSILES RELOADING");
     else if (result === "no target") this.hooks.warn?.("NO LOCK — NOTHING AHEAD");
   }
 
   #shoot(dt) {
-    this.cooldown = Math.max(0, this.cooldown - dt);
-    if (this.mega.busy || this.cooldown > 0) return;
-    if (!input.held("KeyL", "Mouse0")) return; // click / trackpad / L fire; SHIFT is the AIRBRAKE (owner 09-24)
+    this.cooldown -= dt;
+    const firing = !this.mega.busy && input.held("KeyL", "Mouse0"); // click / trackpad / L fire; SHIFT is the AIRBRAKE
+    if (!firing) {
+      this.cooldown = Math.max(0, this.cooldown);
+      return;
+    }
+    // the leftover time carries over (09-25): resetting the cooldown each frame capped every blaster near the frame rate —
+    // on the laptop 3BIZZLE's "fully automatic" fired barely faster than QM85. At most 2 volleys in one frame.
+    for (let shots = 0; this.cooldown <= 0 && shots < 2; shots++) this.#volley();
+  }
+
+  #volley() {
     const cfg = this.power.config;
-    this.cooldown = cfg.gap;
+    const auto = this.pilotKey === "bizzle"; // 3BIZZLE: fully automatic
+    this.cooldown += cfg.gap * (auto ? AUTO_GAP : 1);
     this.side = 1 - Math.max(0, this.side); // alternate fists: 0 = right, 1 = left
     const fwd = this.forward();
     const from = this.pilot.punch(this.side);
     const target = this.swarm.aimTarget(this.pos, fwd, AIM_CONE);
     const aim = this.fight.active ? this.fight.aim(from) : target ? target.obj.position.clone().sub(from).normalize() : fwd;
-    this.#bolts(from, aim, cfg.dmg);
-    sfx.laser(this.power.level);
+    this.#bolts(from, aim, cfg.dmg * this.dmgMult * (auto ? AUTO_DMG : 1));
+    this.shotN = (this.shotN ?? 0) + 1;
+    if (!auto || this.shotN % 2) sfx.laser(this.power.level); // the auto stream sounds every other round
   }
 
   /** One volley at the current blaster level (spread and all) from `from` along `aim`. */
   #bolts(from, aim, dmg) {
-    const { geo, mat, glowGeo, glowMat, radius } = this.power.bolt();
-    for (const dir of this.power.spreadDirs(aim)) {
+    const { geo, mat, glowGeo, glowMat, radius } = this.#boltLook();
+    let dirs = this.power.spreadDirs(aim);
+    if (this.pilotKey === "bizzle" && dirs.length > AUTO_SPREAD) dirs = dirs.filter((_, i) => i % 2 === 0).slice(0, AUTO_SPREAD);
+    for (const dir of dirs) {
       const mesh = new THREE.Mesh(geo, mat);
       mesh.add(new THREE.Mesh(glowGeo, glowMat));
       mesh.position.copy(from);
@@ -502,6 +682,32 @@ export class FlightBattle {
       this.root.add(mesh);
       this.lasers.push({ mesh, dir, life: LASER_LIFE, dmg, r: radius });
     }
+  }
+
+  /** This pilot's bolt at this level: QM85's blaster rods · 3BIZZLE's rods in red plasma · VLTRN8's glowing plasma
+   *  ORBS (owner 09-25: "make mahals blaster more plasma and less spinning thingy"). Cached per level, freed on dispose. */
+  #boltLook() {
+    const base = this.power.bolt();
+    const tint = BOLT_TINT[this.pilotKey];
+    if (!tint) return base;
+    this.boltCache ??= [];
+    const lv = this.power.level;
+    if (!this.boltCache[lv]) {
+      const orb = this.pilotKey === "vltrn8";
+      const glowMat = base.glowMat.clone();
+      glowMat.color.setHex(tint[lv]);
+      if (orb) glowMat.opacity = 0.6;
+      const r = base.radius;
+      this.boltCache[lv] = {
+        geo: orb ? new THREE.SphereGeometry(r * 0.45, 10, 8).scale(1, 1, 1.8) : base.geo,
+        mat: base.mat,
+        glowGeo: orb ? new THREE.SphereGeometry(r * 1.05, 12, 10).scale(1, 1, 2.4) : base.glowGeo,
+        glowMat,
+        radius: r,
+        own: orb,
+      };
+    }
+    return this.boltCache[lv];
   }
 
   /** BACK BLAST volley: alternate fists, outward along the spin; the cannon sound on every other shot. */
@@ -529,7 +735,14 @@ export class FlightBattle {
   }
 
   #takeHit(n) {
+    if (this.lotusT > 0) { // Mahal's lotus shield eats it
+      if (this.shieldPingT <= 0) sfx.shieldPing();
+      this.shieldPingT = 0.25;
+      return;
+    }
     if (this.invuln > 0 || this.mega.busy || this.hyper.active || this.backBlast.active || this.moves.untouchable || this.twirlT > TWIRL_TIME * 0.2) return; // untouchable mid move
+    if (this.fight.active && this.fight.combat.untouchable) return; // mid DODGE ROLL
+    if (this.specials.dashing) return; // mid FLAME STRIKE
     this.shake.add(0.45);
     this.shield -= n;
     this.invuln = INVULN;
@@ -543,14 +756,14 @@ export class FlightBattle {
   }
 
   #pickups() {
-    const box = this.power.update(this.dt, this.t, this.center());
+    const box = this.power.update(this.dt, this.t, this.center(), this.magnet);
     if (box) this.hooks.onPower(box);
-    if (!this.arena.ringHit(this.center())) return;
+    if (!this.arena.ringHit(this.center(), this.magnet)) return;
     if (this.thrust < 3) this.thrust += 1; // rings power the THRUSTERS (Merkabas power the blasters)
     this.hooks.onThrust?.(this.thrust);
     sfx.powerUp();
     this.fuel = 1;
-    this.shield = Math.min(MAX_SHIELD, this.shield + 1);
+    this.shield = Math.min(this.maxShield, this.shield + 1);
     this.score += 50;
   }
 
@@ -571,6 +784,17 @@ export class FlightBattle {
 
   #onKill(bot, rammed) {
     const pos = bot.obj.position.clone();
+    this.hunters?.onKill(bot); // an unaware scout = SILENT TAKEDOWN bonus
+    if (bot.relay) { // FREE OAKLAND: a relay tower comes down and its district is free
+      this.fx.bossDeath(pos, "boss", 3.5);
+      sfx.explode("overseer");
+      this.shake.add(1);
+      this.freeze = BOSS_HIT_STOP;
+      this.slowmo = RELAY_SLOWMO;
+      this.popups.push({ pos, text: `+${bot.score}`, big: true });
+      this.districts?.relayDown(bot);
+      return;
+    }
     if (bot.boss) {
       this.fx.bossDeath(pos, "boss", bot.scale);
       sfx.explode(bot.final ? "boss" : "overseer");
@@ -581,7 +805,7 @@ export class FlightBattle {
       this.hooks.onBossDown?.(bot.name);
       if (bot.final) {
         this.winDelay = WIN_DELAY;
-        for (const b of this.swarm.alive) this.swarm.kill(b, true); // his minions fall with him
+        for (const b of this.swarm.alive) if (!b.relay) this.swarm.kill(b, true); // his minions fall with him (relays are districts, not minions)
       }
       return;
     }
@@ -593,6 +817,42 @@ export class FlightBattle {
     this.shake.add(rammed ? 0.45 : 0.16 + bot.scale * 0.03);
     this.freeze = Math.max(this.freeze, HIT_STOP);
     if (!rammed) this.popups.push({ pos, text: `+${bot.score}`, big: false });
+  }
+
+  /** A shot splashed on a relay's shield: sparks, a ping, and (not too often) the hint. */
+  #onShieldHit(bot) {
+    if (this.shieldPingT > 0) return;
+    this.shieldPingT = 0.25;
+    this.sparks.burst(bot.obj.position.clone(), new THREE.Vector3(0, 1, 0), 0.6);
+    sfx.shieldPing();
+    if ((this.shieldHintT ?? -99) + 4 < this.t) {
+      this.shieldHintT = this.t;
+      this.hooks.warn(bot.relay ? "RELAY SHIELDED — TAKE OUT ITS GUARDS FIRST" : `${bot.name} IS SHIELDED — BREAK HIS RUNE PYLONS`);
+    }
+  }
+
+  /** FREE OAKLAND: the six districts, their relays, and what freeing one does to the run. */
+  #buildDistricts() {
+    const hooks = this.hooks;
+    return new Districts(this.root, this.arena, this, {
+      onEnter: (d, state) => hooks.onDistrict?.("enter", { name: d.name, state }),
+      onWake: (d) => hooks.onDistrict?.("wake", { name: d.name, guards: d.guards.length }),
+      onShieldDown: (d) => hooks.onDistrict?.("shield", { name: d.name }),
+      onFreed: (d, silent) => {
+        this.mission?.unlock(d);
+        if (silent) return;
+        this.score += DISTRICT_SCORE;
+        this.shield = Math.min(this.maxShield, this.shield + 1);
+        this.shake.add(0.6);
+        this.comms?.cheer("freed", d.id);
+        hooks.onDistrict?.("freed", { name: d.name, freed: this.districts.freed, total: this.districts.total, items: d.items.length });
+      },
+      onRegen: () => {
+        if (this.shield >= this.maxShield || this.done) return;
+        this.shield += 1;
+        hooks.onDistrict?.("regen", {});
+      },
+    }, this.arena.buildings ?? []);
   }
 
   /** Half health: red pulse, alarm + roar, and he calls his own faction in. */
@@ -613,12 +873,32 @@ export class FlightBattle {
     this.fx.pulse(bot.obj.position, bot.final ? 0x7dff3a : 0x5fd8ff, bot.scale * 8);
     this.shake.add(0.6);
     sfx.roar();
+    this.comms?.cheer("bigboss", bot);
     this.hooks.onBoss(bot.name, bot.final);
+  }
+
+  #weather(dt) {
+    if (!this.weather) return;
+    this.weather.update(dt, this.t, this.camera, this.day);
+    sfx.rain.set(this.done ? 0 : this.weather.rain01);
+  }
+
+  /** RING RACE 3-2-1: he hovers on the start line, the camera settles behind him, the city keeps living. */
+  #raceCountdown(dt) {
+    this.race.update(dt, this.pos);
+    this.speed = THRUSTERS[this.thrust].cruise;
+    this.fuel = 1;
+    sfx.engine.set({ on: true, speed01: 0.2, boosting: false, level: this.thrust });
+    this.pilot.update(dt, { pos: this.pos, yaw: this.yaw, pitch: 0, bank: 0, boosting: false, spin: 0, t: this.t, blink: false, thrustColor: THRUSTERS[this.thrust].color });
+    this.arena.update(dt, this.t);
+    this.arena.follow?.(this.pos);
+    this.#placeCamera(dt);
   }
 
   /** Cutscene frame: the world idles, the effects play, no input, no damage. */
   #cutscene(dt, body) {
     sfx.engine.set({ on: false });
+    this.#weather(dt); // the rain keeps falling through a boss entrance
     this.arena.update(dt, this.t);
     this.sparks.update(dt);
     this.#updateLasers(dt);
@@ -657,11 +937,23 @@ export class FlightBattle {
   }
 
   /** Battle parts delivered so far → how far his armour has turned black-grey + gold and bulked up. */
+  /** Whoever you fly earns the battle body (each bot flies its own mission). */
+  get armorPilot() {
+    return this.pilot;
+  }
+
+  /** H's name right now: 3BIZZLE's is the MISSILE CANNON in the air and the FLAME STRIKE on foot. */
+  get specialName() {
+    const sp = SPECIALS[this.pilotKey];
+    return sp ? (this.fight?.active && sp.foot ? sp.foot.name : sp.name) : null;
+  }
+
   #armorUp() {
-    if (!this.mission) return;
-    const before = this.pilot.armor?.k ?? 0;
-    setArmorProgress(this.pilot, this.mission.delivered.part / (TOTAL / 2));
-    if ((this.pilot.armor?.k ?? 0) > before && !this.resume) { // a new piece bolted on: gold flash
+    const target = this.armorPilot;
+    if (!this.mission || !target) return;
+    const before = target.armor?.k ?? 0;
+    setArmorProgress(target, this.mission.delivered.part / (TOTAL / 2));
+    if ((target.armor?.k ?? 0) > before && !this.resume) { // a new piece bolted on: gold flash
       this.fx.pulse(this.pos.clone().add(new THREE.Vector3(0, 1, 0)), 0xd4a73a, 5);
       this.shake.add(0.2);
       sfx.snap(3);
@@ -696,6 +988,14 @@ export class FlightBattle {
     this.shake.apply(this.camera, dt, this.t);
   }
 
+  /** The big bottom bar: the day's boss first, else the relay of the district he's fighting in. */
+  #bigBar() {
+    if (this.boss && this.boss.alive && !this.intro) return { name: this.boss.name, hp: Math.max(0, this.boss.hp / this.boss.maxHp), enraged: Boolean(this.boss.enraged), shielded: Boolean(this.boss.shielded) };
+    const d = this.districts?.activeRelay;
+    if (!d) return null;
+    return { name: d.bot.name, hp: Math.max(0, d.bot.hp / d.bot.maxHp), enraged: false, shielded: d.bot.shielded };
+  }
+
   /** Screen-space helpers for the HUD. */
   reticleWorld() {
     return this.pos.clone().addScaledVector(this.forward(), 40);
@@ -712,6 +1012,7 @@ export class FlightBattle {
     let best = null;
     let d = Infinity;
     for (const b of this.swarm.alive) {
+      if (b.frozen) continue; // a sleeping relay across town isn't "the nearest threat"
       const dist = b.obj.position.distanceTo(this.pos);
       if (dist < d) {
         d = dist;
@@ -727,17 +1028,20 @@ export class FlightBattle {
       bossName: this.boss?.name ?? "",
       boss: Boolean(this.boss),
       bossHp: this.boss ? Math.max(0, this.boss.hp / this.boss.maxHp) : 0,
-      bossBar: this.boss && this.boss.alive && !this.intro ? { name: this.boss.name, hp: Math.max(0, this.boss.hp / this.boss.maxHp), enraged: Boolean(this.boss.enraged) } : null,
+      bossBar: this.#bigBar(),
       backBlast: this.power.level >= 2 ? (this.backBlast.cooldown > 0 ? this.backBlast.cooldown : 0) : -1,
       cutscene: Boolean(this.intro || this.finale),
       left: this.swarm.alive.length,
       score: this.score,
       shield: this.shield,
-      maxShield: MAX_SHIELD,
+      maxShield: this.maxShield,
+      lotus: this.lotusT > 0,
+      special: this.pilot.isVltrn ? { name: this.specialName, cd: Math.ceil(this.specialCd) } : null,
+      pilot: this.pilotKey,
       fuel: this.fuel,
       blaster: this.power.level,
       missiles: this.missiles.ammo,
-      missilesMax: MISSILE_MAX,
+      missilesMax: this.missiles.max,
       thrust: this.thrust,
       stealth: this.stealth,
       megaReady: this.fuel >= MEGA_READY && !this.mega.busy,
@@ -747,6 +1051,8 @@ export class FlightBattle {
       landOnRoof: this.fight.landOnRoof,
       altitude: this.pos.y,
       day: this.day && { phase: this.day.phase, clock: this.day.clock, night: this.day.night01 },
+      districts: this.districts && { freed: this.districts.freed, total: this.districts.total, here: this.districts.status },
+      race: this.race?.hud ?? null,
       mission: this.mission && {
         data: this.mission.delivered.data, part: this.mission.delivered.part, total: TOTAL,
         carrying: this.mission.carrying.length, progress: this.mission.progress,
@@ -756,6 +1062,27 @@ export class FlightBattle {
 
   dispose(scene) {
     sfx.engine.set({ on: false });
+    sfx.rain.set(0);
+    // 09-25 review: removing the root only hid the old level — three.js kept every geometry alive (+250 geometries,
+    // +230 MB per RACE AGAIN). Free the whole tree FIRST (the subsystems below detach their parts from it), then
+    // what lives outside it: the sky scene the reflections are rendered from, and the cyber sky texture.
+    disposeTree(this.root);
+    disposeTree(this.arena.envScene);
+    disposeTexture(this.arena.skyTexture);
+    this.weather?.dispose();
+    for (const b of this.boltCache ?? []) { // tinted bolt looks live outside the tree when no bolt is in the air
+      if (!b) continue;
+      b.glowMat.dispose();
+      if (b.own) {
+        b.geo.dispose();
+        b.glowGeo.dispose();
+      }
+    }
+    this.specials.dispose();
+    this.power.dispose(); // shared bolt looks + beam pieces (outside the tree when unused)
+    // per-flight textures/geometry held by systems whose meshes come and go (09-25 review): with no puff, flash or spray
+    // alive at teardown the tree walk never reaches them
+    for (const r of [this.missiles.tex, this.missiles.flashGeo, this.wake.tex, this.wake.ringGeo, this.hyper.tex]) r?.dispose();
     scene.remove(this.root);
   }
 }

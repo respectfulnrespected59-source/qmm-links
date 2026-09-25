@@ -11,18 +11,25 @@ const FilmShader = {
     aberration: { value: 0.0005 },
     grade: { value: 1 }, // 1 = QMM violet/gold grade (cyberspace), 0 = true colours (realistic Oakland)
     realistic: { value: 0 }, // 1 = filmic S-curve contrast, warm highlights, cool shadows (Oakland)
+    speed: { value: 0 }, // 09-25 SPEED FEEL: 0..~0.55 edge smear toward the centre on boost (speed-fx.js)
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
     void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
-    uniform float time, grain, vignette, aberration, grade, realistic;
+    uniform float time, grain, vignette, aberration, grade, realistic, speed;
     varying vec2 vUv;
     float rand(vec2 c) { return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
       vec2 off = (vUv - 0.5) * aberration * length(vUv - 0.5) * 4.0;
       vec3 col = vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b);
+      if (speed > 0.01) { // radial smear: stronger at the edges, none at the centre (where you aim)
+        vec2 toC = (vec2(0.5) - vUv) * speed * 0.06 * smoothstep(0.15, 0.7, length(vUv - 0.5));
+        vec3 acc = col;
+        for (int i = 1; i <= 5; i++) acc += texture2D(tDiffuse, vUv + toC * float(i)).rgb;
+        col = acc / 6.0;
+      }
       float luma = dot(col, vec3(0.299, 0.587, 0.114));
       col += grade * mix(vec3(0.035, 0.0, 0.07), vec3(0.05, 0.03, -0.02), smoothstep(0.2, 0.8, luma)); // violet lows, gold highs
       col = mix(vec3(luma), col, 1.0 + 0.12 * grade);                                                        // a little extra saturation

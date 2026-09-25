@@ -1,5 +1,6 @@
 // Soft additive glow sprites (owner 09-24: enemies and missiles need to read at range against the city).
 import * as THREE from "three";
+import { shareTexture } from "./dispose.js";
 
 let tex = null;
 
@@ -16,9 +17,33 @@ function glowTexture() {
   grad.addColorStop(1, "rgba(255,255,255,0)");
   g.fillStyle = grad;
   g.fillRect(0, 0, 64, 64);
-  tex = new THREE.CanvasTexture(c);
+  tex = shareTexture(new THREE.CanvasTexture(c)); // cached for every flight: a level teardown must not free it
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
+}
+
+const fades = new Map();
+
+/**
+ * Soft light-beam falloff for cones and columns (09-25: hard-edged additive cones read as floating slabs).
+ * An alphaMap over the geometry's v: bright at the source, gone at the far end. Cylinder/Cone v runs 0 (bottom)
+ * → 1 (top); `bright = "top"` for a cone whose apex (the lamp) is the top, `"bottom"` for a column rising from it.
+ */
+export function beamFade(bright = "top") {
+  if (fades.has(bright)) return fades.get(bright);
+  const c = document.createElement("canvas");
+  c.width = 4;
+  c.height = 128;
+  const g = c.getContext("2d");
+  const grad = g.createLinearGradient(0, 0, 0, 128); // canvas top = v 1 (flipY)
+  grad.addColorStop(0, bright === "top" ? "#ffffff" : "#000000");
+  grad.addColorStop(0.55, "#5a5a5a");
+  grad.addColorStop(1, bright === "top" ? "#000000" : "#ffffff");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 4, 128);
+  const t = shareTexture(new THREE.CanvasTexture(c));
+  fades.set(bright, t);
+  return t;
 }
 
 /**

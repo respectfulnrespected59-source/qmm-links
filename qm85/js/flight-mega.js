@@ -80,6 +80,7 @@ export class MegaBlast {
       const inBeam = segDist(p, from, to) < BEAM_WIDTH + bot.radius;
       const inNova = p.distanceTo(ctx.pos) < NOVA_RADIUS;
       if (!inBeam && !inNova) continue;
+      if (bot.shielded) continue; // FREE OAKLAND: a shielded relay shrugs it off
       if (bot.boss) {
         bot.hp -= BOSS_DAMAGE;
         bot.flash = 0.4;

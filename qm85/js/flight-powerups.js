@@ -11,6 +11,13 @@ const PICKUP_RADIUS = 4;
 const RESPAWN_AFTER = 6;
 const MIN_BOX_Y = 12; // keep boxes above the flight floor
 const RIDERS = 4; // Merkabas riding on moving trucks (owner 09-24)
+// 09-25 (owner: "i need to be able to better tell the difference between a parts light beam locator and a blaster
+// powerup tetragrammaton light beam locator"): battle parts keep the solid GOLD pillar, data drives the violet one;
+// a Merkaba's beam is thin electric CYAN with rings climbing it — a different colour AND a different motion.
+const BEAM_COLOR = 0x6ff6ff;
+const BEAM_H = 40;
+const RINGS = 3;
+const RING_RISE = 9; // m/s up the beam
 
 const deg = THREE.MathUtils.degToRad;
 const LEVELS = [
@@ -40,7 +47,12 @@ export class PowerUps {
     this.glowMats = LEVELS.map((l) => l && new THREE.MeshBasicMaterial({ color: l.color, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }));
     this.glowGeos = LEVELS.map((l) => l && new THREE.CylinderGeometry(BOLT_R * l.thick * 2.6, BOLT_R * l.thick * 2.6, l.len * 1.15, 10).rotateX(Math.PI / 2));
     this.radii = LEVELS.map((l) => l && BOLT_R * l.thick * 2.6);
-    this.beamGeo = new THREE.CylinderGeometry(0.25, 0.6, 40, 8, 1, true).translate(0, 20, 0);
+    this.beamGeo = new THREE.CylinderGeometry(0.25, 0.6, BEAM_H, 8, 1, true).translate(0, BEAM_H / 2, 0);
+    this.beamMat = new THREE.MeshBasicMaterial({ // one for every box (it used to be a new material per box, never freed)
+      color: BEAM_COLOR, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    });
+    this.ringGeo = new THREE.TorusGeometry(1.1, 0.07, 6, 28).rotateX(Math.PI / 2);
+    this.ringMat = new THREE.MeshBasicMaterial({ color: BEAM_COLOR, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
   }
 
   get config() {
@@ -76,19 +88,18 @@ export class PowerUps {
     const s = rider ? { x: 0, z: 0, h: 0 } : spots[Math.floor(Math.random() * spots.length)];
     const group = new THREE.Group();
     const star = merkaba(1.8); // the "blaster box" is a Merkaba
-    const beam = new THREE.Mesh(this.beamGeo, new THREE.MeshBasicMaterial({
-      color: 0xffb338, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
-    }));
-    group.add(star, beam);
+    const beam = new THREE.Mesh(this.beamGeo, this.beamMat);
+    const rings = Array.from({ length: RINGS }, () => new THREE.Mesh(this.ringGeo, this.ringMat));
+    group.add(star, beam, ...rings);
     const y = Math.max(s.h + 2.5, MIN_BOX_Y);
     group.position.set(s.x, y, s.z);
     this.root.add(group);
-    this.boxes.push({ group, star, base: y, phase: Math.random() * 6, follow });
+    this.boxes.push({ group, star, rings, base: y, phase: Math.random() * 6, follow });
     return true;
   }
 
   /** Returns a pickup event {level, source} when he flies through a box this frame. */
-  update(dt, t, pos) {
+  update(dt, t, pos, reach = 1) { // reach: the garage's PICKUP MAGNET multiplier
     const riders = this.boxes.filter((b) => b.follow).length;
     while (this.boxes.length - riders + this.pending < ACTIVE_BOXES && this.#spawnOne()) { /* fill the rooftops */ }
     for (let r = riders; r < RIDERS && this.riderSource && this.#spawnOne(true); r++) { /* and the trucks */ }
@@ -107,7 +118,12 @@ export class PowerUps {
         b.group.position.y = b.base + Math.sin(t * 2 + b.phase) * 0.4;
       }
       spinMerkaba(b.star, t + b.phase);
-      if (!event && b.group.position.distanceTo(pos) < PICKUP_RADIUS) {
+      b.rings.forEach((r, i) => { // rings climb the beam and narrow with it, then start again at the box
+        const h = (t * RING_RISE + b.phase * 7 + (i * BEAM_H) / RINGS) % BEAM_H;
+        r.position.y = h;
+        r.scale.setScalar(1 - 0.6 * (h / BEAM_H));
+      });
+      if (!event && b.group.position.distanceTo(pos) < PICKUP_RADIUS * reach) {
         b.dead = true;
         this.root.remove(b.group);
         if (!b.follow) { // rooftop boxes wait to respawn; truck riders hop onto another truck right away
@@ -119,5 +135,11 @@ export class PowerUps {
     }
     this.boxes = this.boxes.filter((b) => !b.dead);
     return event;
+  }
+
+  /** The bolt looks and beam pieces are shared, so a level teardown's tree walk can miss them: free them here. */
+  dispose() {
+    for (const r of [...this.mats, ...this.geos, ...this.glowMats, ...this.glowGeos]) r?.dispose();
+    for (const r of [this.beamGeo, this.beamMat, this.ringGeo, this.ringMat]) r.dispose();
   }
 }

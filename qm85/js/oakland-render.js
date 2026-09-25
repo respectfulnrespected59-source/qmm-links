@@ -226,6 +226,7 @@ function streetlights(root, roads) {
   const lampMat = new THREE.PointsMaterial({ color: 0xffc27a, size: 1.6, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
   root.add(new THREE.Points(geo, lampMat));
   streetlights.lampMat = lampMat;
+  streetlights.pts = pts; // WEATHER (09-25): rain puts a light pool on the wet street under every lamp
   return pts.length / 3;
 }
 
@@ -333,5 +334,6 @@ export async function renderRealisticOakland(root, city, extent, { shoreX = -ext
 
   const stats = { lights: streetlights(root, city.roads), trees: trees(root, { ...city, trees: city.trees ?? [], parks: city.parks ?? [] }) };
   lights.lamps = streetlights.lampMat;
+  lights.lampPts = streetlights.pts;
   return { envScene, sunDir, stats, textures: { glass, midrise, lowrise }, waterMesh, follow, chunks: tiles.size, lights, setTime };
 }

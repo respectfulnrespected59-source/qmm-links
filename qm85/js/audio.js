@@ -25,6 +25,21 @@ export function setSfxMuted(m) {
   if (master) master.gain.value = m ? 0 : 1;
 }
 
+let tap = null;
+/** CLIP RECORDING: one MediaStream carrying every game sound, plus whatever is connected to `input` (the soundtrack).
+ *  A MediaRecorder keeps only ONE audio track, so music is mixed in here instead of added as a second track. */
+export function clipTap() {
+  const a = ac();
+  if (!tap) {
+    const dest = a.createMediaStreamDestination();
+    const input = a.createGain();
+    input.connect(dest);
+    out().connect(dest);
+    tap = { stream: dest.stream, input, ctx: a };
+  }
+  return tap;
+}
+
 function tone(freq, dur, { type = "square", vol = 0.08, slide = 0, delay = 0 } = {}) {
   const a = ac();
   const t = a.currentTime + delay;
@@ -425,8 +440,48 @@ const DEATH = {
   chainEnd: () => blast(0.95),
 };
 
+/** RAIN (09-25): a looping hiss — highpassed noise with a soft patter band — faded by set(level 0..1). */
+const rain = {
+  nodes: null,
+  build() {
+    const a = ac();
+    const len = a.sampleRate * 2;
+    const buf = a.createBuffer(1, len, a.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const hp = a.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 1800;
+    const band = a.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = 4200;
+    band.Q.value = 0.6;
+    const gain = a.createGain();
+    gain.gain.value = 0;
+    src.connect(hp).connect(band).connect(gain).connect(out());
+    src.start();
+    this.nodes = { gain, a };
+  },
+  set(level = 0) {
+    if (level <= 0.001 && !this.nodes) return;
+    if (!this.nodes) this.build();
+    const { gain, a } = this.nodes;
+    gain.gain.setTargetAtTime(0.1 * Math.min(1, level), a.currentTime, 0.4);
+  },
+};
+
 export const sfx = {
   engine,
+  rain,
+  // thunder: a crack when it's close, then a long low roll either way
+  thunder: (near = false) => {
+    if (near) sweptNoise(0.3, 0.35, { type: "highpass", f0: 5000, f1: 1500, decay: 0.08 });
+    sweptNoise(3.2, near ? 0.4 : 0.25, { f0: 400, f1: 50, q: 0.5, decay: 1.2, delay: near ? 0.05 : 0 });
+    tone(38, 2.4, { type: "sine", slide: -10, vol: near ? 0.35 : 0.2 });
+  },
   explode: (kind = "virus") => (DEATH[kind] ?? DEATH.virus)(),
   // BOSS ENTRANCE: two detuned low saws growling through a lowpass that opens and closes, over a rumble
   roar: () => {
@@ -527,5 +582,69 @@ export const sfx = {
   megaFire: () => {
     noise(0.9, 0.3);
     tone(90, 0.9, { type: "square", slide: -60, vol: 0.12 });
+  },
+  // FREE OAKLAND (09-25): a shot ringing off a relay's shield, the shield shattering, and a district going free
+  shieldPing: () => { tone(1900, 0.1, { type: "triangle", slide: -600, vol: 0.035 }); tone(950, 0.14, { type: "sine", slide: -300, vol: 0.03 }); },
+  shieldDown: () => {
+    sweptNoise(0.9, 0.3, { type: "highpass", f0: 9000, f1: 1200, q: 0.7, decay: 0.35 }); // glass breaking
+    [1400, 1050, 700, 420].forEach((f, i) => tone(f, 0.22, { type: "triangle", slide: -f * 0.4, vol: 0.05, delay: i * 0.07 }));
+    tone(70, 0.6, { type: "sine", slide: -30, vol: 0.3 });
+  },
+  // THE VLTRNS (09-25): VLTRN8's drone swarm launching + a drone zap; 3BIZZLE's flame strike, a mega melanin round,
+  // and the record scratch when he shows off
+  droneSwarm: () => {
+    [0, 0.06, 0.12, 0.18, 0.24, 0.3].forEach((d, i) => tone(900 + i * 140, 0.3, { type: "sawtooth", slide: 400, vol: 0.025, delay: d }));
+    sweptNoise(0.8, 0.12, { type: "bandpass", f0: 1800, f1: 4200, q: 3, decay: 0.3 }); // rotors spinning up
+  },
+  comm: () => { tone(1800, 0.05, { type: "square", vol: 0.025 }); tone(2400, 0.05, { type: "square", vol: 0.02, delay: 0.06 }); }, // tech-support radio chirp
+  droneZap: () => tone(2600 + Math.random() * 600, 0.07, { type: "square", slide: -1800, vol: 0.02 }),
+  flameStrike: () => {
+    sweptNoise(0.6, 0.35, { type: "bandpass", f0: 400, f1: 3000, q: 0.8, decay: 0.25 }); // the whoosh
+    tone(160, 0.5, { type: "sawtooth", slide: -90, vol: 0.12 });
+    sweptNoise(0.9, 0.18, { f0: 2500, f1: 200, decay: 0.4, delay: 0.1 }); // fire roar
+  },
+  melanin: () => { tone(110, 0.22, { type: "sawtooth", slide: -40, vol: 0.12 }); sweptNoise(0.25, 0.22, { f0: 4000, f1: 500, decay: 0.08 }); },
+  scratch: () => { // wikka-wikka: a noise burst swept up then down, like a record pulled back and pushed forward
+    sweptNoise(0.12, 0.22, { type: "bandpass", f0: 600, f1: 2600, q: 4, decay: 0.08 });
+    sweptNoise(0.14, 0.22, { type: "bandpass", f0: 2600, f1: 500, q: 4, decay: 0.09, delay: 0.12 });
+  },
+  // RING RACES (09-25): the 3-2-1 beeps, GO, a gate chime (bigger on the finish)
+  countBeep: (go = false) => (go ? [784, 1175].forEach((f, i) => tone(f, 0.35, { type: "square", vol: 0.07, delay: i * 0.02 })) : tone(523, 0.18, { type: "square", vol: 0.06 })),
+  gatePass: (finish = false) => {
+    if (finish) [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.5, { type: "triangle", vol: 0.06, delay: i * 0.08 }));
+    else { tone(1318, 0.12, { type: "triangle", vol: 0.05 }); tone(1760, 0.16, { type: "sine", vol: 0.04, delay: 0.05 }); }
+  },
+  // PALANTÍR HUNTERS (09-25): the eye has seen you — a rising two-tone alarm over a scanner chirp
+  spotted: () => {
+    [880, 1320, 880, 1320].forEach((f, i) => tone(f, 0.12, { type: "square", vol: 0.05, delay: i * 0.13 }));
+    tone(2600, 0.3, { type: "sine", slide: -1800, vol: 0.04 });
+  },
+  // GROUND COMBAT (09-25): a swung fist, a connecting hit, the dodge whoosh, a ground pound / superhero landing
+  punch: (kind = "jab") => sweptNoise(kind === "uppercut" ? 0.3 : 0.16, 0.14, { type: "bandpass", f0: 900, f1: kind === "uppercut" ? 3200 : 2200, q: 1.1, decay: 0.07 }),
+  impact: (big = false) => {
+    tone(big ? 95 : 140, big ? 0.28 : 0.14, { type: "sine", slide: big ? -55 : -70, vol: big ? 0.5 : 0.3 });
+    sweptNoise(big ? 0.3 : 0.14, big ? 0.3 : 0.2, { f0: 5000, f1: 400, decay: big ? 0.09 : 0.05 });
+    tone(big ? 1500 : 2100, 0.07, { type: "square", slide: -900, vol: 0.03 });
+  },
+  dodge: () => sweptNoise(0.35, 0.12, { type: "bandpass", f0: 700, f1: 2400, q: 0.9, decay: 0.14 }),
+  slam: (big = false) => {
+    tone(big ? 48 : 62, 0.8, { type: "sine", slide: -24, vol: 0.55 });
+    sweptNoise(0.9, 0.35, { f0: 3000, f1: 90, decay: 0.3 });
+    sweptNoise(0.25, 0.25, { type: "highpass", f0: 5000, f1: 2000, decay: 0.06 }); // concrete cracking
+  },
+  // MAHAL WINGMATE (09-25): her sword cut, a thrown crescent, the heal chime, the lotus shield blooming
+  slash: () => { sweptNoise(0.22, 0.2, { type: "bandpass", f0: 6000, f1: 900, q: 1.4, decay: 0.08 }); tone(620, 0.2, { type: "sawtooth", slide: -380, vol: 0.05 }); tone(1240, 0.12, { type: "triangle", slide: -700, vol: 0.03 }); },
+  crescent: () => { sweptNoise(0.3, 0.09, { type: "bandpass", f0: 1800, f1: 5200, q: 2, decay: 0.12 }); tone(880, 0.18, { type: "sine", slide: 500, vol: 0.025 }); },
+  heal: () => [659, 880, 1175, 1568].forEach((f, i) => tone(f, 0.4, { type: "sine", vol: 0.04, delay: i * 0.06 })),
+  lotus: () => {
+    [523, 784, 1046, 1318, 1568].forEach((f, i) => tone(f, 0.7, { type: "triangle", vol: 0.045, delay: i * 0.05 }));
+    tone(130, 0.9, { type: "sine", slide: 130, vol: 0.12 });
+    sweptNoise(0.8, 0.1, { type: "highpass", f0: 3000, f1: 9000, q: 0.7, decay: 0.3 });
+  },
+  liberate: () => {
+    [392, 494, 587, 784, 988, 1175].forEach((f, i) => tone(f, 0.9, { type: "triangle", vol: 0.05, delay: 0.25 + i * 0.09 })); // the gold chord
+    tone(98, 1.6, { type: "sawtooth", slide: 98, vol: 0.05, delay: 0.25 });
+    sweptNoise(2.6, 0.12, { type: "bandpass", f0: 900, f1: 1800, q: 0.6, decay: 1.4, delay: 0.5 }); // the block cheering
+    for (let i = 0; i < 6; i++) sweptNoise(0.35, 0.18, { f0: 5000, f1: 300, decay: 0.12, delay: 0.6 + i * 0.28 }); // fireworks popping
   },
 };

@@ -197,10 +197,12 @@ export async function addVehicles(root, roads, blocked) {
   });
   let density = 1; // share of the moving fleet on the road (the day cycle: half at dawn, all by noon)
   let focus = null; // QM85's position: traffic outside VIEW_RANGE keeps driving but isn't drawn
+  let hidden = null; // FREE OAKLAND: (x, z) => true inside an occupied district — its streets are empty
   const parkedOffMap = m.compose(new THREE.Vector3(0, -60, 0), q, one).clone();
   const update = (dt) => {
     for (const [i, c] of cars.entries()) {
-      if (i > cars.length * density) {
+      c.hidden = i > cars.length * density;
+      if (c.hidden) {
         moving.set(c.slot, parkedOffMap);
         continue;
       }
@@ -215,16 +217,17 @@ export async function addVehicles(root, roads, blocked) {
       q.setFromAxisAngle(up, Math.atan2(dx, dz) + (c.v > 0 ? 0 : Math.PI));
       c.pos.copy(p);
       c.yaw = Math.atan2(dx, dz) + (c.v > 0 ? 0 : Math.PI);
+      c.hidden = Boolean(hidden?.(p.x, p.z));
       const far = focus && Math.hypot(p.x - focus.x, p.z - focus.z) > VIEW_RANGE;
-      moving.set(c.slot, far ? parkedOffMap : m.compose(p, q, one));
+      moving.set(c.slot, far || c.hidden ? parkedOffMap : m.compose(p, q, one));
     }
     moving.flush();
   };
   const trucks = cars.filter((c) => c.truck);
   /** The moving vehicle a point is inside (shots stop, QM85 bounces), or null. */
   const vehicleAt = (pt) => {
-    for (const [i, c] of cars.entries()) {
-      if (i > cars.length * density || pt.y > c.top) continue;
+    for (const c of cars) {
+      if (c.hidden || pt.y > c.top) continue;
       const dx = pt.x - c.pos.x;
       const dz = pt.z - c.pos.z;
       if (dx * dx + dz * dz > 81) continue;
@@ -238,11 +241,14 @@ export async function addVehicles(root, roads, blocked) {
   };
   /** A live "top of a random truck" follower for power-ups riding in traffic. */
   const truckRider = () => {
-    const c = trucks[Math.floor(Math.random() * trucks.length)];
-    return c ? () => c.pos.clone().setY(c.top) : null;
+    const open = trucks.filter((t) => !t.hidden);
+    const c = open[Math.floor(Math.random() * open.length)];
+    return c ? () => c.pos.clone().setY(c.hidden ? -60 : c.top) : null; // a truck driving into occupied streets takes its Merkaba with it
+
   };
   update(0);
   const setDensity = (f) => (density = f);
   const setFocus = (pos) => (focus = pos);
-  return { update, vehicleAt, truckRider, setDensity, setFocus, stats: { vehicles: cars.length + placed, parked: placed, trucks: trucks.length } };
+  const setHidden = (fn) => (hidden = fn);
+  return { update, vehicleAt, truckRider, setDensity, setFocus, setHidden, stats: { vehicles: cars.length + placed, parked: placed, trucks: trucks.length } };
 }

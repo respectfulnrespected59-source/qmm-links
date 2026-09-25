@@ -58,12 +58,16 @@ function beam(color) {
 }
 
 export class OaklandMission {
-  /** hooks: { onPickup(kind, carrying), onDeliver(state), onFull(), onBoss(name), onComplete() } */
-  constructor(root, arena, flight, hooks) {
+  /**
+   * hooks: { onPickup(kind, carrying), onDeliver(state), onFull(), onBoss(name), onComplete() }
+   * districts (FREE OAKLAND, 09-25): each relay hoards its district's items — they stay locked until it falls.
+   */
+  constructor(root, arena, flight, hooks, districts = null) {
     this.root = root;
     this.arena = arena;
     this.f = flight;
     this.hooks = hooks;
+    this.districts = districts;
     this.items = [];
     this.carrying = [];
     this.delivered = { data: 0, part: 0 };
@@ -71,7 +75,46 @@ export class OaklandMission {
     this.fullWarned = 0;
     this.done = false;
     this.#crew();
-    this.#scatter();
+    if (districts) this.#stash(districts);
+    else this.#scatter();
+  }
+
+  #addItem(kind, pos, extra = {}) {
+    const obj = kind === "data" ? dataDrive() : battlePart();
+    obj.position.copy(pos);
+    const pillar = beam(kind === "data" ? 0x9b4dff : 0xffb338);
+    pillar.position.set(pos.x, 0, pos.z);
+    this.root.add(obj, pillar);
+    const it = { kind, obj, pillar, pos, taken: false, phase: rand(0, 6), ...extra };
+    obj.visible = pillar.visible = !it.locked;
+    this.items.push(it);
+    return it;
+  }
+
+  /** FREE OAKLAND: one item per kind each district lists, hidden and locked at its relay. */
+  #stash(districts) {
+    for (const d of districts.list) {
+      for (const kind of d.items) this.#addItem(kind, d.ground.clone().setY(1), { locked: true, district: d.id });
+    }
+  }
+
+  /** A district fell: its items spill out around the relay's plinth, on open street. */
+  unlock(district) {
+    const mine = this.items.filter((it) => it.district === district.id && it.locked);
+    mine.forEach((it, i) => {
+      for (let tries = 0; tries < 24; tries++) {
+        const a = (i / Math.max(1, mine.length)) * Math.PI * 2 + tries * 0.7;
+        const r = 10 + tries * 0.8;
+        const p = new THREE.Vector3(district.ground.x + Math.cos(a) * r, 1, district.ground.z + Math.sin(a) * r);
+        if (this.arena.groundBlocked(p) || this.arena.isWater(p.x, p.z)) continue;
+        it.pos.copy(p);
+        break;
+      }
+      it.locked = false;
+      it.obj.position.copy(it.pos);
+      it.pillar.position.set(it.pos.x, 0, it.pos.z);
+      it.obj.visible = it.pillar.visible = !it.taken;
+    });
   }
 
   get total() {
@@ -85,7 +128,7 @@ export class OaklandMission {
   /** Rob & Mahal at the door, facing the street. */
   #crew() {
     this.crew = []; // the finale makes them cheer
-    for (const [name, dx] of [["rob", -9], ["mahal", 9]]) {
+    for (const [name, dx] of [["rob", -9], ["mahal", 9]]) { // the humans are the crew; their VLTRNs fight
       const who = spawn(name);
       who.position.set(DOOR.x + dx, 0, DOOR.z - 3);
       who.rotation.y = Math.PI; // face downtown (-Z)
@@ -129,20 +172,29 @@ export class OaklandMission {
 
   /** Where the HUD arrow points: the warehouse door when carrying (and it's closer or he's full), else the nearest item. */
   waypoint() {
+    return this.target().pos;
+  }
+
+  /** Where the gold arrow points, and what to call it on screen (09-25: the arrow names its target). */
+  target() {
     let best = null;
     let d = Infinity;
     for (const it of this.items) {
-      if (it.taken) continue;
+      if (it.taken || it.locked) continue;
       const dist = it.pos.distanceTo(this.f.pos);
       if (dist < d) {
         d = dist;
-        best = it.pos;
+        best = it;
       }
     }
-    if (!best) return DOOR;
-    if (this.carrying.length >= CARRY_MAX) return DOOR;
-    if (this.carrying.length && DOOR.distanceTo(this.f.pos) < d) return DOOR;
-    return best;
+    const home = { pos: DOOR, label: "WAREHOUSE" };
+    if (!best && !this.carrying.length && this.districts) { // go free the next district
+      const relay = this.districts.nextRelay(this.f.pos);
+      return relay ? { pos: relay, label: "RELAY" } : home;
+    }
+    if (!best || this.carrying.length >= CARRY_MAX) return home;
+    if (this.carrying.length && DOOR.distanceTo(this.f.pos) < d) return home;
+    return { pos: best.pos, label: best.kind === "data" ? "DATA DRIVE" : "BATTLE PART" };
   }
 
   update(dt, t) {
@@ -151,10 +203,10 @@ export class OaklandMission {
     const onFoot = f.fight.active && f.fight.landing === 0;
     this.fullWarned = Math.max(0, this.fullWarned - dt);
     for (const it of this.items) {
-      if (it.taken) continue;
+      if (it.taken || it.locked) continue;
       it.obj.rotation.y = t * 1.5 + it.phase;
       it.obj.position.y = 1 + Math.sin(t * 2 + it.phase) * 0.25;
-      if (!onFoot || Math.hypot(it.pos.x - f.pos.x, it.pos.z - f.pos.z) > PICK_RADIUS) continue;
+      if (!onFoot || Math.hypot(it.pos.x - f.pos.x, it.pos.z - f.pos.z) > PICK_RADIUS * (f.magnet ?? 1)) continue;
       if (this.carrying.length >= CARRY_MAX) {
         if (!this.fullWarned) this.hooks.onFull();
         this.fullWarned = 3;
@@ -188,9 +240,11 @@ export class OaklandMission {
 
   /** Continue from a checkpoint: mark N of each kind as already delivered. */
   restore(delivered) {
+    // unlocked (freed-district) items count first, so a restored run never re-hides what was already won
+    const order = [...this.items].sort((a, b) => Number(Boolean(a.locked)) - Number(Boolean(b.locked)));
     for (const kind of ["data", "part"]) {
       let n = delivered?.[kind] ?? 0;
-      for (const it of this.items) {
+      for (const it of order) {
         if (n <= 0) break;
         if (it.kind !== kind || it.taken) continue;
         it.taken = true;
@@ -208,7 +262,7 @@ export class OaklandMission {
     if (this.airTimer > 0) return;
     this.airTimer = AIR_TOPUP_EVERY;
     const late = (this.f.day?.difficulty ?? 1) - 1; // 0 dawn → 1.4 night
-    const airborne = this.f.swarm.alive.filter((b) => !b.ground && !b.boss).length;
+    const airborne = this.f.swarm.alive.filter((b) => !b.ground && !b.boss && !b.patrol).length; // patrolling scouts aren't the air fight
     if (airborne >= 3 + this.total + Math.round(late * 4)) return;
     const lineup = { palantir: 1 + Math.floor(this.total / 3) + Math.round(late), virus: 1 };
     if (this.total >= 3 || late > 0.4) lineup.shadow = 1 + Math.floor(late);

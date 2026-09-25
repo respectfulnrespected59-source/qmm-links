@@ -80,6 +80,8 @@ export class Missiles {
   constructor(root, flight) {
     this.root = root;
     this.f = flight;
+    this.max = MISSILE_MAX; // the garage's MISSILE RACK raises these per run
+    this.reloadTime = RELOAD;
     this.ammo = MISSILE_MAX;
     this.reload = 0;
     this.live = [];
@@ -93,6 +95,7 @@ export class Missiles {
     let best = null;
     let bestScore = Infinity;
     for (const b of this.f.swarm.alive) {
+      if (b.shielded || b.frozen) continue; // never waste a missile on a relay's shield or a sleeping tower
       const to = b.obj.position.clone().sub(from);
       const d = to.length();
       if (d > LOCK_RANGE || to.normalize().dot(fwd) < LOCK_CONE) continue;
@@ -106,11 +109,12 @@ export class Missiles {
   }
 
   /** Fire one. Returns "fired" | "empty" | "no target". */
-  fire(from, fwd) {
-    if (this.ammo <= 0) return "empty";
+  /** free: 3BIZZLE's MISSILE CANNON burst (09-25) — fires off the special's own charge, never from the Q rack. */
+  fire(from, fwd, { free = false } = {}) {
+    if (!free && this.ammo <= 0) return "empty";
     const target = this.target(from, fwd);
     if (!target) return "no target";
-    this.ammo -= 1;
+    if (!free) this.ammo -= 1;
     const mesh = missileMesh();
     const side = this.live.length % 2 ? -1 : 1;
     mesh.position.copy(from).add(new THREE.Vector3(side * 0.5, 0.3, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.f.yaw));
@@ -124,9 +128,9 @@ export class Missiles {
   }
 
   update(dt) {
-    if (this.ammo < MISSILE_MAX) {
+    if (this.ammo < this.max) {
       this.reload += dt;
-      if (this.reload >= RELOAD) {
+      if (this.reload >= this.reloadTime) {
         this.reload = 0;
         this.ammo += 1;
         this.f.hooks.onMissile?.(this.ammo, true);
@@ -157,7 +161,7 @@ export class Missiles {
         this.#puff(tail);
         this.#ember(tail);
       }
-      const hit = this.f.swarm.hitTest(prev, m.mesh.position, DAMAGE, 0.8);
+      const hit = this.f.swarm.hitTest(prev, m.mesh.position, DAMAGE * (this.f.dmgMult ?? 1), 0.8); // 3BIZZLE hits harder
       const solid = this.f.arena.towerAt?.(m.mesh.position) || this.f.arena.vehicleAt?.(m.mesh.position);
       const floored = m.mesh.position.y <= (this.f.arena.floor ?? 0);
       if (hit || solid || floored || m.life <= 0) {
@@ -203,7 +207,7 @@ export class Missiles {
   #explode(at, direct) {
     const f = this.f;
     for (const b of f.swarm.alive) {
-      if (b === direct || b.obj.position.distanceTo(at) > SPLASH + b.radius) continue;
+      if (b === direct || b.shielded || b.obj.position.distanceTo(at) > SPLASH + b.radius) continue;
       b.hp -= SPLASH_DAMAGE;
       b.flash = 0.3;
       if (b.hp <= 0) {

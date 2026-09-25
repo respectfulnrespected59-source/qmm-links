@@ -298,6 +298,12 @@ export function buildOakland(root) {
       arena.setTraffic = traffic.setDensity;
       arena.vehicleAt = traffic.vehicleAt ?? (() => null);
       arena.truckRider = traffic.truckRider ?? (() => null);
+      arena.setTrafficHidden = traffic.setHidden ?? (() => {});
+      arena.buildings = city.buildings; // FREE OAKLAND hangs a fresh mural on a real wall in every freed district
+      arena.water = city.water; // the minimap paints the lakes + estuary
+      arena.lampPts = look.lights?.lampPts ?? []; // rain nights: light pools under the streetlights (weather.js)
+      arena.tallest = [...city.buildings].sort((p, q) => q.h - p.h).slice(0, 14).map((b) => ({ // lightning picks a real tower
+        x: b.p.reduce((s, q) => s + q[0], 0) / b.p.length, z: b.p.reduce((s, q) => s + q[1], 0) / b.p.length, h: b.h, name: b.name }));
       Object.assign(marks.stats, traffic.stats);
       lap("vehicles");
       const lod = cullingTiles(root); // AFTER everything static is in: split city-wide meshes into culling tiles
@@ -331,11 +337,11 @@ export function buildOakland(root) {
       updateTraffic(dt);
       for (const tick of ticks) tick(dt, t);
     },
-    ringHit(pos) {
+    ringHit(pos, reach = 1) {
       for (const ring of rings) {
         if (ring.taken) continue;
         const off = pos.clone().sub(ring.obj.position);
-        if (off.length() < 6.5 && Math.abs(off.dot(ring.normal)) < 2) {
+        if (off.length() < 6.5 * reach && Math.abs(off.dot(ring.normal)) < 2 * reach) {
           ring.taken = true;
           ring.respawn = 25;
           ring.obj.visible = false;

@@ -207,6 +207,7 @@ export class Maneuvers {
     for (const bot of ctx.swarm.alive) {
       if (s.hit.has(bot) || segDist(bot.obj.position, prev, ctx.pos) > STRIKE_RADIUS + bot.radius) continue;
       s.hit.add(bot);
+      if (bot.shielded) continue; // FREE OAKLAND: a shielded relay shrugs it off
       if (bot.boss) {
         bot.hp -= BOSS_STRIKE_DAMAGE;
         bot.flash = 0.4;

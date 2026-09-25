@@ -57,8 +57,10 @@
     #toast { position: fixed; top: 22%; left: 50%; transform: translate(-50%, -10px); font: 900 clamp(16px, 3vw, 28px) Orbitron, sans-serif; color: var(--gold);
       text-shadow: 0 0 18px var(--violet); opacity: 0; transition: .25s; pointer-events: none; text-align: center; width: calc(100% - 32px); }
     #toast.on { opacity: 1; transform: translate(-50%, 0); }
-    #subtitle { position: fixed; bottom: 9%; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, .65); padding: 8px 16px; border-radius: 8px;
-      font-size: 17px; opacity: 0; transition: .25s; pointer-events: none; max-width: calc(100% - 32px); }
+    /* crew callouts (Mahal): a pill under the toast — the bottom belongs to the boss bar + land prompt */
+    #subtitle { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); background: rgba(14, 6, 28, .78); padding: 7px 16px; border-radius: 20px;
+      border: 1px solid rgba(180, 107, 255, .8); box-shadow: 0 0 14px rgba(155, 77, 255, .45); font: 700 15px Orbitron, sans-serif; letter-spacing: .04em;
+      color: #f1e4ff; opacity: 0; transition: .25s; pointer-events: none; max-width: calc(100% - 32px); text-align: center; }
     #subtitle.on { opacity: 1; }
     .meter { flex-basis: 100%; display: flex; align-items: center; gap: 10px; font-size: 12px; }
     .meter .bar { width: 200px; height: 10px; border: 1px solid var(--violet); border-radius: 6px; overflow: hidden; }
@@ -125,6 +127,13 @@
     #tbuttons .tb-fire { border-color: #ffb338; color: #ffb338; }
     #tbuttons .tb-brake { border-color: #8ff3ff; color: #8ff3ff; }
     #tbuttons .tb-missile { border-color: #ff8a5a; color: #ff8a5a; }
+    #tbuttons .tb.brawl { border-color: #ff5a6a; color: #ffb3bb; } /* FIGHT MODE: BOOST -> PUNCH, AIRBRAKE -> DODGE */
+    #tbuttons .tb-special { display: none; border-color: #ffcf5a; color: #ffcf5a; grid-column: span 2; height: 48px; } /* VLTRN pilots */
+    #touch.has-special #tbuttons .tb-special { display: block; }
+    #stats .special { color: #ffcf5a; }
+    #stats .special.cool { opacity: .55; }
+    #stats .special i { font-style: normal; opacity: .6; font-size: 11px; }
+    .popup.style { color: #ff5a3c; font-size: 22px; letter-spacing: .08em; text-shadow: 0 0 10px #000, 0 0 16px rgba(46, 230, 168, .9); } /* 3BIZZLE's show-off words */
     @media (pointer: coarse) { #controls button { padding: 10px 12px; } #card.home .howto .body { max-height: 40vh; } }
     #credit { position: fixed; right: 12px; bottom: 8px; font-size: 11px; opacity: .7; pointer-events: none; }
     #controls { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 5; }
@@ -148,10 +157,25 @@
     .meter.body .bar i { background: linear-gradient(90deg, #6a1fd6, var(--gold)); }
     #prompt { position: fixed; bottom: 16%; left: 50%; transform: translateX(-50%); font: 900 16px Orbitron, sans-serif; letter-spacing: .08em;
       color: var(--gold); background: rgba(10, 4, 24, .7); border: 1px solid var(--gold); padding: 8px 16px; border-radius: 10px; pointer-events: none; }
-    #waypoint { position: fixed; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none;
-      background: var(--gold); transform-origin: 11px 11px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); box-shadow: 0 0 12px var(--gold); }
-    #waypoint.edge { clip-path: polygon(0 0, 100% 50%, 0 100%, 25% 50%); }
-    #waypoint::after { content: attr(data-dist); position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font: 600 11px Orbitron, sans-serif; color: var(--gold); white-space: nowrap; }
+    @media not all and (pointer: coarse) { #prompt.ground { left: 16px; bottom: 44px; transform: none; font-size: 13px; max-width: 44%; } }
+    /* THE GOLD ARROW (09-25: "more visible, its hard to follow"): bigger, outlined black so it reads on a bright sky,
+       pulsing, and it NAMES its target; off screen a big chevron orbits the reticle pointing the way. The outline is a
+       black shape UNDER the gold one — NOT a CSS drop-shadow filter: three stacked filters on a moving element cost
+       15-18 fps on the integrated GPU (A/B: 19.5/31.3 fps with, 37.3/48.5 without). */
+    #waypoint, #guide { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 4; }
+    #waypoint .pin { position: absolute; left: -20px; top: -20px; width: 40px; height: 40px; animation: wppulse 1.1s ease-in-out infinite; }
+    #guide .chev { position: absolute; left: -26px; top: -20px; width: 52px; height: 40px; animation: wppulse 0.9s ease-in-out infinite; }
+    #waypoint .pin::before, #waypoint .pin::after, #guide .chev::before, #guide .chev::after { content: ""; position: absolute; }
+    #waypoint .pin::before, #guide .chev::before { inset: 0; background: #120a02; } /* the black outline */
+    #waypoint .pin::after, #guide .chev::after { inset: 5px; background: #ffcf5a; }
+    #waypoint .pin::before, #waypoint .pin::after { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+    #waypoint.edge .pin { animation: none; }
+    #waypoint.edge .pin::before, #waypoint.edge .pin::after, #guide .chev::before, #guide .chev::after { clip-path: polygon(0 0, 100% 50%, 0 100%, 30% 50%); }
+    #waypoint .tag, #guide .tag { position: absolute; top: 26px; left: 0; transform: translateX(-50%); white-space: nowrap;
+      font: 800 13px Orbitron, sans-serif; letter-spacing: .08em; color: #ffe39a; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000; }
+    #waypoint.edge .tag { display: none; }
+    #guide .tag { top: 30px; }
+    @keyframes wppulse { 50% { transform: scale(1.18); } }
     .meter.stealth span { color: #9fe8ff; text-shadow: 0 0 12px #9fe8ff; }
     .meter.stealth .bar i { background: linear-gradient(90deg, #9fe8ff, #ffffff); }
     /* BOSS BAR (audit pick #2): a real health bar top-centre; the white "chip" trails the damage */
@@ -211,6 +235,88 @@
       #prompt { bottom: 390px; max-width: calc(100% - 32px); }
       #bossbar { bottom: 300px; width: calc(100% - 32px); }
     }
+    /* FREE OAKLAND (09-25): the city map, district lines, the gold "district is free" slam, a shielded relay bar */
+    @media not all and (pointer: coarse) { #hud { right: 250px; } } /* desktop: the stats wrap before the minimap (phones keep their own layout) */
+    #minimap { position: fixed; top: 58px; right: 12px; width: 220px; height: 158px; border: 1px solid rgba(212, 167, 58, .7); border-radius: 10px;
+      background: #12101a; box-shadow: 0 0 16px rgba(0, 0, 0, .6); pointer-events: none; z-index: 3; image-rendering: auto; }
+    #stats .free { color: #ffcf5a; letter-spacing: .06em; }
+    /* PALANTÍR HUNTERS: alert marks over scouts. "?" fills gold as it gets suspicious; "!" pulses red with the backup countdown */
+    #detect { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+    #detect .mark { position: absolute; left: 0; top: 0; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; display: grid; place-items: center;
+      font: 900 18px Orbitron, sans-serif; color: #1a1204; background: conic-gradient(#ffd24a calc(var(--k) * 360deg), rgba(20, 14, 30, .75) 0);
+      border: 2px solid #ffd24a; box-shadow: 0 0 10px rgba(255, 210, 74, .7); }
+    #detect .mark.alarm { width: auto; min-width: 40px; padding: 0 8px; border-radius: 16px; background: #ff3040; color: #fff; border-color: #ffd0d4;
+      box-shadow: 0 0 16px #ff3040; animation: lockblink .3s steps(2) infinite; }
+    #stats .lotus { color: #ffe39a; text-shadow: 0 0 10px #b46bff, 0 0 4px #ffcf5a; animation: lockblink .5s steps(2) infinite; }
+    #stats .zone { color: #ff8a9a; }
+    #stats .zone.free, #stats .zone.home { color: #ffe39a; }
+    #bosscard.freed::before, #bosscard.freed::after { background: linear-gradient(90deg, #1a1004, #3a2a08, #1a1004); }
+    #bosscard.freed h2 { color: #fff3c4; text-shadow: 0 0 26px rgba(255, 190, 60, .95), 0 4px 0 #000; }
+    #bosscard.freed p { color: #ffe39a; }
+    #bossbar.shielded .hp { background: repeating-linear-gradient(45deg, #ff6a8a 0 10px, #b02a4a 10px 20px); }
+    #bossbar.shielded b::after { content: " · SHIELDED"; color: #ff8a9a; }
+    @media (pointer: coarse) { #minimap { top: 40px; right: 200px; width: 120px; height: 86px; } } /* phones: left of the 178px button column, not under it */
+    @media (pointer: coarse) and (orientation: portrait) { #minimap { top: 232px; bottom: auto; right: 8px; width: 110px; height: 79px; } } /* the open sky under the HUD: the button grid now reaches 344px up */
+    /* THE GARAGE (09-25): Rob & Mahal build permanent upgrades with the credits every run banks */
+    #card.garage { width: min(900px, calc(100% - 24px)); text-align: left; }
+    #card.garage h2 { text-align: center; }
+    #card.garage .garage-sub { text-align: center; font: 900 18px Orbitron, sans-serif; color: #ffcf5a; letter-spacing: .1em; margin: 0; }
+    #card.garage .garage-said { text-align: center; font-style: italic; color: #e9dcff; min-height: 1.6em; }
+    #card.garage .garage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 8px; }
+    #card.garage .tile { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 12px; background: rgba(155, 77, 255, .12); border: 1px solid rgba(212, 167, 58, .5); }
+    #card.garage .tile.maxed { border-color: #ffcf5a; background: rgba(212, 167, 58, .14); }
+    #card.garage .tile b { font: 900 13px Orbitron, sans-serif; color: #ffcf5a; letter-spacing: .06em; }
+    #card.garage .tile .pips { color: #c58bff; letter-spacing: .15em; }
+    #card.garage .tile small { font-size: 12px; opacity: .85; }
+    #card.garage .tile small.next { color: #bff6ff; }
+    #card.garage .tile .buy { margin-top: 6px; padding: 8px 10px; font-size: 12px; }
+    #card.garage .tile .buy:disabled { opacity: .4; cursor: not-allowed; }
+    #card.garage > button:last-child { display: block; margin: 16px auto 0; }
+    /* RING RACES (09-25): the race clock top-centre; 3-2-1 slams big */
+    /* LEADERBOARD + CLIPS (09-25) */
+    #card .lb-wrap { margin: 10px auto 4px; max-width: 420px; text-align: left; }
+    #card .lb-head { font: 900 12px Orbitron, sans-serif; letter-spacing: .08em; color: #ffcf5a; text-align: center; margin-bottom: 6px; }
+    #card .lb-name { display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 12px Orbitron, sans-serif; letter-spacing: .06em; margin-bottom: 6px; }
+    #card .lb-name input { width: 4.2em; padding: 4px 6px; font: 900 18px Orbitron, sans-serif; letter-spacing: .18em; text-align: center; text-transform: uppercase;
+      color: #fff3c4; background: rgba(155, 77, 255, .18); border: 1px solid var(--gold); border-radius: 8px; }
+    .lb { list-style: none; margin: 0; padding: 0; counter-reset: lb; }
+    .lb li { counter-increment: lb; display: grid; grid-template-columns: 2em 3.6em 1fr auto; align-items: baseline; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 13px; }
+    .lb li::before { content: counter(lb) "."; opacity: .6; }
+    .lb li b { font: 900 13px Orbitron, sans-serif; letter-spacing: .12em; color: #fff3c4; }
+    .lb li small { opacity: .6; font-size: 11px; }
+    .lb li.me { background: rgba(212, 167, 58, .22); outline: 1px solid rgba(255, 207, 90, .7); }
+    .lb li.empty { grid-template-columns: 1fr; opacity: .6; }
+    .lb li.empty::before { content: none; }
+    #card.garage .tile .lb li { padding: 1px 4px; font-size: 11px; grid-template-columns: 1.6em 3.2em 1fr; }
+    #card.garage .tile .lb li small { display: none; }
+    #card .clip-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 2px; }
+    #card .clip-row .clip-note { width: 100%; font: 700 11px Orbitron, sans-serif; letter-spacing: .06em; color: #bff6ff; }
+    #card .clip-row button { margin: 0; padding: 8px 14px; font-size: 12px; }
+    #rec { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 3px 10px 3px 8px; border-radius: 999px; pointer-events: none;
+      font: 900 12px Orbitron, sans-serif; letter-spacing: .1em; color: #fff; background: rgba(20, 0, 8, .7); border: 1px solid rgba(255, 60, 80, .8); }
+    #rec::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #ff3a4f; animation: recblink 1s steps(2) infinite; }
+    @keyframes recblink { 50% { opacity: 0; } }
+    #racehud { position: fixed; top: 58px; left: 50%; transform: translateX(-50%); font: 900 22px Orbitron, sans-serif; letter-spacing: .08em; color: #fff3c4;
+      background: rgba(10, 4, 24, .72); border: 2px solid var(--gold); border-radius: 14px; padding: 6px 18px; pointer-events: none; z-index: 3; white-space: nowrap; text-shadow: 0 0 10px rgba(255, 190, 60, .6); }
+    #racehud.count { top: 30%; font-size: clamp(60px, 14vw, 140px); border: none; background: none; text-shadow: 0 0 30px rgba(255, 190, 60, .9), 0 6px 0 #000; }
+    @media (pointer: coarse) { #racehud { top: 42px; font-size: 14px; } }
+    /* TECH SUPPORT COMMS (09-25): Rob <-> Mahal over each other's shoulder. Left edge, below the stats. */
+    #comms { position: fixed; left: 16px; top: 46%; max-width: min(360px, 40vw); padding: 8px 12px 9px; border-radius: 10px; pointer-events: none; z-index: 3;
+      background: rgba(8, 6, 18, .82); border-left: 4px solid #ffcf5a; box-shadow: 0 0 18px rgba(0, 0, 0, .5); opacity: 0; transform: translateX(-12px); transition: opacity .25s, transform .25s; }
+    #comms.on { opacity: 1; transform: none; }
+    #comms[data-who="mahal"] { border-left-color: #b56cff; }
+    #comms[data-who="rob"] { border-left-color: #2ee6a8; }
+    #comms b { display: block; font: 800 10px Orbitron, sans-serif; letter-spacing: .16em; color: #ffe39a; margin-bottom: 3px; }
+    #comms[data-who="mahal"] b { color: #d9b8ff; }
+    #comms[data-who="rob"] b { color: #8ff5d0; }
+    #comms[data-who="qm85"] { border-left-color: #ffcf5a; }
+    #comms[data-who="qm85"] b { color: #ffe39a; }
+    /* a threat call (a pack closing in, one on your six, a beam, low shield): red edge + a pulse */
+    #comms.alert { border-left-color: #ff4a4a; box-shadow: 0 0 0 1px rgba(255, 74, 74, .55), 0 0 22px rgba(255, 40, 40, .35); animation: commsalert 0.6s ease-in-out 3; }
+    #comms.alert b { color: #ff9a9a; }
+    @keyframes commsalert { 50% { box-shadow: 0 0 0 2px rgba(255, 74, 74, .9), 0 0 34px rgba(255, 40, 40, .6); } }
+    #comms span { font: 600 14px Inter, sans-serif; color: #f4ecff; line-height: 1.35; }
+    @media (pointer: coarse) { #comms { top: auto; bottom: 200px; left: 10px; max-width: 46vw; } #comms span { font-size: 12px; } }
     [hidden] { display: none !important; }
     @media (prefers-reduced-motion: reduce) { #toast, #subtitle { transition: none; } .popup, #bosscard div { animation-duration: .01s; } }
   </style>
@@ -225,8 +331,14 @@
   <div id="popups"></div>
   <div id="bossbar" hidden><b></b><div class="track"><i class="chip"></i><i class="hp"></i></div></div>
   <div id="bosscard" hidden><div><h2></h2><p></p></div></div>
+  <div id="detect" aria-hidden="true"></div>
+  <div id="racehud" hidden role="timer"></div>
+  <div id="rec" hidden aria-live="polite"></div>
+  <div id="comms" aria-live="polite"><b></b><span></span></div>
+  <canvas id="minimap" width="440" height="316" hidden aria-label="Oakland map: red = occupied, gold = free"></canvas>
   <div id="prompt" hidden></div>
-  <div id="waypoint" hidden></div>
+  <div id="waypoint" hidden><i class="pin"></i><b class="tag"></b></div>
+  <div id="guide" hidden><i class="chev"></i><b class="tag"></b></div>
   <div id="credit" hidden></div>
   <div id="controls">
     <button id="btn-pause" type="button" title="Pause (P / Esc)">II PAUSE</button>

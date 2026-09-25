@@ -71,7 +71,7 @@ export class BackBlast {
   #nova(f) {
     let hits = 0;
     for (const b of f.swarm.bots) {
-      if (!b.alive || b.obj.position.distanceTo(f.pos) > NOVA_RADIUS) continue;
+      if (!b.alive || b.shielded || b.obj.position.distanceTo(f.pos) > NOVA_RADIUS) continue; // a relay's shield eats the nova
       b.hp -= NOVA_DAMAGE;
       b.flash = 0.2;
       hits += 1;

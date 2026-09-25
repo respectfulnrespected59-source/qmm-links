@@ -1,8 +1,11 @@
 // Loads the Blender-built GLBs once and hands out clones.
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { markShared } from "./dispose.js";
 
-const NAMES = ["qm85_rig", "rob", "mahal", "sentinel"]; // story mode retired 09-24: only the flight cast loads now
+// story mode retired 09-24: only the flight cast loads now. 09-25: Rob's 3BIZZLE + Mahal's VLTRN8 as QM85-family mini
+// bots on the same limb-split rig (they replaced the full-size KayKit-rigged VLTRNs).
+const NAMES = ["qm85_rig", "bizzle_rig", "vltrn8_rig", "rob", "mahal", "sentinel"];
 const cache = new Map();
 
 export async function loadAssets(onProgress) {
@@ -17,6 +20,7 @@ export async function loadAssets(onProgress) {
           o.receiveShadow = true;
         }
       });
+      markShared(gltf.scene); // every spawn() clone shares these: whoever cleans up a clone must never dispose them
       cache.set(name, gltf.scene);
       done += 1;
       onProgress?.(done / NAMES.length);

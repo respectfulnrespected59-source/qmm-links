@@ -57,10 +57,23 @@ let order = [];
 let mode = "off"; // off | menu | game
 let onTrack = () => {};
 
+let feed = null; // clip recording: { gain, stream, src, track } — the soundtrack mixed into audio.js clipTap()
+
 function apply() {
   el.volume = VOLUME_STEPS[step];
   el.muted = muted;
   setSfxMuted(muted);
+  if (feed) feed.gain.gain.value = muted ? 0 : VOLUME_STEPS[step]; // a captured stream ignores el.volume
+}
+
+/** (Re)bind the capture's current audio track: a new song swaps the stream's tracks. */
+function bindFeed() {
+  const track = feed?.stream.getAudioTracks().find((t) => t.readyState === "live");
+  if (!track || feed.track === track) return;
+  feed.src?.disconnect();
+  feed.src = feed.gain.context.createMediaStreamSource(new MediaStream([track]));
+  feed.src.connect(feed.gain);
+  feed.track = track;
 }
 
 function shuffled() {
@@ -133,6 +146,22 @@ export const music = {
     if (muted && step > 0) this.toggleMute();
     apply();
     return this.level;
+  },
+  /** Mix the soundtrack into a clip recording (tap = audio.js clipTap()). Browsers without element capture
+   *  (Firefox, Safari) record the game sounds only. */
+  feedClip(tap) {
+    if (feed || typeof el.captureStream !== "function") return;
+    try {
+      const gain = tap.ctx.createGain();
+      gain.connect(tap.input);
+      feed = { gain, stream: el.captureStream(), src: null, track: null };
+      feed.stream.addEventListener("addtrack", bindFeed);
+      bindFeed();
+      apply();
+    } catch (err) {
+      console.warn("[music] clip capture unavailable:", err?.message ?? err);
+      feed = null;
+    }
   },
 };
 

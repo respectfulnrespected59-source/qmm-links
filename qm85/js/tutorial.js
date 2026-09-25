@@ -31,6 +31,12 @@ const STEPS = [
     reset: (s, f) => { s.ammo0 = f.missiles.ammo; },
     done: (s, f) => f.missiles.ammo < s.ammo0 || input.pressed("KeyQ", "KeyE"), // trying counts: no drone ahead = no lock, but he learned the button
   },
+  { // VLTRN SPECIALS (09-25): only when Mahal's or Rob's bot is flying; clears when the cooldown starts (it fired)
+    id: "special", key: "H — SPECIAL: VLTRN8's DRONE SWARM · 3BIZZLE's MISSILE CANNON (3 missiles — needs blaster LV2: grab a CYAN beam)", pad: "tap SPECIAL — VLTRN8's drone swarm · 3BIZZLE's missile cannon (blaster LV2+)",
+    pilots: ["vltrn8", "bizzle"],
+    reset: (s, f) => { s.n0 = f.specialTries ?? 0; },
+    done: (s, f) => (f.specialTries ?? 0) > s.n0, // pressing it counts: at LV1 the cannon says why it won't fire yet
+  },
   {
     id: "roll", key: "double-tap ← or → — BARREL ROLL (untouchable while rolling)", pad: "flick the stick left or right TWICE — barrel roll",
     reset: (s) => { s.hit = false; },
@@ -46,6 +52,18 @@ const STEPS = [
     only: "oakland",
     reset: () => {},
     done: (s, f) => f.fight.active,
+  },
+  { // GROUND COMBAT (09-25)
+    id: "punch", key: "on foot: R — PUNCH (the VLTRNs swing their blades). Press it 3 times fast = the 3-HIT COMBO", pad: "on foot: tap PUNCH / SWORD 3 times fast = the 3-hit combo",
+    only: "oakland",
+    reset: (s, f) => { s.n0 = f.fight.combat.stats.punches; },
+    done: (s, f) => f.fight.combat.stats.punches - s.n0 >= 3,
+  },
+  {
+    id: "dodge", key: "on foot: SHIFT — DODGE ROLL (hold A / D / S to roll that way). SPACE then R = GROUND POUND", pad: "on foot: tap DODGE to roll. JUMP then PUNCH = ground pound",
+    only: "oakland",
+    reset: (s, f) => { s.n0 = f.fight.combat.stats.dodges; },
+    done: (s, f) => f.fight.combat.stats.dodges > s.n0,
   },
 ];
 
@@ -98,10 +116,10 @@ class Tutorial {
   }
 
   /** Called when a flight starts. Runs on the first flight, or when force is set (home screen TUTORIAL button). */
-  start(zone, force = false) {
+  start(zone, force = false, pilot = "qm85") {
     this.stop();
     if (!force && Tutorial.isDone()) return;
-    this.steps = STEPS.filter((s) => !s.only || s.only === zone);
+    this.steps = STEPS.filter((s) => (!s.only || s.only === zone) && (!s.pilots || s.pilots.includes(pilot)));
     this.i = 0;
     this.#enter();
   }

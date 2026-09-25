@@ -192,11 +192,11 @@ export function buildArena(root) {
       }
     },
     /** Returns the ring the point just flew through, or null. */
-    ringHit(pos) {
+    ringHit(pos, reach = 1) { // reach: the garage's PICKUP MAGNET
       for (const ring of this.rings) {
         if (ring.taken) continue;
         const off = pos.clone().sub(ring.obj.position);
-        if (off.length() < RING_R + 0.5 && Math.abs(off.dot(ring.normal)) < 1.6) {
+        if (off.length() < (RING_R + 0.5) * reach && Math.abs(off.dot(ring.normal)) < 1.6 * reach) {
           ring.taken = true;
           ring.respawn = 20;
           ring.obj.visible = false;
