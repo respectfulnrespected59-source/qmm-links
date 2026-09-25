@@ -228,7 +228,7 @@ export function buildOakland(root) {
       const hillsX = bounds.maxX + 250;
       arena.radius = Math.max(OAKLAND_RADIUS, -shoreX + 1900); // the Bay Bridge must stay reachable
       lap("render");
-      const look = await renderRealisticOakland(world, city, arena.radius);
+      const look = await renderRealisticOakland(world, city, arena.radius, { shoreX });
       arena.envScene = look.envScene;
       lap("landmarks");
       const marks = await addLandmarks(world, city, { shoreX });

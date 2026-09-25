@@ -1,13 +1,17 @@
 // The enemy swarm: whatever factions a wave calls for (flight-factions.js) — they swarm, circle
 // QM85 and fire leading shots in their faction colour; viruses just ram. One boss per zone.
 import * as THREE from "three";
-import { FACTIONS, BOSS, MID_BOSS } from "./flight-factions.js";
+import { FACTIONS, BOSS, MID_BOSS, ENEMY_SIZE } from "./flight-factions.js";
+import { makeGlow } from "./flight-glow.js";
 import { sfx } from "./audio.js";
 
 const SHOT_SPEED = 38;
 const SHOT_LIFE = 3;
 const FIRE_RANGE = 60;
-const GROUND_Y = { acolyte: 2.3, virus: 1.1, palantir: 3 }; // model origin height when standing on the street
+// model origin height when standing on the street (tuned at size 1: bigger bodies stand taller)
+const GROUND_Y = Object.fromEntries(Object.entries({ acolyte: 2.3, virus: 1.1, palantir: 3 }).map(([k, y]) => [k, y * ENEMY_SIZE]));
+const GLOW_NEAR = 60; // m: past this the halo swells so a bot still reads as a dot of colour
+const GLOW_MAX = 5; // cap on that swell
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -77,8 +81,10 @@ export class EnemySwarm {
     const obj = build();
     obj.scale.setScalar(cfg.scale);
     obj.position.copy(pos);
+    const glow = cfg.boss ? null : makeGlow(cfg.shot, 1, 0.2); // faction-coloured halo: readable against the city
+    if (glow) obj.add(glow);
     this.root.add(obj);
-    const bot = { obj, ...cfg, maxHp: cfg.hp, alive: true, cd: rand(...cfg.fireGap), flash: 0, phase: rand(0, 6) };
+    const bot = { obj, glow, ...cfg, maxHp: cfg.hp, alive: true, cd: rand(...cfg.fireGap), flash: 0, phase: rand(0, 6) };
     this.bots.push(bot);
     return bot;
   }
@@ -113,8 +119,14 @@ export class EnemySwarm {
       else b.obj.lookAt(target);
       b.obj.userData.animate?.(t + b.phase);
       b.flash = Math.max(0, b.flash - dt);
-      b.obj.scale.setScalar(b.scale * (1 + b.flash * 0.35));
+      const grow = 1 + b.flash * 0.35;
+      b.obj.scale.setScalar(b.scale * grow);
       const dist = b.obj.position.distanceTo(target);
+      if (b.glow) { // faint up close (it would wash out the model), a bright beacon far off
+        const far = Math.min(GLOW_MAX, Math.max(1, dist / GLOW_NEAR));
+        b.glow.scale.setScalar((b.radius * 3.2 * far) / (b.scale * grow));
+        b.glow.material.opacity = 0.14 + 0.46 * clamp01((dist - 40) / 220);
+      }
       if (dist < b.radius + 0.7) {
         damage += b.boss ? 2 : 1;
         if (!b.boss) this.kill(b, true);

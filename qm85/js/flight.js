@@ -236,7 +236,7 @@ export class FlightBattle {
     this.dt = dt;
     for (const q of this.fx.update(dt)) { // boss death chain blasts
       this.shake.add(q.final ? 1 : 0.3);
-      sfx.explode(q.final ? "boss" : "shadow");
+      sfx.explode(q.final ? "chainEnd" : "chain");
     }
     if (this.finale) return this.#cutscene(dt, () => this.#updateFinale(dt));
     if (this.intro) return this.#cutscene(dt, () => this.#updateIntro(dt));
@@ -573,7 +573,7 @@ export class FlightBattle {
     const pos = bot.obj.position.clone();
     if (bot.boss) {
       this.fx.bossDeath(pos, "boss", bot.scale);
-      sfx.explode("boss");
+      sfx.explode(bot.final ? "boss" : "overseer");
       this.shake.add(1);
       this.freeze = BOSS_HIT_STOP;
       this.slowmo = BOSS_SLOWMO;
@@ -699,6 +699,13 @@ export class FlightBattle {
   /** Screen-space helpers for the HUD. */
   reticleWorld() {
     return this.pos.clone().addScaledVector(this.forward(), 40);
+  }
+
+  /** What Q would lock right now (same aim + rule the missile uses), or null when the rack is empty. */
+  missileLock() {
+    if (this.missiles.ammo <= 0) return null;
+    const fwd = this.fight.active ? this.fight.aim(this.pos) : this.forward();
+    return this.missiles.target(this.pos, fwd);
   }
 
   nearestBot() {

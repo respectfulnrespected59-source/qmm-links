@@ -239,6 +239,153 @@ function sweptNoise(dur, vol, { type = "lowpass", f0 = 4000, f1 = 200, q = 0.8, 
   src.start(t);
 }
 
+// ------------------------------------------------------------ BIG BLASTS
+// Owner 09-24 (late): "doper explosion sounds for destroying harder enemies". Five layers, all generated:
+//   crack   — a hard broadband transient (the detonation front)
+//   body    — distorted noise through a lowpass that slams shut (the fireball)
+//   sub     — a sine punch that drops away (you feel it more than hear it)
+//   debris  — random crackling grains that thin out over time (shrapnel, glass, metal)
+//   echo    — a generated street-canyon impulse response, so the blast rings off the buildings
+// Everything runs through a limiter bus so the big ones slam without clipping the mix.
+let blastBus = null;
+
+function impulse(a, seconds, decay) {
+  const len = Math.floor(a.sampleRate * seconds);
+  const ir = a.createBuffer(2, len, a.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      const slap = i > a.sampleRate * 0.09 && i < a.sampleRate * 0.1 ? 0.6 : 0; // one early wall reflection
+      d[i] = ((Math.random() * 2 - 1) + slap) * (1 - i / len) ** decay;
+    }
+  }
+  return ir;
+}
+
+function softClip(amount) {
+  const n = 1024;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    curve[i] = Math.tanh(x * amount) / Math.tanh(amount);
+  }
+  return curve;
+}
+
+/** { dry, wet }: dry -> limiter -> out, wet -> echo -> limiter. Built once, reused by every blast. */
+function blastOut() {
+  if (blastBus) return blastBus;
+  const a = ac();
+  const limiter = a.createDynamicsCompressor();
+  limiter.threshold.value = -10;
+  limiter.knee.value = 6;
+  limiter.ratio.value = 12;
+  limiter.attack.value = 0.002;
+  limiter.release.value = 0.25;
+  limiter.connect(out());
+  const echo = a.createConvolver();
+  echo.buffer = impulse(a, 2.6, 3.2);
+  const wet = a.createGain();
+  wet.gain.value = 0.55;
+  wet.connect(echo).connect(limiter);
+  blastBus = { dry: limiter, wet };
+  return blastBus;
+}
+
+function noiseBuffer(a, seconds, decay) {
+  const len = Math.floor(a.sampleRate * seconds);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (a.sampleRate * decay));
+  return buf;
+}
+
+/** Route a node to the dry bus and (a share of it) to the echo. */
+function toBlast(node, send) {
+  const bus = blastOut();
+  node.connect(bus.dry);
+  if (send > 0) {
+    const s = ac().createGain();
+    s.gain.value = send;
+    node.connect(s).connect(bus.wet);
+  }
+}
+
+/**
+ * One detonation. size 0..1 scales loudness, length, how low the sub goes and how much debris falls.
+ * @param {number} size
+ * @param {{ delay?: number, pan?: number }} [opts]
+ */
+function blast(size, { delay = 0, pan = 0 } = {}) {
+  const a = ac();
+  const t = a.currentTime + delay;
+  const panner = a.createStereoPanner();
+  panner.pan.value = pan;
+  toBlast(panner, 0.35 + size * 0.45);
+
+  // crack
+  const crack = a.createBufferSource();
+  crack.buffer = noiseBuffer(a, 0.12, 0.018);
+  const hp = a.createBiquadFilter();
+  hp.type = "highpass";
+  hp.frequency.value = 1400;
+  const cg = a.createGain();
+  cg.gain.value = 0.5 + size * 0.4;
+  crack.connect(hp).connect(cg).connect(panner);
+  crack.start(t);
+
+  // body: distorted fireball, the lowpass slams shut
+  const bodyLen = 0.7 + size * 1.6;
+  const body = a.createBufferSource();
+  body.buffer = noiseBuffer(a, bodyLen, 0.18 + size * 0.45);
+  const lp = a.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.Q.value = 1.2;
+  lp.frequency.setValueAtTime(5200, t);
+  lp.frequency.exponentialRampToValueAtTime(110 + (1 - size) * 160, t + bodyLen * 0.8);
+  const drive = a.createWaveShaper();
+  drive.curve = softClip(2.5 + size * 4);
+  drive.oversample = "2x";
+  const bg = a.createGain();
+  bg.gain.setValueAtTime(0.0001, t);
+  bg.gain.exponentialRampToValueAtTime(0.55 + size * 0.35, t + 0.012);
+  bg.gain.exponentialRampToValueAtTime(0.0001, t + bodyLen);
+  body.connect(lp).connect(drive).connect(bg).connect(panner);
+  body.start(t);
+
+  // sub punch
+  const sub = a.createOscillator();
+  sub.type = "sine";
+  sub.frequency.setValueAtTime(78 - size * 22, t);
+  sub.frequency.exponentialRampToValueAtTime(24, t + 0.5 + size * 0.9);
+  const sg = a.createGain();
+  sg.gain.setValueAtTime(0.0001, t);
+  sg.gain.exponentialRampToValueAtTime(0.5 + size * 0.45, t + 0.01);
+  sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.6 + size * 1.1);
+  sub.connect(sg).connect(panner);
+  sub.start(t);
+  sub.stop(t + 0.7 + size * 1.2);
+
+  // debris: grains thinning out, scattered across the stereo field
+  const grains = Math.round(6 + size * 22);
+  for (let i = 0; i < grains; i++) {
+    const when = t + 0.08 + (Math.random() ** 1.8) * (0.5 + size * 1.5);
+    const g = a.createBufferSource();
+    g.buffer = noiseBuffer(a, 0.05, 0.008 + Math.random() * 0.01);
+    const bp = a.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 900 + Math.random() * 5200;
+    bp.Q.value = 2 + Math.random() * 4;
+    const gg = a.createGain();
+    gg.gain.value = (0.12 + Math.random() * 0.22) * (0.6 + size * 0.5);
+    const gp = a.createStereoPanner();
+    gp.pan.value = Math.max(-1, Math.min(1, pan + (Math.random() * 2 - 1) * 0.8));
+    g.connect(bp).connect(gg).connect(gp);
+    toBlast(gp, 0.3);
+    g.start(when);
+  }
+}
+
 /** Every faction dies with its own voice (owner 09-24 audit: kills were one generic boom). */
 const DEATH = {
   virus: () => { // wet goo pop + bubbling
@@ -251,20 +398,31 @@ const DEATH = {
     sweptNoise(0.45, 0.24, { type: "bandpass", f0: 5000, f1: 400, q: 2, decay: 0.15 });
     tone(1600, 0.6, { type: "sawtooth", slide: -1450, vol: 0.05, delay: 0.08 });
   },
-  shadow: () => { // jet breaking up: sub boom + roaring debris
-    tone(80, 0.8, { type: "sine", slide: -50, vol: 0.3 });
-    sweptNoise(1.1, 0.34, { f0: 6000, f1: 150, decay: 0.35 });
-    tone(2600, 0.05, { type: "square", slide: -2200, vol: 0.05 });
+  // The HARD ones (3+ hits) go up in real detonations (owner 09-24 late): blast() plus their own signature on top.
+  shadow: () => { // jet breaking up: a mid blast, the turbine screaming down, fuel cooking off
+    blast(0.5);
+    tone(2600, 0.5, { type: "sawtooth", slide: -2300, vol: 0.05 });
+    blast(0.22, { delay: 0.28, pan: (Math.random() * 2 - 1) * 0.6 });
   },
-  acolyte: () => { // the robe tears, a hollow cursed bell rings out
-    sweptNoise(0.6, 0.26, { type: "bandpass", f0: 900, f1: 250, q: 1.5, decay: 0.2 });
-    [330, 333, 495].forEach((f) => tone(f, 0.9, { type: "triangle", vol: 0.05 }));
+  acolyte: () => { // heavy blast, the robe tears, the cursed bell rings out through the smoke
+    blast(0.62);
+    sweptNoise(0.6, 0.2, { type: "bandpass", f0: 900, f1: 250, q: 1.5, decay: 0.2 });
+    [330, 333, 495].forEach((f) => tone(f, 1.3, { type: "triangle", vol: 0.05, delay: 0.1 }));
   },
-  boss: () => { // a building-sized detonation
-    tone(55, 1.8, { type: "sine", slide: -30, vol: 0.45 });
-    sweptNoise(2.2, 0.45, { f0: 7000, f1: 90, decay: 0.7 });
-    tone(3000, 0.08, { type: "square", slide: -2700, vol: 0.07 });
+  overseer: () => { // the mid boss: a huge blast, the eye shorts out, two aftershocks
+    blast(0.88);
+    for (let i = 0; i < 6; i++) tone(1200 + Math.random() * 2600, 0.05, { type: "square", vol: 0.04, delay: 0.05 + i * 0.05 });
+    blast(0.45, { delay: 0.45, pan: -0.5 });
+    blast(0.4, { delay: 0.8, pan: 0.5 });
   },
+  boss: () => { // the Serpent Priest: the biggest thing in the city, then the whole block keeps going off
+    blast(1);
+    tone(55, 2.4, { type: "sine", slide: -32, vol: 0.35 });
+    [[0.35, -0.6, 0.5], [0.7, 0.55, 0.55], [1.15, -0.2, 0.7], [1.7, 0.3, 0.45]].forEach(([d, pan, s]) => blast(s, { delay: d, pan }));
+  },
+  // the visual boss death chain (flight-fx) fires these per burst: lighter, scattered, then one heavy closer
+  chain: () => blast(0.38, { pan: (Math.random() * 2 - 1) * 0.7 }),
+  chainEnd: () => blast(0.95),
 };
 
 export const sfx = {
@@ -341,7 +499,7 @@ export const sfx = {
   shard: () => [880, 1320].forEach((f, i) => tone(f, 0.12, { type: "triangle", delay: i * 0.06 })),
   orb: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.2, { type: "triangle", delay: i * 0.07 })),
   blast: () => tone(900, 0.18, { type: "sawtooth", slide: -700, vol: 0.06 }),
-  boom: () => noise(0.35, 0.18),
+  boom: (size = 0) => (size > 0 ? blast(size) : noise(0.35, 0.18)), // size > 0 = a real detonation (missile hits)
   // MISSILE launch: a whoosh of noise under a rising-then-falling whistle
   missile: () => { noise(0.5, 0.16); tone(900, 0.45, { type: "sine", slide: -600, vol: 0.06 }); tone(180, 0.3, { type: "sawtooth", slide: 220, vol: 0.05 }); },
   hurt: () => tone(200, 0.3, { type: "sawtooth", slide: -140, vol: 0.1 }),

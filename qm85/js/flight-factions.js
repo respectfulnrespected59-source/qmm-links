@@ -9,22 +9,26 @@ import * as THREE from "three";
 import { virusModel, palantirModel, shadowOpsModel, acolyteModel, serpentPriestModel } from "./flight-enemy-models.js";
 
 // Models + idle animation live in flight-enemy-models.js (owner 09-24: "more pronounced and detailed").
+/** Owner 09-24 (late): regular enemies read too small against the city — model AND hitbox grow. Bosses keep their size. */
+export const ENEMY_SIZE = 1.45;
+const sized = (cfg) => ({ ...cfg, scale: cfg.scale * ENEMY_SIZE, radius: cfg.radius * ENEMY_SIZE });
+
 export const FACTIONS = {
   virus: {
     name: "VIRUSES", build: virusModel,
-    cfg: { scale: 1.2, hp: 1, radius: 0.9, speed: 17, orbit: 2, fireGap: [999, 999], volley: 0, score: 60, shot: 0x9dff5a },
+    cfg: sized({ scale: 1.2, hp: 1, radius: 0.9, speed: 17, orbit: 2, fireGap: [999, 999], volley: 0, score: 60, shot: 0x9dff5a }),
   },
   palantir: {
     name: "PALANTÍR BOTS", build: palantirModel,
-    cfg: { scale: 1.4, hp: 2, radius: 0.9, speed: 13, orbit: 18, fireGap: [1.6, 2.6], volley: 1, score: 100, shot: 0x8ff3ff },
+    cfg: sized({ scale: 1.4, hp: 2, radius: 0.9, speed: 13, orbit: 18, fireGap: [1.6, 2.6], volley: 1, score: 100, shot: 0x8ff3ff }),
   },
   shadow: {
     name: "SHADOW OPS", build: shadowOpsModel,
-    cfg: { scale: 1.3, hp: 3, radius: 1.3, speed: 20, orbit: 26, fireGap: [1.1, 1.6], volley: 2, score: 150, shot: 0xe8f4ff },
+    cfg: sized({ scale: 1.3, hp: 3, radius: 1.3, speed: 20, orbit: 26, fireGap: [1.1, 1.6], volley: 2, score: 150, shot: 0xe8f4ff }),
   },
   acolyte: {
     name: "ROBED ACOLYTES", build: acolyteModel,
-    cfg: { scale: 1.6, hp: 4, radius: 1.3, speed: 9, orbit: 20, fireGap: [1.8, 2.6], volley: 1, score: 200, shot: 0x9dff5a },
+    cfg: sized({ scale: 1.6, hp: 4, radius: 1.3, speed: 9, orbit: 20, fireGap: [1.8, 2.6], volley: 1, score: 200, shot: 0x9dff5a }),
   },
 };
 

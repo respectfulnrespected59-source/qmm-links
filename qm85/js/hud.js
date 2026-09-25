@@ -136,6 +136,15 @@ export const hud = {
       lock.hidden = false;
       ptr.hidden = true;
       lock.style.transform = `translate(${bot.x}px, ${bot.y}px)`;
+      if (bot.size) lock.style.setProperty("--s", `${Math.round(bot.size)}px`);
+      lock.classList.toggle("locked", Boolean(bot.locked));
+      lock.classList.toggle("boss", Boolean(bot.boss) && !bot.locked);
+      const bar = lock.querySelector(".hpbar i");
+      if (bar) bar.style.width = `${Math.round((bot.hp ?? 1) * 100)}%`;
+      const tag = lock.querySelector(".tag");
+      const range = bot.dist != null ? `${Math.round(bot.dist)} M` : "";
+      const text = bot.locked ? `MISSILE LOCK · ${range}` : bot.name ? `${bot.name} · ${range}` : range;
+      if (tag && tag.textContent !== text) tag.textContent = text;
     } else {
       lock.hidden = true;
       ptr.hidden = false;

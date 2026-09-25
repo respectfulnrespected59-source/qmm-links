@@ -273,15 +273,18 @@ export function trees(root, city, { shadows = true } = {}) {
 
 
 /** Builds the realistic city from oakland.json. Returns { envScene, sunDir, updateTraffic, stats }. */
-export async function renderRealisticOakland(root, city, extent) {
+export async function renderRealisticOakland(root, city, extent, { shoreX = -extent * 3 } = {}) {
   const [glass, midrise, lowrise, roof, ground] = await Promise.all([
     tex("real_glass"), tex("real_midrise"), tex("real_lowrise"), tex("real_roof", 1 / 25), tex("real_ground"),
   ]);
   const { envScene, sunDir, follow, lights, setTime } = skyAndSun(root);
 
-  const floorGeo = new THREE.PlaneGeometry(extent * 6, extent * 6).rotateX(-Math.PI / 2);
+  // The paver floor stops at the shoreline: running it under the Bay made it z-fight through the water.
+  const floorW = extent * 3 - shoreX;
+  const floorD = extent * 6;
+  const floorGeo = new THREE.PlaneGeometry(floorW, floorD).rotateX(-Math.PI / 2).translate(shoreX + floorW / 2, 0, 0);
   const uv = floorGeo.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * (extent * 6) / 12, uv.getY(i) * (extent * 6) / 12); // tile every 12 m (pavers ~1 m)
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * floorW / 12, uv.getY(i) * floorD / 12); // tile every 12 m (pavers ~1 m)
   root.add(mesh(floorGeo, new THREE.MeshStandardMaterial(ground ? { map: ground, color: 0x9a9894, roughness: 0.95 } : { color: 0x6b6a66, roughness: 0.95 })));
 
   const facade = (map, fallback, glossy) => {

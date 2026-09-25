@@ -80,6 +80,7 @@ function clearScene() {
   game.paused = false;
   hud.paused(false);
   camera.far = 300;
+  camera.near = 0.01;
   film.enabled = false;
   scene.environment = null;
   camera.fov = 60;
@@ -130,6 +131,7 @@ function startFlight(zone = game.zone, resume = null) {
   bloom.strength = 0.8;
   camera.fov = 70;
   camera.far = zone === "oakland" ? 30000 : 1500; // Oakland: the Golden Gate is ~14 km out
+  camera.near = zone === "oakland" ? 0.25 : 0.01; // 30 km / 0.01 m wrecked depth precision: flat layers flickered at range
   camera.updateProjectionMatrix();
   game.flight = new FlightBattle(scene, camera, {
     onPower: ({ level, source }) => hud.toast(`BLASTER LV${level}${source === "box" ? " — BLASTER BOX" : ""}`),
@@ -270,11 +272,20 @@ function flightHud() {
   const wp = f.mission?.waypoint();
   hud.waypoint(wp ? { ...screenMark(wp.clone().setY(Math.max(wp.y, 2))), dist: wp.distanceTo(f.pos) } : null);
   const reticle = toScreen(f.reticleWorld());
-  const bot = f.nearestBot();
+  const lockOn = f.missileLock(); // what Q would hit gets the marker first, else the nearest bot
+  const bot = lockOn ?? f.nearestBot();
   if (!bot) return hud.targeting(reticle, null);
   const s = toScreen(bot.obj.position);
   const onScreen = !s.behind && Math.abs(s.ndc.x) < 0.95 && Math.abs(s.ndc.y) < 0.95;
-  if (onScreen) return hud.targeting(reticle, { onScreen, x: s.x, y: s.y });
+  if (onScreen) {
+    const dist = bot.obj.position.distanceTo(camera.position);
+    const px = ((bot.radius * 1.7) / (dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))) * (innerHeight / 2);
+    return hud.targeting(reticle, {
+      onScreen, x: s.x, y: s.y, size: Math.min(220, Math.max(46, px * 2)), // brackets hug the bot, never a speck or a wall
+      locked: bot === lockOn, boss: bot.boss, name: bot.boss ? bot.name : "", hp: Math.min(1, Math.max(0, bot.hp / bot.maxHp)),
+      dist: bot.obj.position.distanceTo(f.pos),
+    });
+  }
   let dx = s.ndc.x;
   let dy = -s.ndc.y;
   if (s.behind) {

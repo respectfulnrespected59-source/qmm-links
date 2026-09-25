@@ -73,7 +73,27 @@
     #reticle { width: 50px; height: 50px; margin: -25px 0 0 -25px; /* owner 09-24: the circle was a little too small */ border: 2px solid rgba(217, 168, 255, .9); border-radius: 50%;
       box-shadow: 0 0 10px var(--violet); }
     #reticle::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; background: var(--gold); border-radius: 50%; }
-    #lock { width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 2px dashed #8ff3ff; }
+    /* TARGET MARKER (owner 09-24 late: "a better target marker for our bot view"): corner brackets sized to the bot on
+       screen, a health bar, the range, and a gold MISSILE LOCK when Q would hit it. Bosses mark red. */
+    #lock { width: 0; height: 0; --s: 64px; --c: #8ff3ff; --k: calc(var(--s) * .3); }
+    #lock .ring { position: absolute; left: 0; top: 0; animation: lockpulse .7s ease-in-out infinite alternate; }
+    #lock .c { position: absolute; width: var(--k); height: var(--k); border: 3px solid var(--c); filter: drop-shadow(0 0 5px var(--c)); }
+    #lock .tl { left: calc(var(--s) / -2); top: calc(var(--s) / -2); border-right: 0; border-bottom: 0; }
+    #lock .tr { left: calc(var(--s) / 2 - var(--k)); top: calc(var(--s) / -2); border-left: 0; border-bottom: 0; }
+    #lock .bl { left: calc(var(--s) / -2); top: calc(var(--s) / 2 - var(--k)); border-right: 0; border-top: 0; }
+    #lock .br { left: calc(var(--s) / 2 - var(--k)); top: calc(var(--s) / 2 - var(--k)); border-left: 0; border-top: 0; }
+    #lock .dot { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; background: var(--c); transform: rotate(45deg); box-shadow: 0 0 8px var(--c); }
+    #lock .hpbar { position: absolute; left: calc(var(--s) / -2); top: calc(var(--s) / 2 + 7px); width: var(--s); height: 6px; overflow: hidden; background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .35); }
+    #lock .hpbar i { display: block; height: 100%; background: var(--c); box-shadow: 0 0 6px var(--c); }
+    #lock .tag { position: absolute; left: 0; top: calc(var(--s) / -2 - 20px); transform: translateX(-50%); white-space: nowrap;
+      font: 800 12px Orbitron, sans-serif; letter-spacing: .14em; color: var(--c); text-shadow: 0 0 6px #000;
+      padding: 2px 8px; background: rgba(8, 6, 20, .72); border: 1px solid var(--c); border-radius: 3px; /* readable on a bright sky */ }
+    #lock.boss { --c: #ff4a4a; }
+    #lock.locked { --c: #ffcf5a; }
+    #lock.locked .ring { animation-duration: .22s; }
+    #lock.locked .tag { animation: lockblink .44s steps(2) infinite; }
+    @keyframes lockpulse { from { transform: scale(1); } to { transform: scale(1.12); } }
+    @keyframes lockblink { 50% { opacity: .45; } }
     #pointer { width: 0; height: 0; margin: -10px 0 0 -10px; border-left: 20px solid #8ff3ff; border-top: 10px solid transparent; border-bottom: 10px solid transparent;
       transform-origin: 0 10px; }
     #flash { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(transparent 50%, rgba(255, 40, 80, .55)); opacity: 0; }
@@ -199,7 +219,7 @@
   <div id="stage"></div>
   <div id="hud" hidden><div id="level-title"></div><div id="stats"></div></div>
   <div id="reticle" hidden></div>
-  <div id="lock" hidden></div>
+  <div id="lock" hidden><div class="ring"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i></div><i class="dot"></i><div class="hpbar"><i></i></div><b class="tag"></b></div>
   <div id="pointer" hidden></div>
   <div id="flash"></div>
   <div id="popups"></div>
