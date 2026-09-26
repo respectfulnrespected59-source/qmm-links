@@ -21,7 +21,7 @@
     html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--text); font-family: Inter, sans-serif; }
     #stage canvas { display: block; }
     #loading { position: fixed; inset: 0; display: grid; place-items: center; font: 600 18px Orbitron, sans-serif; letter-spacing: .15em; color: var(--violet); z-index: 7;
-      background: linear-gradient(rgba(7, 2, 15, .72), rgba(7, 2, 15, .92)), url("assets/cover_small.jpg?v=qm85sheet") center / cover #07020f; /* covers the half-built city */
+      background: linear-gradient(rgba(7, 2, 15, .72), rgba(7, 2, 15, .92)), url("assets/cover_roster_small.jpg?v=roster1") center / cover #07020f; /* covers the half-built city */
       text-shadow: 0 0 14px rgba(155, 77, 255, .8); }
     #card { position: fixed; inset: 0; margin: auto; width: min(720px, calc(100% - 32px)); height: fit-content; max-height: calc(100% - 32px); overflow: auto;
       background: rgba(10, 4, 24, .92); border: 2px solid var(--gold); border-radius: 18px; padding: 24px; text-align: center;
@@ -29,8 +29,17 @@
     /* HOME: the owner's QM85 character sheet IS the title screen (at 1036×476 a stacked card hid it above the fold) */
     #card.home { width: 100%; max-height: 100%; height: 100%; margin: 0; padding: 16px 28px 18px; border: none; border-radius: 0; overflow: hidden;
       display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; box-shadow: none;
-      background: linear-gradient(to top, rgba(8, 5, 16, .96) 0, rgba(8, 5, 16, .55) 38%, rgba(8, 5, 16, 0) 68%),
-        url("assets/cover.jpg?v=qm85sheet") center / cover no-repeat #08050f; }
+      background: linear-gradient(to top, rgba(8, 5, 16, .96) 0, rgba(8, 5, 16, .55) 38%, rgba(8, 5, 16, 0) 68%); }
+    /* 09-26 THE ROSTER TITLE: QM85 + VLTRN8 (Mahal's bot) + 3BIZZLE (Rob's bot), MuAPI key art animated on Seedance VIP
+       Fast (art/gen_roster_title.py + animate_roster_title.py), looped forward-then-back so it never jumps. It plays
+       behind the see-through home card and only while the home card is up. */
+    #title-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 56% 45%;
+      background: #08050f; display: none; }
+    body:has(#card.home:not([hidden])) #title-video { display: block; }
+    /* phones held upright: a cover crop showed QM85 alone — show the whole team strip under the HUD buttons instead */
+    @media (orientation: portrait) {
+      #title-video { inset: 56px 0 auto 0; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: transparent; }
+    }
     #card.home h1 { font-size: clamp(26px, 5vw, 54px); margin: 0 0 4px; text-shadow: 0 0 18px rgba(155, 77, 255, .8), 0 2px 6px #000; }
     #card.home .tag { margin: 0 0 10px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #e9dcff; text-shadow: 0 1px 4px #000; }
     #card.home .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -355,6 +364,9 @@
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="subtitle" aria-live="polite"></div>
   <div id="loading">BOOTING QM85...</div>
+  <video id="title-video" autoplay muted loop playsinline preload="auto" poster="assets/title_roster_poster.jpg?v=roster1" aria-hidden="true">
+    <source src="assets/title_roster.mp4?v=roster1" type="video/mp4">
+  </video>
   <div id="card" hidden></div>
   <script type="module" src="js/main.js"></script>
 </body>

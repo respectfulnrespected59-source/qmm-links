@@ -98,6 +98,7 @@ window.__qm85 = game; // handle for automated playtests
 game.gl = { renderer, composer, bloom, film, fxaa, scene, camera, sizeFxaa }; // perf probes toggle passes and read renderer.info
 
 function clearScene() {
+  document.getElementById("title-video")?.pause(); // the roster title loop: hidden once a flight starts, so stop decoding it
   camera.up.set(0, 1, 0); // flight loops roll the camera; every other mode expects world-up
   bloom.enabled = true;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
