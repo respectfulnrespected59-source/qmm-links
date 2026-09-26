@@ -31,7 +31,7 @@
       display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; text-align: left; box-shadow: none;
       background: linear-gradient(to top, rgba(8, 5, 16, .96) 0, rgba(8, 5, 16, .55) 38%, rgba(8, 5, 16, 0) 68%); }
     /* 09-26 THE ROSTER TITLE: QM85 + VLTRN8 (Mahal's bot) + 3BIZZLE (Rob's bot), MuAPI key art animated on Seedance VIP
-       Fast (art/gen_roster_title.py + animate_roster_title.py), looped forward-then-back so it never jumps. It plays
+       Fast (art/gen_roster_title.py + animate_roster_title.py), looped forward-then-back so it never jumps. 09-26 DANCE MONTAGE (owner: "string together the dancing vids we made"): art/beatlock/montage.py cuts six takes' bars on the beat and pins every bop onto a half-beat of SLAP IN THE SADDLE (96.5 BPM -> a bop every 0.311 s; 120 half-beats a loop: innocent bop, then solos in REAL TIME then a SLOW-MO replay - QM85 thruster moonwalk, VLTRN8 pop-lock, the windmill + kip-up - between the busiest groove chops); data-step/-steps/-phase drive syncTitleVideo() in main.js. It plays
        behind the see-through home card and only while the home card is up. */
     #title-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 56% 45%;
       background: #08050f; display: none; }
@@ -364,8 +364,9 @@
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="subtitle" aria-live="polite"></div>
   <div id="loading">BOOTING QM85...</div>
-  <video id="title-video" autoplay muted loop playsinline preload="auto" poster="assets/title_roster_poster.jpg?v=roster1" aria-hidden="true">
-    <source src="assets/title_roster.mp4?v=roster1" type="video/mp4">
+  <video id="title-video" autoplay muted loop playsinline preload="auto" poster="assets/title_dance_poster.jpg?v=routine2" aria-hidden="true"
+    data-step="0.31082" data-steps="120" data-phase="0.670">
+    <source src="assets/title_dance.mp4?v=routine2" type="video/mp4">
   </video>
   <div id="card" hidden></div>
   <script type="module" src="js/main.js"></script>

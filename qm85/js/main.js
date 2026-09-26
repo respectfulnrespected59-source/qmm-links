@@ -611,6 +611,7 @@ function tick() {
       tutorial.update(game.flight, dt);
     }
   }
+  if (game.mode === "card") syncTitleVideo();
   touch.setVisible(game.mode === "flight" && !game.paused);
   touch.setGround(Boolean(game.mode === "flight" && game.flight?.fight.active), game.flight?.pilot.isVltrn ? "SWORD" : "PUNCH"); // PUNCH (SWORD) / DODGE on foot
   touch.setSpecial(game.mode === "flight" ? game.flight?.specialName ?? null : null); // the VLTRN pilot's SPECIAL button (H)
@@ -620,6 +621,35 @@ function tick() {
   film.uniforms.speed.value = speedLines.update(dt, fast);
   if (game.mode !== "loading") composer.render();
   input.endFrame();
+}
+
+// TITLE BEAT LOCK (owner 09-26: "tune them to bop on time to slap in the saddle"). art/beatlock/beatlock.py pinned
+// every bop of the title loop onto a grid step (data-step seconds, data-steps per loop); data-phase is the song's first
+// beat. While the menu song plays, hold the loop in phase with it: tiny rate nudges for drift, one seek for a big jump
+// (the song starting late after the click that unlocks audio, or the song looping). Silent menu = the loop runs free.
+const titleVideo = document.getElementById("title-video");
+const SEEK_GAP_MS = 1000; // a seek reports the OLD time until it lands: re-seeking every frame never landed (seek storm)
+const SEEK_LEAD_S = 0.05; // aim a touch ahead: the song keeps playing while the seek decodes
+let lastSeek = -Infinity;
+function syncTitleVideo() {
+  const songT = music.menuTime;
+  if (songT === null || !titleVideo || titleVideo.paused || titleVideo.seeking || titleVideo.readyState < 2) return;
+  const step = Number(titleVideo.dataset.step);
+  const steps = Number(titleVideo.dataset.steps);
+  const phase = Number(titleVideo.dataset.phase);
+  if (!(step > 0 && steps > 0 && Number.isFinite(phase))) return;
+  const loop = step * steps;
+  const target = ((((songT - phase) / step) % steps + steps) % steps) * step;
+  let drift = target - titleVideo.currentTime;
+  if (drift > loop / 2) drift -= loop;
+  else if (drift < -loop / 2) drift += loop;
+  if (Math.abs(drift) > 0.12) {
+    const now = performance.now();
+    if (now - lastSeek < SEEK_GAP_MS) return;
+    lastSeek = now;
+    titleVideo.currentTime = (target + SEEK_LEAD_S) % loop;
+    titleVideo.playbackRate = 1;
+  } else titleVideo.playbackRate = 1 + Math.max(-0.06, Math.min(0.06, drift * 0.8));
 }
 
 // One bad frame must never stop the game (09-25 review: an exception anywhere in a frame used to skip the

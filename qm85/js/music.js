@@ -113,6 +113,10 @@ export const music = {
   get title() {
     return el.dataset.title ?? "";
   },
+  /** Where SLAP IN THE SADDLE is (seconds) while the home screen's song is actually playing, else null. */
+  get menuTime() {
+    return mode === "menu" && !el.paused ? el.currentTime : null;
+  },
   onTrackChange(fn) {
     onTrack = fn;
   },
