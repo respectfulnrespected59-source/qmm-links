@@ -149,22 +149,19 @@
 
 <header class="top">
   <div class="wrap">
-    <span class="eyebrow">Free class · MarketPulse</span>
-    <h1>Stop timing the market.<span class="q">Learn the plan that doesn't need you to be right.</span></h1>
+    <span class="eyebrow">Free class · MarketPulse · being re-recorded</span>
+    <h1>The buying class is being rebuilt.<span class="q">Taught on real charts, free, back here soon.</span></h1>
     <p class="lede">
-      Five lessons on <b>dollar cost averaging</b>, taught on real charts: five years of Bitcoin and the
-      S&amp;P 500, every number computed from the prices on screen. It includes the parts most courses skip:
-      when buying all at once wins, what it feels like to be under water for a year, and what fees quietly cost you.
+      The first cut of the <b>dollar cost averaging</b> class came down: it taught buying on a fixed schedule no matter
+      the price, and that is not how we buy. The new lessons are being recorded on five years of Bitcoin and S&amp;P 500
+      prices, every number computed from the chart on screen. They will land on this page when they are ready.
     </p>
     <div class="stat">
-      <div><b>5</b><span>Lessons</span></div>
-      <div><b>47</b><span>Minutes</span></div>
       <div><b>$0</b><span>To watch</span></div>
+      <div><b>Real</b><span>Charts, real prices</span></div>
     </div>
     <div class="cta-row">
-      <a class="btn btn-gold" href="#lesson-1">Start lesson 1</a>
-      <a class="btn btn-line" href="https://marketpulse-22bi.onrender.com/app?view=classes" target="_blank" rel="noopener">Take it interactively in MarketPulse</a>
-      <a class="btn btn-line" href="https://www.youtube.com/playlist?list=PLbwT8A4lSZFQ" target="_blank" rel="noopener">Watch the playlist on YouTube</a>
+      <a class="btn btn-gold" href="https://marketpulse-22bi.onrender.com/app" target="_blank" rel="noopener">Open MarketPulse</a>
     </div>
   </div>
 </header>
@@ -173,11 +170,11 @@
 
 <section class="wrap">
   <div class="app">
-    <h2>Same class, on a chart you can touch.</h2>
-    <p>Inside MarketPulse each lesson plays on the live chart itself: it rewinds, draws the buys, and points at the
-      exact tool that does the job. When a lesson ends, the chart is yours to practise on. The class is free there too.</p>
+    <h2>It will play on a chart you can touch.</h2>
+    <p>Inside MarketPulse the rebuilt lessons will run on the live chart itself: it rewinds, draws each buy, and points
+      at the exact tool that does the job. When a lesson ends, the chart is yours to practise on. Free there too.</p>
     <div class="cta-row">
-      <a class="btn btn-gold" href="https://marketpulse-22bi.onrender.com/app?view=classes" target="_blank" rel="noopener">Open the Classes tab</a>
+      <a class="btn btn-gold" href="https://marketpulse-22bi.onrender.com/app" target="_blank" rel="noopener">Open MarketPulse</a>
     </div>
   </div>
 </section>
@@ -191,25 +188,12 @@
 </footer>
 
 <script>
-/* The five lessons. `yt` is the YouTube video id; the player loads only when a lesson is
-   pressed (youtube-nocookie), so the page itself sets no third-party cookies and stays fast. */
-const LESSONS = [
-  { yt: "qs2QOktRluA", len: "9:58", title: "Same dollars, every period",
-    blurb: "The whole rule, and the arithmetic that makes it work. Then the hard test: a plan started nine days after Bitcoin's all-time high.",
-    points: ["Why fixed dollars land below the average price", "One year of buys through two deep drops", "How to rewind a chart and try it yourself"] },
-  { yt: "UT9Hu1jGFL8", len: "9:50", title: "Lump sum vs DCA: the honest version",
-    blurb: "Five years of the S&P 500, counted. Buying all at once finished ahead in 38 of 48 one-year windows. Here is when it didn't, and why that still matters.",
-    points: ["The worst day to invest, and the best", "What a schedule really buys you: a smaller hole", "A middle path for a pile of cash"] },
-  { yt: "1bRyf1NuRb0", len: "9:36", title: "Living below your line",
-    blurb: "A monthly plan started at the 2021 Bitcoin top spent 553 days under its average cost. This lesson walks through every one of the hard months.",
-    points: ["Why the buys that feel worst do the most work", "The math of getting back to even", "Three rules for when not to keep buying"] },
-  { yt: "O3WE4DlPG8w", len: "8:59", title: "Cadence and costs",
-    blurb: "Weekly, every two weeks, or monthly: the difference is noise. Fees are not. How a flat fee quietly takes four percent of a small buy.",
-    points: ["Three schedules on the same budget", "Does the day of the month matter?", "Percentage fees vs flat fees"] },
-  { yt: "y4py0AOANHQ", len: "9:18", title: "Signal-tilt DCA",
-    blurb: "MarketPulse has a smarter-sounding version of DCA. We tested it in 49 one-year windows and it beat the plain plan in none of them. We show you why.",
-    points: ["How the tilt sizes each buy", "Where it leaned in, and where it eased off", "How to check any clever method: ask for the count"] },
-];
+/* The lessons. `yt` is the YouTube video id; the player loads only when a lesson is pressed (youtube-nocookie),
+   so the page itself sets no third-party cookies and stays fast.
+   2026-09-30: the five fixed-schedule DCA lessons were taken down (owner: that is not how we buy) — the list is
+   empty until the rebuilt class is recorded. Never list a video here that oEmbed cannot see: the deploy gate
+   screenshots this page and fails the whole site on a dead thumbnail. */
+const LESSONS = [];
 
 const list = document.getElementById("lessons");
 
