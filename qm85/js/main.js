@@ -17,7 +17,6 @@ import { touch } from "./touch.js";
 import { tutorial } from "./tutorial.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
-import { battleBodyUnlocked, unlockBattleBody, chosenSkin, chooseSkin } from "./battle-body.js";
 import { Minimap } from "./minimap.js";
 import { garage, openGarage } from "./garage.js";
 import { COURSES } from "./race-courses.js";
@@ -383,7 +382,7 @@ function startFlight(zone = game.zone, resume = null, race = null) {
       if (kind === "finale") hud.toast("BATTLE BODY — ASSEMBLING");
       if (kind === "complete") { // after the warehouse cutscene: fight the rest of the night IN the battle body
         game.mode = "card";
-        hud.card("BATTLE BODY ONLINE", `Every data drive and battle part is inside the QMM Warehouse. Rob and Mahal bolt the last plate on — ${SUITED[flownPilot()] ?? SUITED.qm85} Blasters maxed, shield full. Score: ${data.score}. The Serpent Priest is still out there. Unlocked: the BATTLE BODY skin on the home screen.`, "FINISH THE NIGHT", () => {
+        hud.card("BATTLE BODY ONLINE", `Every data drive and battle part is inside the QMM Warehouse. Rob and Mahal bolt the last plate on — ${SUITED[flownPilot()] ?? SUITED.qm85} Blasters maxed, shield full. Score: ${data.score}. The Serpent Priest is still out there — and the body is yours for the rest of the night.`, "FINISH THE NIGHT", () => {
           game.mode = "flight";
           hud.show("flight", "OAKLAND MISSION — BATTLE BODY");
         });
@@ -424,7 +423,7 @@ function startFlight(zone = game.zone, resume = null, race = null) {
       hud.card("SHOT DOWN", `The invaders got a lock on him. Score: ${score}. Small, yes. Harmless, no. Run it back.${credits}`, "FLY AGAIN", () => startFlight());
       endExtras(score);
     },
-  }, zone, { resume, skin: chosenSkin(), loadout: garage.loadout(), race, wingmate: !race, pilot: resume?.pilot ?? chosenPilot() }); // a saved run keeps its pilot
+  }, zone, { resume, skin: "classic", loadout: garage.loadout(), race, wingmate: !race, pilot: resume?.pilot ?? chosenPilot() }); // a saved run keeps its pilot; the body is always earned
   scene.background = game.flight.background;
   scene.fog = game.flight.fog;
   film.enabled = true;
@@ -717,23 +716,8 @@ function pilotToggle() {
   actions.append(btn);
 }
 
-/** Home screen: once the battle body is earned, a toggle to fly in it from the start. */
-function skinToggle() {
-  if (!battleBodyUnlocked()) return;
-  const actions = document.getElementById("actions");
-  if (!actions) return;
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "secondary";
-  const label = () => (btn.textContent = `SKIN: ${chosenSkin() === "battle" ? "BATTLE BODY" : "CLASSIC"}`);
-  label();
-  btn.addEventListener("click", () => {
-    chooseSkin(chosenSkin() === "battle" ? "classic" : "battle");
-    label();
-    btn.blur();
-  });
-  actions.append(btn);
-}
+// The battle body is BUILT, never worn from the start (owner 09-30: "we can not be able to just start off with a
+// battle body") — the old home-screen SKIN toggle and the ?unlock review link are gone. Every run collects the parts.
 
 /** Home screen: a saved Oakland run (a pause-save or a NOON / NIGHT checkpoint) → CONTINUE, with its clock and progress. */
 function continueButton() {
@@ -763,12 +747,7 @@ async function boot() {
     hud.card("LOAD FAILED", `Could not load the 3D assets (${escapeHtml(err.message)}). Serve this folder over http, not file://.`, "RELOAD", () => location.reload());
     return;
   }
-  const params = new URLSearchParams(location.search);
-  if (params.get("unlock") === "battle") { // local review link (09-30): fly the full battle body without the 10 parts
-    unlockBattleBody();
-    chooseSkin("battle");
-  }
-  const jump = Number(params.get("level"));
+  const jump = Number(new URLSearchParams(location.search).get("level"));
   const zoneFor = { 5: "cyber", 6: "oakland" };
   const forced = zoneFor[jump]; // ?level= jump (testing) routes the menu straight to a zone
   game.mode = "card";
@@ -779,7 +758,6 @@ async function boot() {
       startFlight(forced ?? zone);
     }, { credits: garage.state.credits, onGarage: () => openGarage(document.getElementById("card"), home, sfx), onRaces: () => racePicker(home) });
     pilotToggle();
-    skinToggle();
     continueButton();
   };
   home();
