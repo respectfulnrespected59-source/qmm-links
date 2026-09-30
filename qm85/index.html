@@ -44,6 +44,7 @@
     #card.home .tag { margin: 0 0 10px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #e9dcff; text-shadow: 0 1px 4px #000; }
     #card.home .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     #card.home .actions button { margin: 0; }
+    #card.home .actions #card-continue { background: linear-gradient(135deg, #7a5a12, var(--gold)); color: #1a0f00; } /* a saved run: gold, first in the row */
     #card.home .howto { margin-top: 10px; max-width: 760px; font-size: 13px; }
     #card.home .howto summary { cursor: pointer; font: 700 12px Orbitron, sans-serif; letter-spacing: .12em; color: var(--gold); list-style: none; }
     #card.home .howto summary::before { content: "▸ "; }
@@ -158,6 +159,9 @@
     .pause-actions #btn-menu { background: transparent; }
     .pause-actions button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
     #pause small { display: block; margin-top: 14px; font: 600 14px Inter, sans-serif; color: var(--text); letter-spacing: .05em; }
+    #pause small.note { color: var(--gold); font-family: Orbitron, sans-serif; font-weight: 800; letter-spacing: .12em; }
+    #pause small.note:empty { display: none; }
+    .pause-actions #btn-save { background: transparent; border-color: var(--gold); }
     #nowplaying { position: fixed; left: 16px; bottom: 12px; font: 600 12px Orbitron, sans-serif; color: var(--gold); opacity: 0;
       transition: opacity .6s; pointer-events: none; letter-spacing: .1em; }
     #nowplaying.on { opacity: .9; }
@@ -354,9 +358,10 @@
     <button id="btn-mute" type="button" title="Mute everything (M)">SOUND ON</button>
     <button id="btn-vol" type="button" title="Music volume (N)">MUSIC</button>
   </div>
-  <div id="pause" hidden>PAUSED<small>P / ESC to resume · M mute · N music volume</small>
+  <div id="pause" hidden>PAUSED<small id="pause-note" class="note"></small><small>P / ESC to resume · M mute · N music volume</small>
     <div class="pause-actions">
       <button id="btn-resume" type="button">▶ RESUME</button>
+      <button id="btn-save" type="button" hidden>SAVE &amp; QUIT</button>
       <button id="btn-menu" type="button">⌂ MAIN MENU</button>
     </div>
   </div>

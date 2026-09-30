@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { spawn } from "./assets.js";
 import { sfx } from "./audio.js";
+import { plateMaterial, goldMaterial, emberMaterial, chevronGeometry } from "./armor-parts.js";
 
 export const WAREHOUSE = { x: -200, z: 700, yaw: Math.PI, hw: 23, hd: 16, h: 17, clear: 55 }; // door faces downtown (-Z)
 const DOOR = new THREE.Vector3(-200, 0.5, 680);
@@ -37,18 +38,21 @@ export function dataDrive() {
   return g;
 }
 
+/** A BATTLE PART: an armour plate like the ones that bolt onto him — gunmetal chevron, gold rim, a smaller plate
+ *  layered on top, an ember slit (owner 09-30: "edgy, dangerous looking" — and "NO SPIKES"). */
 export function battlePart() {
   const g = new THREE.Group();
-  const gold = new THREE.MeshStandardMaterial({ color: 0xd4a73a, metalness: 1, roughness: 0.25, emissive: 0x4a3208, emissiveIntensity: 0.6 });
-  g.add(new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.14, 8, 24), gold)); // gear body
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2;
-    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.2, 0.2), gold);
-    tooth.position.set(Math.cos(a) * 0.62, Math.sin(a) * 0.62, 0);
-    tooth.rotation.z = a;
-    g.add(tooth);
-  }
-  g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 1), glow(0x9b4dff)));
+  const gold = goldMaterial(0.6);
+  g.add(new THREE.Mesh(chevronGeometry(1.2, 0.5, 0.18, 0.12), plateMaterial()));
+  const rim = new THREE.Mesh(chevronGeometry(1.32, 0.56, 0.2, 0.06), gold);
+  rim.position.z = -0.06;
+  g.add(rim);
+  const upper = new THREE.Mesh(chevronGeometry(0.72, 0.26, 0.11, 0.08), plateMaterial());
+  upper.position.set(0, 0.16, 0.08);
+  g.add(upper);
+  const slit = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.02), emberMaterial(0.95));
+  slit.position.set(0, -0.08, 0.08);
+  g.add(slit);
   return g;
 }
 
@@ -238,21 +242,21 @@ export class OaklandMission {
     this.f.swarm.spawnGround(this.f.pos, { acolyte: 1 + Math.floor(n / 2), virus: 1 + Math.floor(n / 3) }, n);
   }
 
-  /** Continue from a checkpoint: mark N of each kind as already delivered. */
-  restore(delivered) {
+  /** Continue from a save: N of each kind already delivered, and what he was carrying (09-30: PAUSE & SAVE mid-run). */
+  restore(delivered, carrying = []) {
     // unlocked (freed-district) items count first, so a restored run never re-hides what was already won
     const order = [...this.items].sort((a, b) => Number(Boolean(a.locked)) - Number(Boolean(b.locked)));
+    const take = (kind) => {
+      const it = order.find((o) => o.kind === kind && !o.taken);
+      if (!it) return false;
+      it.taken = true;
+      it.obj.visible = it.pillar.visible = false;
+      return true;
+    };
     for (const kind of ["data", "part"]) {
-      let n = delivered?.[kind] ?? 0;
-      for (const it of order) {
-        if (n <= 0) break;
-        if (it.kind !== kind || it.taken) continue;
-        it.taken = true;
-        it.obj.visible = it.pillar.visible = false;
-        this.delivered[kind] += 1;
-        n -= 1;
-      }
+      for (let n = delivered?.[kind] ?? 0; n > 0 && take(kind); n--) this.delivered[kind] += 1;
     }
+    for (const kind of carrying.slice(0, CARRY_MAX)) if (take(kind)) this.carrying.push(kind);
     if (this.total >= TOTAL) this.done = true;
   }
 

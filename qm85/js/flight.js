@@ -22,6 +22,12 @@ import { KillFX, Shake } from "./flight-fx.js";
 import { BackBlast } from "./flight-backblast.js";
 import { Wake } from "./flight-wake.js";
 import { Finale, applyBattleBody, setArmorProgress } from "./battle-body.js";
+
+const ROCKET_RECOIL = 9; // m/s knocked off his speed when the pack rocket leaves the rail
+const PACK_LASER_COLORS = { beam: 0xff4fd8, core: 0xfff0fa, nova: 0xff8ae6, sphere: 0xff4fd8 }; // Mahal's pink
+const PACK_LASER_RELOAD = 12; // s between LOTUS NUKES
+const RESUME_LIFT = 4; // a continued run wakes this far above where it was saved (a landed save takes off again)
+const RESUME_MIN_ALT = 14; // …and never under the roofline of the low blocks
 import { disposeTree, disposeTexture } from "./dispose.js";
 import { Districts } from "./oakland-districts.js";
 import { Hunters } from "./flight-hunters.js";
@@ -122,6 +128,8 @@ export class FlightBattle {
     this.magnet = L.magnet ?? 1;
     this.lotusT = 0; // Mahal's lotus shield: untouchable while > 0
     this.mega = new MegaBlast(this.root);
+    this.packLaser = new MegaBlast(this.root, PACK_LASER_COLORS); // VLTRN8's LOTUS NUKE off the top of her pack (E)
+    this.packLaserCd = 0;
     this.moves = new Maneuvers(this.root, this.pilot.frame);
     this.fight = new FightMode(this);
     this.hyper = new HyperLoop(this.root);
@@ -196,7 +204,12 @@ export class FlightBattle {
           this.#bossArrives(bot);
         },
         onCheckpoint: (cp) => hooks.onCheckpoint?.(cp),
-        snapshot: () => ({ delivered: this.mission ? { ...this.mission.delivered } : { data: 0, part: 0 }, thrust: this.thrust, blaster: this.power.level, score: this.score, freed: this.districts?.freedIds() ?? [] }),
+        snapshot: () => ({ // everything a save needs (09-30: PAUSE & SAVE restores the exact moment)
+          delivered: this.mission ? { ...this.mission.delivered } : { data: 0, part: 0 },
+          carrying: this.mission ? [...this.mission.carrying] : [],
+          thrust: this.thrust, blaster: this.power.level, score: this.score, freed: this.districts?.freedIds() ?? [],
+          pos: this.pos.toArray(), yaw: this.yaw, pilot: this.pilotKey,
+        }),
       });
       this.arena.ready.then(() => {
         if (this.done) return;
@@ -228,8 +241,13 @@ export class FlightBattle {
         }, this.districts);
         if (this.resume) {
           this.districts.restore(this.resume.freed ?? []);
-          this.mission.restore(this.resume.delivered);
-          this.day.jumpTo(this.resume.phase);
+          this.mission.restore(this.resume.delivered, this.resume.carrying ?? []);
+          this.day.jumpTo(this.resume.phase, { t: this.resume.t, midBossDown: this.resume.midBossDown });
+          if (this.resume.pos) { // back where he paused — airborne, a little above it, so a rooftop save never wakes inside a wall
+            this.pos.set(this.resume.pos[0], Math.max(this.resume.pos[1] + RESUME_LIFT, RESUME_MIN_ALT), this.resume.pos[2]);
+            this.yaw = this.resume.yaw ?? this.yaw;
+            this.pitch = 0;
+          }
           this.#armorUp();
         }
         this.hunters = new Hunters(this, this.districts, { // PALANTÍR SCOUTS over every district still occupied
@@ -382,6 +400,8 @@ export class FlightBattle {
     const dmg = this.swarm.update(dt, this.t, this);
     if (dmg) this.#takeHit(dmg);
     this.lotusT = Math.max(0, this.lotusT - dt);
+    this.packLaserCd = Math.max(0, this.packLaserCd - dt);
+    this.packLaser.update(dt, {}); // only ever in its fx phase: no charge-up, so no ctx needed
     this.specials.update(dt, this.t);
     this.#pickups();
     if (!this.fight.active) this.#placeCamera(dt);
@@ -626,6 +646,47 @@ export class FlightBattle {
   }
 
   /** The MISSILE CANNON's burst: one real heat-seeker per beat, off the special (the Q rack is untouched). */
+  /** E with the full battle body: the PACK ROCKET off the rail on his back — heat-seeking, never misses, and the
+   *  launch kicks him back (owner 09-30: "make the bot recoil back a little bit mid flight when it's fired"). */
+  #fireRocket(round) {
+    this.pilot.frame.updateMatrixWorld(true);
+    const from = round.getWorldPosition(new THREE.Vector3());
+    const fwd = this.fight.active ? this.fight.aim(this.pos) : this.forward();
+    const result = this.missiles.fire(from, fwd, { rocket: true });
+    if (result === "fired") {
+      if (!this.fight.active) this.speed = Math.max(this.speed - ROCKET_RECOIL, THRUSTERS[this.thrust].cruise * 0.35);
+      this.shake.add(0.5);
+      this.hooks.warn?.("PACK ROCKET AWAY");
+    } else if (result === "reloading") this.hooks.warn?.(`PACK ROCKET RELOADING — ${Math.ceil(this.missiles.rocketCooldown)}s`);
+    else if (result === "no target") this.hooks.warn?.("PACK ROCKET — NO HOSTILES TO HUNT");
+  }
+
+  /** VLTRN8's LOTUS NUKE (owner 09-30: "a sick laser blaster, but like a nuke"): the mega beam + nova in pink, straight
+   *  off the cannon on her pack, no charge-up — and a harder recoil than the rocket. */
+  #firePackLaser(cannon) {
+    if (this.packLaserCd > 0) return this.hooks.warn?.(`LOTUS NUKE CHARGING — ${Math.ceil(this.packLaserCd)}s`);
+    this.packLaserCd = PACK_LASER_RELOAD;
+    this.pilot.frame.updateMatrixWorld(true);
+    this.packLaser.fireFrom(cannon.getWorldPosition(new THREE.Vector3()), {
+      pos: this.pos,
+      forward: this.fight.active ? this.fight.aim(this.pos) : this.forward(),
+      swarm: this.swarm,
+      onKill: (_bot, points) => (this.score += points),
+      onFire: (kills) => this.hooks.warn?.(kills ? `LOTUS NUKE — ${kills} DOWN` : "LOTUS NUKE"),
+    });
+    if (!this.fight.active) this.speed = Math.max(this.speed - ROCKET_RECOIL * 1.5, THRUSTERS[this.thrust].cruise * 0.35);
+    this.shake.add(0.9);
+  }
+
+  /** Missiles leave the wing pods once they're bolted on (battle body, 09-30), alternating sides; before that, his body. */
+  #missileOrigin() {
+    const pods = this.pilot.armor?.pods;
+    if (!pods?.length) return this.pos.clone();
+    this.podSide = ((this.podSide ?? 0) + 1) % pods.length;
+    this.pilot.frame.updateMatrixWorld(true);
+    return pods[this.podSide].getWorldPosition(new THREE.Vector3());
+  }
+
   #cannon() {
     while (this.cannonQueue.length && this.cannonQueue[0] <= this.t) {
       this.cannonQueue.shift();
@@ -635,10 +696,14 @@ export class FlightBattle {
 
   /** Q / E (or the MISSILE touch button): one heat-seeker at the hottest hostile ahead. */
   #fireMissile() {
-    if (!input.pressed("KeyQ", "KeyE") || this.mega.busy) return;
+    const top = this.pilot.armor?.packTop; // the full battle body: a rocket on the rail (QM85, 3BIZZLE) or VLTRN8's laser cannon
+    if (top?.kind === "rocket") top.mesh.visible = this.missiles.rocketCooldown <= 0; // the rail shows the loaded round
+    if (this.mega.busy) return;
+    if (top && input.pressed("KeyE")) return top.kind === "laser" ? this.#firePackLaser(top.mesh) : this.#fireRocket(top.mesh);
+    if (!input.pressed("KeyQ", "KeyE")) return;
     const fwd = this.fight.active ? this.fight.aim(this.pos) : this.forward();
-    const result = this.missiles.fire(this.pos.clone(), fwd);
-    if (this.pilotKey === "bizzle" && result === "fired") this.missiles.fire(this.pos.clone(), fwd); // 3BIZZLE: a TWIN SALVO
+    const result = this.missiles.fire(this.#missileOrigin(), fwd);
+    if (this.pilotKey === "bizzle" && result === "fired") this.missiles.fire(this.#missileOrigin(), fwd); // 3BIZZLE: a TWIN SALVO
     if (result === "empty") this.hooks.warn?.("MISSILES RELOADING");
     else if (result === "no target") this.hooks.warn?.("NO LOCK — NOTHING AHEAD");
   }
@@ -1020,6 +1085,13 @@ export class FlightBattle {
       }
     }
     return best;
+  }
+
+  /** PAUSE & SAVE (owner 09-30): the Oakland mission's exact moment to storage. Null = nothing to save here (cyber,
+   *  a race, a cutscene, a run already over, or a city still building). */
+  save() {
+    if (!this.day || this.raceId || this.done || !this.built || this.intro || this.finale || !this.mission) return null;
+    return this.day.save();
   }
 
   get stats() {

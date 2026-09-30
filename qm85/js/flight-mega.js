@@ -17,15 +17,18 @@ const KILL_SCORE = 150;
 
 const additive = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 
+export const MEGA_COLORS = { beam: 0xc58bff, core: 0xfff4d6, nova: 0xffcf5a, sphere: 0x9b4dff };
+
 export class MegaBlast {
-  constructor(root) {
+  /** colors: the beam / core / nova ring / nova sphere tints — VLTRN8's pack laser (09-30) is this blast in pink. */
+  constructor(root, colors = MEGA_COLORS) {
     this.root = root;
     this.phase = "idle"; // idle | swirl | fx
     this.t = 0;
-    this.beam = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), additive(0xc58bff));
-    this.beamCore = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1, 16, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), additive(0xfff4d6));
-    this.nova = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 8, 64), additive(0xffcf5a));
-    this.novaSphere = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), additive(0x9b4dff));
+    this.beam = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), additive(colors.beam));
+    this.beamCore = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1, 16, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), additive(colors.core));
+    this.nova = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 8, 64), additive(colors.nova));
+    this.novaSphere = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), additive(colors.sphere));
     for (const m of [this.beam, this.beamCore, this.nova, this.novaSphere]) {
       m.visible = false;
       root.add(m);
@@ -58,10 +61,15 @@ export class MegaBlast {
   }
 
   #fire(ctx) {
-    this.phase = "fx";
-    this.t = 0;
     const from = ctx.pilot.chargeWorld();
     ctx.pilot.setCharge(0);
+    this.fireFrom(from, ctx);
+  }
+
+  /** Unload from `from` right now, no charge-up (the pack laser). ctx: { pos, forward, swarm, onKill(bot, score), onFire(kills) }. */
+  fireFrom(from, ctx) {
+    this.phase = "fx";
+    this.t = 0;
     const dir = ctx.forward.clone();
     const to = from.clone().addScaledVector(dir, BEAM_LEN);
     const look = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);

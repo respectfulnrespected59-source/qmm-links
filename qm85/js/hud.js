@@ -275,8 +275,8 @@ export const hud = {
   },
 
   /** Wire the corner buttons once. Blur after click so SPACE (jump/boost) never re-presses them. */
-  controls({ onPause, onMute, onVolume, onMenu }) {
-    for (const [id, fn] of [["btn-pause", onPause], ["btn-mute", onMute], ["btn-vol", onVolume], ["btn-resume", onPause], ["btn-menu", onMenu]]) {
+  controls({ onPause, onMute, onVolume, onMenu, onSave }) {
+    for (const [id, fn] of [["btn-pause", onPause], ["btn-mute", onMute], ["btn-vol", onVolume], ["btn-resume", onPause], ["btn-menu", onMenu], ["btn-save", onSave]]) {
       $(id).addEventListener("click", (e) => {
         fn();
         e.currentTarget.blur();
@@ -290,8 +290,11 @@ export const hud = {
     $("btn-vol").textContent = `MUSIC ${"▮".repeat(bars)}${"▯".repeat(6 - bars)}`;
   },
 
-  paused(on) {
+  /** note: what the pause did ("PROGRESS SAVED — 14:32"); canSave: show SAVE & QUIT (the Oakland mission only). */
+  paused(on, note = "", canSave = false) {
     $("pause").hidden = !on;
+    $("pause-note").textContent = note ?? "";
+    $("btn-save").hidden = !canSave;
     $("btn-pause").textContent = on ? "▶ RESUME" : "II PAUSE";
   },
 

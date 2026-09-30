@@ -23,9 +23,10 @@ const SWAGGER_HZ = 95 / 60; // 3BIZZLE's cruising bob, on the beat
  * plasma blade(s) it draws on foot (none for QM85 — he punches).
  */
 export const PILOT_LOOKS = {
-  qm85: { model: "qm85_rig", name: "QM85", melee: 1 },
-  bizzle: { model: "bizzle_rig", name: "3BIZZLE", thrust: 0x3dff7a, blade: 0xff3b2b, bladeCore: 0xffe3d6, flaming: true, melee: 1.45, vltrn: true },
-  vltrn8: { model: "vltrn8_rig", name: "VLTRN8", thrust: 0xff4fd8, blade: 0xb34dff, bladeCore: 0xffe6ff, melee: 1, vltrn: true },
+  qm85: { model: "qm85_rig", name: "QM85", melee: 1, pack: { top: "rocket" } },
+  bizzle: { model: "bizzle_rig", name: "3BIZZLE", thrust: 0x3dff7a, blade: 0xff3b2b, bladeCore: 0xffe3d6, flaming: true, melee: 1.45, vltrn: true, pack: { top: "rocket", plume: 0x3dff7a, accent: 0xff3b2b } },
+  // owner 09-30: Mahal's pack is PINK, its thruster blooms a LOTUS like her shield, and on top sits a laser cannon "like a nuke"
+  vltrn8: { model: "vltrn8_rig", name: "VLTRN8", thrust: 0xff4fd8, blade: 0xb34dff, bladeCore: 0xffe6ff, melee: 1, vltrn: true, pack: { top: "laser", plume: 0xff4fd8, accent: 0xff4fd8, pink: true, lotus: true } },
 };
 
 export class Pilot {
@@ -358,6 +359,7 @@ export class Pilot {
     this.#embers(dt, { grounded, boosting, stealth, thrustColor });
     this.thrustLight.intensity = grounded ? 0 : stealth ? 8 : boosting ? 5 : 2;
     this.thrustLight.color.setHex(thrustColor);
+    this.armor?.animate?.(dt, { grounded, boosting, braking }); // battle body: the wings fold out in flight (battle-body.js)
     this.frame.visible = !blink;
   }
 }

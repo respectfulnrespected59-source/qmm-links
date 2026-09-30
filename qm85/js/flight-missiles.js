@@ -23,6 +23,15 @@ const MISSILE_SCALE = 2.1;
 const FLARE_SIZE = 2.4; // m, up close
 const FLARE_NEAR = 45; // m: past this the flare swells so it stays a readable dot
 const FLARE_MAX = 6;
+// THE PACK ROCKET (owner 09-30): one fat round off the top of the wing pack (E). Heat-seeking on the nearest hostile
+// anywhere, three times the homing authority, ignores cover, and it does not miss. Reloads every ROCKET_RELOAD s.
+export const ROCKET_RELOAD = 8;
+const ROCKET_SPEED = 84;
+const ROCKET_TURN = TURN * 3;
+const ROCKET_LIFE = 14;
+const ROCKET_DAMAGE = 14;
+const ROCKET_HIT_RADIUS = 2.6; // m: close is a hit
+const ROCKET_SCALE = 1.35;
 
 function smokeTexture() {
   const c = document.createElement("canvas");
@@ -39,9 +48,11 @@ function smokeTexture() {
   return t;
 }
 
-function missileMesh() {
+function missileMesh(rocket = false) {
   const g = new THREE.Group();
-  const body = new THREE.MeshStandardMaterial({ color: 0xe8e4f2, metalness: 0.8, roughness: 0.3 });
+  const body = rocket
+    ? new THREE.MeshStandardMaterial({ color: 0xe8e8ee, metalness: 1, roughness: 0.08 }) // chrome, like its rail
+    : new THREE.MeshStandardMaterial({ color: 0xe8e4f2, metalness: 0.8, roughness: 0.3 });
   const gold = new THREE.MeshStandardMaterial({ color: 0xd4a73a, metalness: 1, roughness: 0.25, emissive: 0x4a3208, emissiveIntensity: 0.4 });
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.7, 10).rotateX(Math.PI / 2), body));
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.25, 10).rotateX(Math.PI / 2), gold);
@@ -63,7 +74,7 @@ function missileMesh() {
   const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2a2a }));
   eye.position.z = 0.6;
   g.add(eye);
-  g.scale.setScalar(MISSILE_SCALE);
+  g.scale.setScalar(MISSILE_SCALE * (rocket ? ROCKET_SCALE : 1));
   const flare = makeGlow(0xffb84a, FLARE_SIZE / MISSILE_SCALE, 0.9); // the hot exhaust, readable from far off
   flare.position.z = -0.5;
   g.add(flare);
@@ -86,8 +97,24 @@ export class Missiles {
     this.reload = 0;
     this.live = [];
     this.puffs = [];
+    this.rocketCooldown = 0; // seconds until the next pack rocket is on the rail
     this.tex = smokeTexture();
     this.flashGeo = new THREE.SphereGeometry(1, 16, 12);
+  }
+
+  /** The pack rocket's mark: the nearest hostile anywhere in the sky or on the street, bosses preferred. */
+  targetAnywhere(from) {
+    let best = null;
+    let bestScore = Infinity;
+    for (const b of this.f.swarm.alive) {
+      if (b.shielded || b.frozen) continue;
+      const score = b.obj.position.distanceTo(from) * (b.boss ? 0.5 : 1);
+      if (score < bestScore) {
+        bestScore = score;
+        best = b;
+      }
+    }
+    return best;
   }
 
   /** The hottest hostile ahead: nearest inside the lock cone, bosses preferred. */
@@ -110,24 +137,35 @@ export class Missiles {
 
   /** Fire one. Returns "fired" | "empty" | "no target". */
   /** free: 3BIZZLE's MISSILE CANNON burst (09-25) — fires off the special's own charge, never from the Q rack. */
-  fire(from, fwd, { free = false } = {}) {
-    if (!free && this.ammo <= 0) return "empty";
-    const target = this.target(from, fwd);
+  /** rocket: the pack rocket (09-30) — its own reload, any target, and it does not miss. */
+  fire(from, fwd, { free = false, rocket = false } = {}) {
+    if (rocket && this.rocketCooldown > 0) return "reloading";
+    if (!rocket && !free && this.ammo <= 0) return "empty";
+    const target = rocket ? this.targetAnywhere(from) : this.target(from, fwd);
     if (!target) return "no target";
-    if (!free) this.ammo -= 1;
-    const mesh = missileMesh();
+    if (rocket) this.rocketCooldown = ROCKET_RELOAD;
+    else if (!free) this.ammo -= 1;
+    const mesh = missileMesh(rocket);
     const side = this.live.length % 2 ? -1 : 1;
-    mesh.position.copy(from).add(new THREE.Vector3(side * 0.5, 0.3, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.f.yaw));
-    const dir = fwd.clone().add(new THREE.Vector3(side * 0.35, 0.3, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.f.yaw)).normalize(); // arcs out of the pod
+    const up = new THREE.Vector3(0, 1, 0);
+    if (rocket) mesh.position.copy(from); // straight off the rail
+    else mesh.position.copy(from).add(new THREE.Vector3(side * 0.5, 0.3, 0).applyAxisAngle(up, this.f.yaw));
+    const dir = rocket
+      ? fwd.clone().add(new THREE.Vector3(0, 0.45, 0)).normalize() // lofts up off the pack, then hunts
+      : fwd.clone().add(new THREE.Vector3(side * 0.35, 0.3, 0).applyAxisAngle(up, this.f.yaw)).normalize(); // arcs out of the pod
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
     this.root.add(mesh);
-    this.live.push({ mesh, dir, target, life: LIFE, t: 0, puffT: 0 });
+    this.live.push({ mesh, dir, target, life: rocket ? ROCKET_LIFE : LIFE, t: 0, puffT: 0, rocket });
     sfx.missile();
-    this.f.hooks.onMissile?.(this.ammo);
+    if (!rocket) this.f.hooks.onMissile?.(this.ammo);
     return "fired";
   }
 
   update(dt) {
+    if (this.rocketCooldown > 0) {
+      this.rocketCooldown = Math.max(0, this.rocketCooldown - dt);
+      if (this.rocketCooldown === 0) this.f.hooks.warn?.("PACK ROCKET LOADED — E");
+    }
     if (this.ammo < this.max) {
       this.reload += dt;
       if (this.reload >= this.reloadTime) {
@@ -139,17 +177,20 @@ export class Missiles {
     for (const m of this.live) {
       m.t += dt;
       m.life -= dt;
-      if (m.target && !m.target.alive) m.target = this.target(m.mesh.position, m.dir);
+      if (m.target && !m.target.alive) m.target = m.rocket ? this.targetAnywhere(m.mesh.position) : this.target(m.mesh.position, m.dir);
       if (m.target && m.t > 0.18) { // a beat of straight flight, then it turns hard
         const want = m.target.obj.position.clone().sub(m.mesh.position).normalize();
-        const angle = Math.min(m.dir.angleTo(want), TURN * dt);
+        const angle = Math.min(m.dir.angleTo(want), (m.rocket ? ROCKET_TURN : TURN) * dt);
         if (angle > 1e-4) {
           const axis = new THREE.Vector3().crossVectors(m.dir, want).normalize();
           m.dir.applyAxisAngle(axis, angle).normalize();
         }
       }
       const prev = m.mesh.position.clone();
-      m.mesh.position.addScaledVector(m.dir, SPEED * dt);
+      m.mesh.position.addScaledVector(m.dir, (m.rocket ? ROCKET_SPEED : SPEED) * dt);
+      if (m.rocket && m.target && m.mesh.position.distanceTo(m.target.obj.position) < ROCKET_HIT_RADIUS + m.target.radius) {
+        m.mesh.position.copy(m.target.obj.position); // it does not miss: close is a hit
+      }
       m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), m.dir);
       m.mesh.userData.flame.scale.set(1, 1, 0.8 + Math.random() * 0.5);
       const far = Math.min(FLARE_MAX, Math.max(1, m.mesh.position.distanceTo(this.f.pos) / FLARE_NEAR));
@@ -161,9 +202,9 @@ export class Missiles {
         this.#puff(tail);
         this.#ember(tail);
       }
-      const hit = this.f.swarm.hitTest(prev, m.mesh.position, DAMAGE * (this.f.dmgMult ?? 1), 0.8); // 3BIZZLE hits harder
-      const solid = this.f.arena.towerAt?.(m.mesh.position) || this.f.arena.vehicleAt?.(m.mesh.position);
-      const floored = m.mesh.position.y <= (this.f.arena.floor ?? 0);
+      const hit = this.f.swarm.hitTest(prev, m.mesh.position, (m.rocket ? ROCKET_DAMAGE : DAMAGE) * (this.f.dmgMult ?? 1), m.rocket ? 1.6 : 0.8); // 3BIZZLE hits harder
+      const solid = !m.rocket && (this.f.arena.towerAt?.(m.mesh.position) || this.f.arena.vehicleAt?.(m.mesh.position)); // the rocket ignores cover
+      const floored = !m.rocket && m.mesh.position.y <= (this.f.arena.floor ?? 0);
       if (hit || solid || floored || m.life <= 0) {
         this.lastEnd = hit ? "hit" : solid ? "solid" : floored ? "floor" : "timeout"; // playtest probes read this
         this.#explode(m.mesh.position, hit);

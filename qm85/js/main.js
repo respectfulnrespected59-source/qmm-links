@@ -17,7 +17,7 @@ import { touch } from "./touch.js";
 import { tutorial } from "./tutorial.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
-import { battleBodyUnlocked, chosenSkin, chooseSkin } from "./battle-body.js";
+import { battleBodyUnlocked, unlockBattleBody, chosenSkin, chooseSkin } from "./battle-body.js";
 import { Minimap } from "./minimap.js";
 import { garage, openGarage } from "./garage.js";
 import { COURSES } from "./race-courses.js";
@@ -230,7 +230,20 @@ function togglePause() {
     sfx.engine.set({ on: false });
     sfx.rain.set(0);
   }
-  hud.paused(game.paused);
+  const saved = game.paused ? saveRun() : null; // PAUSE & SAVE (owner 09-30): every pause writes the exact moment
+  // SAVE & QUIT only when the save really landed (a boss intro or a cutscene can't be saved: quitting there would lose the run)
+  hud.paused(game.paused, saved ? `PROGRESS SAVED — ${saved.clock}` : "", Boolean(saved));
+}
+
+/** Write the Oakland run to storage. Null = nothing to save here (cyber, a race, a cutscene, a run already over). */
+function saveRun() {
+  return game.flight?.save() ?? null;
+}
+
+/** SAVE & QUIT on the pause screen: the run is on disk, back to the title. CONTINUE picks it up from the home screen. */
+function saveAndQuit() {
+  saveRun();
+  toMenu();
 }
 
 function toggleMute() {
@@ -268,7 +281,11 @@ function toggleClip() {
 for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => music.unlock());
 // Back to the title screen from anywhere: a clean reload drops every level, sound and timer at once.
 const toMenu = () => location.assign(location.pathname);
-hud.controls({ onPause: togglePause, onMute: toggleMute, onVolume: stepVolume, onMenu: toMenu });
+hud.controls({ onPause: togglePause, onMute: toggleMute, onVolume: stepVolume, onMenu: toMenu, onSave: saveAndQuit });
+// The tab closed or the phone locked mid-mission: keep the run (a paused game is already saved).
+addEventListener("pagehide", () => {
+  if (game.mode === "flight" && !game.paused) saveRun();
+});
 hud.sound(music.muted, music.level);
 music.onTrackChange((title) => hud.nowPlaying(title));
 
@@ -398,16 +415,16 @@ function startFlight(zone = game.zone, resume = null, race = null) {
       }
       const credits = creditLine(score);
       const cp = zone === "oakland" ? loadCheckpoint() : null;
-      if (cp) { // continue from the last time-of-day checkpoint (owner: "time of day check points")
-        hud.card("SHOT DOWN", `The invaders got a lock on him. Score: ${score}. Checkpoint: ${cp.phase}, battle body ${cp.delivered.data + cp.delivered.part}/10, Oakland freed ${cp.freed?.length ?? 0}/6, thrusters LV${cp.thrust}, blaster LV${cp.blaster}.${credits}`,
-          `CONTINUE FROM ${cp.phase}`, () => startFlight("oakland", cp), { label: "RESTART AT DAWN", onClick: () => { clearCheckpoint(); startFlight("oakland"); } });
+      if (cp) { // continue from the last save: a NOON / NIGHT checkpoint or the last pause (owner: "time of day check points")
+        hud.card("SHOT DOWN", `The invaders got a lock on him. Score: ${score}. Last save: ${cp.clock} (${cp.phase}), battle body ${cp.delivered.data + cp.delivered.part}/10, Oakland freed ${cp.freed?.length ?? 0}/6, thrusters LV${cp.thrust}, blaster LV${cp.blaster}.${credits}`,
+          `CONTINUE FROM ${cp.clock}`, () => startFlight("oakland", cp), { label: "RESTART AT DAWN", onClick: () => { clearCheckpoint(); startFlight("oakland"); } });
         endExtras(score);
         return;
       }
       hud.card("SHOT DOWN", `The invaders got a lock on him. Score: ${score}. Small, yes. Harmless, no. Run it back.${credits}`, "FLY AGAIN", () => startFlight());
       endExtras(score);
     },
-  }, zone, { resume, skin: chosenSkin(), loadout: garage.loadout(), race, wingmate: !race, pilot: chosenPilot() });
+  }, zone, { resume, skin: chosenSkin(), loadout: garage.loadout(), race, wingmate: !race, pilot: resume?.pilot ?? chosenPilot() }); // a saved run keeps its pilot
   scene.background = game.flight.background;
   scene.fog = game.flight.fog;
   film.enabled = true;
@@ -718,6 +735,23 @@ function skinToggle() {
   actions.append(btn);
 }
 
+/** Home screen: a saved Oakland run (a pause-save or a NOON / NIGHT checkpoint) → CONTINUE, with its clock and progress. */
+function continueButton() {
+  const cp = loadCheckpoint();
+  const actions = document.getElementById("actions");
+  if (!cp || !actions) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "card-continue";
+  btn.textContent = `CONTINUE · ${cp.clock} · BODY ${cp.delivered.data + cp.delivered.part}/10`;
+  btn.addEventListener("click", () => {
+    document.getElementById("card").hidden = true;
+    sfx.unlock();
+    startFlight("oakland", cp);
+  });
+  actions.prepend(btn);
+}
+
 // ------------------------------------------------------------ boot
 /** Card bodies are HTML: text from outside the game (an error message) goes in escaped. */
 const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -729,7 +763,12 @@ async function boot() {
     hud.card("LOAD FAILED", `Could not load the 3D assets (${escapeHtml(err.message)}). Serve this folder over http, not file://.`, "RELOAD", () => location.reload());
     return;
   }
-  const jump = Number(new URLSearchParams(location.search).get("level"));
+  const params = new URLSearchParams(location.search);
+  if (params.get("unlock") === "battle") { // local review link (09-30): fly the full battle body without the 10 parts
+    unlockBattleBody();
+    chooseSkin("battle");
+  }
+  const jump = Number(params.get("level"));
   const zoneFor = { 5: "cyber", 6: "oakland" };
   const forced = zoneFor[jump]; // ?level= jump (testing) routes the menu straight to a zone
   game.mode = "card";
@@ -741,6 +780,7 @@ async function boot() {
     }, { credits: garage.state.credits, onGarage: () => openGarage(document.getElementById("card"), home, sfx), onRaces: () => racePicker(home) });
     pilotToggle();
     skinToggle();
+    continueButton();
   };
   home();
   requestAnimationFrame(frame);
