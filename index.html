@@ -81,6 +81,11 @@
   }
   .nav-cta:hover,.nav-cta:focus-visible{transform:translateY(-1px);filter:brightness(1.07);outline:none}
   @media (max-width:1020px){ .nav-links{display:none} .nav-in{gap:12px} .nav-cta{margin-left:auto} }
+  /* Ten links only just fit at full width; between the breakpoint and 1180 they tighten up
+     instead of pushing the CTA off the edge. */
+  @media (min-width:1021px) and (max-width:1180px){
+    .nav-in{gap:12px} .nav-links a{padding:9px 7px;letter-spacing:.08em;font-size:.74rem}
+  }
 
   /* ---------- hero ---------- */
   .hero{position:relative;min-height:min(88vh,760px);display:flex;align-items:center;overflow:hidden}
@@ -370,13 +375,122 @@
     display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;color:var(--mut);font-size:.78rem}
   .fbot .hand{color:var(--gold);font-weight:700;letter-spacing:.04em}
 
+  /* ---------- atmosphere ---------- */
+  /* Every section used to sit on the same flat ink. A faint glow under each heading,
+     alternating violet left / gold right, gives the long scroll a rhythm without a single
+     extra request. Painted as the section's own background so it can never cause overflow. */
+  section{background:radial-gradient(900px 440px at 8% 0%,rgba(168,119,230,.10),transparent 70%)}
+  section:nth-of-type(even){background:radial-gradient(900px 440px at 92% 0%,rgba(232,194,90,.07),transparent 70%)}
+  .kicker::before{content:"";display:inline-block;width:28px;height:1px;margin-right:10px;
+    vertical-align:middle;background:linear-gradient(90deg,transparent,var(--gold))}
+  .capture .kicker::before{display:none}
+
+  /* Gold reading-progress line under the nav. Scroll-driven, no JS; browsers without
+     animation-timeline simply never draw it. */
+  .nav .prog{position:absolute;left:0;right:0;bottom:-1px;height:2px;transform-origin:0 50%;
+    transform:scaleX(0);background:linear-gradient(90deg,var(--violet),var(--gold),var(--gold-hi));opacity:0}
+  @supports (animation-timeline:scroll()){
+    .nav .prog{opacity:1;animation:prog linear both;animation-timeline:scroll(root)}
+    @keyframes prog{to{transform:scaleX(1)}}
+  }
+
+  /* Cursor spotlight on cards: a soft gold light follows the pointer across the card. */
+  .prod,.lcard,.gcard,.app{position:relative}
+  .prod::after,.lcard::after,.gcard::after,.app::after{
+    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+    transition:opacity .25s;
+    background:radial-gradient(380px circle at var(--mx,50%) var(--my,50%),rgba(232,194,90,.12),transparent 62%)}
+  @media (hover:hover){
+    .prod:hover::after,.lcard:hover::after,.gcard:hover::after,.app:hover::after{opacity:1}
+  }
+
+  /* ---------- apps ---------- */
+  .apps{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media (max-width:860px){ .apps{grid-template-columns:1fr} }
+  .app{
+    --ac:var(--gold);--ac2:#3fd2c7;
+    display:flex;flex-direction:column;overflow:hidden;text-decoration:none;
+    border:1px solid var(--line);border-radius:22px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card));
+    transition:transform .22s cubic-bezier(.16,1,.3,1),border-color .22s,box-shadow .22s;
+  }
+  .app.a365{--ac:#a46bf0;--ac2:#3b8cf2}
+  .app:hover,.app:focus-within{transform:translateY(-5px);border-color:var(--ac);
+    box-shadow:0 30px 60px -30px var(--ac),0 0 0 1px var(--ac) inset}
+  .app .shot{position:relative;display:block;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
+  .app .shot img{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top;
+    transition:transform .6s cubic-bezier(.16,1,.3,1)}
+  .app:hover .shot img{transform:scale(1.035)}
+  .app .shot::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,transparent 55%,rgba(22,15,36,.85))}
+  .live{position:absolute;z-index:2;bottom:14px;left:14px;display:inline-flex;align-items:center;gap:8px;
+    background:rgba(7,5,13,.8);border:1px solid rgba(255,255,255,.14);color:var(--txt);
+    font-size:.62rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:6px 12px;border-radius:999px}
+  .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#3ee08a;
+    box-shadow:0 0 0 0 rgba(62,224,138,.7);animation:livepulse 2s ease-out infinite}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(62,224,138,.7)}100%{box-shadow:0 0 0 9px rgba(62,224,138,0)}}
+  .app .c{padding:24px 26px 26px;display:flex;flex-direction:column;flex:1}
+  .app .meta{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+    background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .app h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,3vw,2.05rem);line-height:1.1;margin-top:8px}
+  .app h3 em{font-style:normal;background:linear-gradient(90deg,var(--ac),var(--ac2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .app p{color:var(--mut);font-size:.95rem;margin-top:10px;flex:1}
+  .feats{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;list-style:none}
+  .feats li{font-size:.74rem;color:var(--txt);border:1px solid var(--line);background:rgba(7,5,13,.45);
+    border-radius:999px;padding:5px 12px}
+  .app .btns{margin-top:22px}
+  .app .btn-app{color:#fff;background:linear-gradient(135deg,var(--ac),var(--ac2));
+    box-shadow:0 14px 34px -16px var(--ac)}
+  .app.qt .btn-app{color:#20180a}
+  .app .btn-app:hover,.app .btn-app:focus-visible{transform:translateY(-2px);filter:brightness(1.08);outline:none}
+
+  /* ---------- record sleeves (listen) ---------- */
+  .sleeves{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:30px}
+  @media (max-width:860px){ .sleeves{grid-template-columns:1fr 1fr} }
+  @media (max-width:560px){ .sleeves{grid-template-columns:1fr} }
+  .sleeve{text-decoration:none;display:block;outline:none}
+  .rec{display:block;position:relative;width:80%;aspect-ratio:1;margin-bottom:18px}
+  .disc{position:absolute;inset:3%;border-radius:50%;z-index:0;
+    background:
+      radial-gradient(circle,var(--lab) 0 17%,#0b0810 17.5% 19%,transparent 19.5%),
+      repeating-radial-gradient(circle,#141019 0 1.2px,#0a080e 1.6px 3px);
+    box-shadow:0 14px 34px -12px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,255,255,.05);
+    transform:translateX(9%);transition:transform .7s cubic-bezier(.16,1,.3,1)}
+  .disc::after{content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 30deg,transparent 0 12%,rgba(255,255,255,.07) 16%,transparent 22% 62%,rgba(255,255,255,.05) 66%,transparent 72%)}
+  .sleeve:hover .disc,.sleeve:focus-visible .disc{transform:translateX(27%) rotate(140deg)}
+  .art{position:absolute;inset:0;z-index:1;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;
+    justify-content:flex-end;padding:16px;background:var(--bg);
+    box-shadow:0 22px 40px -22px rgba(0,0,0,.95),inset 0 0 0 1px rgba(255,255,255,.08);
+    transition:transform .5s cubic-bezier(.16,1,.3,1),box-shadow .3s}
+  .sleeve:hover .art,.sleeve:focus-visible .art{transform:translateY(-4px) rotate(-1.2deg);
+    box-shadow:0 30px 50px -24px var(--glow),inset 0 0 0 1px rgba(232,194,90,.45)}
+  .art svg{position:absolute;width:76%;top:6%;left:12%;opacity:.5;transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
+  .sleeve:hover .art svg{transform:rotate(60deg) scale(1.04)}
+  .art small{position:relative;font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.75)}
+  .art b{position:relative;font-family:var(--serif);font-weight:400;font-size:clamp(1.25rem,2.4vw,1.6rem);line-height:1.05;color:#fff;
+    text-shadow:0 2px 14px rgba(0,0,0,.6)}
+  .s-qmm{--bg:radial-gradient(120% 90% at 30% 20%,#4a2a86,#1a0f33 55%,#08060f);--lab:#e8c25a;--glow:rgba(168,119,230,.8)}
+  .s-mali{--bg:radial-gradient(120% 90% at 70% 15%,#d07a2c,#6e2414 50%,#1a0806);--lab:#f0b44a;--glow:rgba(224,120,50,.8)}
+  .s-laf{--bg:radial-gradient(120% 90% at 50% 10%,#f6d27a,#3f8fa6 52%,#0d2433);--lab:#f5dc8e;--glow:rgba(120,200,220,.75)}
+  .sleeve .t{display:block;font-weight:700;font-size:1.02rem}
+  .sleeve .s{display:block;color:var(--gold);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;margin-top:3px}
+  .sleeve .tl{display:block;color:var(--mut);font-size:.8rem;margin-top:6px;line-height:1.45}
+  .sleeve:hover .t{color:var(--gold-hi)}
+
+  /* four-across link row (the Watch socials) — the 3-up grid stranded Instagram on its own row */
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media (max-width:1020px){ .grid4{grid-template-columns:1fr 1fr} }
+  @media (max-width:600px){ .grid4{grid-template-columns:1fr} }
+
   /* ---------- reveal ---------- */
   .rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
   .rv.in{opacity:1;transform:none}
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
     .rv{opacity:1;transform:none;transition:none}
-    .eyebrow::before{animation:none}
+    .eyebrow::before,.live::before{animation:none}
     *{transition-duration:.01ms !important}
   }
 </style>
@@ -395,6 +509,7 @@
       <b><i>Quantum</i> Melanin Media</b>
     </a>
     <div class="nav-links">
+      <a href="#apps">Apps</a>
       <a href="#games">Games</a>
       <a href="#books">Books</a>
       <a href="#receipts">Receipts</a>
@@ -407,6 +522,7 @@
     </div>
     <a class="nav-cta" href="https://quantummelaninmedia.gumroad.com/subscribe" target="_blank" rel="noopener">Join the list</a>
   </div>
+  <span class="prog" aria-hidden="true"></span>
 </nav>
 
 <header class="hero" id="top">
@@ -423,13 +539,14 @@
   <div class="wrap hero-in">
     <span class="eyebrow">Catch the myth · become the fisherman</span>
     <h1><span class="q">Quantum</span> Melanin Media</h1>
-    <p class="lede">Afrofuturist games, books and receipts — built in the open by Robert Hadden Jr.
+    <p class="lede">Afrofuturist games, apps, books and receipts — built in the open by Robert Hadden Jr.
       &amp; Mahal Kita. Plain-English proof on melanin, history &amp; truth.</p>
     <div class="btns">
       <a class="btn btn-gold" href="/quantummotors3dracing/">▶ Play Quantum Motors 3D</a>
       <a class="btn btn-ghost" href="#receipts">Read the receipts</a>
     </div>
     <div class="stats">
+      <div class="stat"><b>2</b><span>Live apps</span></div>
       <div class="stat"><b>5</b><span>Free browser games</span></div>
       <div class="stat"><b>7</b><span>Books on Amazon</span></div>
       <div class="stat"><b>47</b><span>Drops on Gumroad</span></div>
@@ -437,6 +554,60 @@
     </div>
   </div>
 </header>
+
+<!-- ============ APPS ============ -->
+<section id="apps">
+  <div class="wrap">
+    <div class="head rv">
+      <p class="kicker">⚡ Live apps</p>
+      <h2>Two apps, running right now.</h2>
+      <p class="sub">Built in-house and live on our own servers. Open one, make an account, and
+        it is yours to use.</p>
+    </div>
+    <div class="apps rv">
+      <article class="app qt">
+        <a class="shot" href="https://quantus-ai.onrender.com" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+          <span class="live">Live</span>
+          <img src="/assets/img/work-quantess.jpg" width="1280" height="720" loading="lazy"
+               alt="">
+        </a>
+        <div class="c">
+          <p class="meta">The Akashic AI · research · images · documents</p>
+          <h3><em>QUAN-TESS</em> AI</h3>
+          <p>Two souls, one field. QUANTUS and TESS research the suppressed sciences, make clean
+            images, write glossy documents and repair whole manuscripts — all grounded in the
+            six books of the Quantum Melanin library.</p>
+          <ul class="feats">
+            <li>6 books in its library</li><li>29 craft skills</li><li>$0 to start</li>
+          </ul>
+          <div class="btns">
+            <a class="btn btn-app" href="https://quantus-ai.onrender.com" target="_blank" rel="noopener">Open QUAN-TESS AI →</a>
+          </div>
+        </div>
+      </article>
+      <article class="app a365">
+        <a class="shot" href="https://alignment365.onrender.com" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+          <span class="live">Live</span>
+          <img src="/assets/img/work-alignment365.jpg" width="1280" height="720" loading="lazy"
+               alt="">
+        </a>
+        <div class="c">
+          <p class="meta">Holistic wellness companion</p>
+          <h3>Alignment <em>365</em></h3>
+          <p>Align your mind, body &amp; spirit. One accountability partner for nutrition, fitness,
+            hydration, health vitals, medication and personal growth — built as a safe space for
+            your wellness journey.</p>
+          <ul class="feats">
+            <li>Meals &amp; calories</li><li>Hydration &amp; vitals</li><li>Monthly calendar</li>
+          </ul>
+          <div class="btns">
+            <a class="btn btn-app" href="https://alignment365.onrender.com" target="_blank" rel="noopener">Open Alignment 365 →</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
 
 <!-- ============ GAMES ============ -->
 <section id="games">
@@ -644,7 +815,30 @@
       <h2>Every song we made. Free.</h2>
       <p class="sub">Twenty original tracks — the singles, the full <em>Lion of Mali</em> suite
         and the whole <em>Light as a Feather</em> set. The same score that plays while you read
-        <em>The Melanin Key</em>. No signup, no download, just press play.</p>
+        <em>The Melanin Key</em>. No signup, no download — press play, loop one song or the whole set.</p>
+    </div>
+    <div class="sleeves rv">
+      <a class="sleeve s-qmm" href="/soundtrack/#t1">
+        <span class="rec"><span class="disc" aria-hidden="true"></span>
+          <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>Quantum Melanin Media</small><b>The Singles</b></span></span>
+        <span class="t">The singles</span>
+        <span class="s">8 songs · 25 min</span>
+        <span class="tl">I Refuse · World Wide Wake Up · They Don’t · SCFL 10-2</span>
+      </a>
+      <a class="sleeve s-mali" href="/soundtrack/#t9">
+        <span class="rec"><span class="disc" aria-hidden="true"></span>
+          <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>The suite</small><b>Lion of Mali</b></span></span>
+        <span class="t">Lion of Mali</span>
+        <span class="s">7 songs · 20 min</span>
+        <span class="tl">The Lion Rises · Battle of Kirina · Nine Witches of Mali</span>
+      </a>
+      <a class="sleeve s-laf" href="/soundtrack/#t16">
+        <span class="rec"><span class="disc" aria-hidden="true"></span>
+          <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>The set</small><b>Light as a Feather</b></span></span>
+        <span class="t">Light as a Feather</span>
+        <span class="s">5 songs · 14 min</span>
+        <span class="tl">Light as a Feather · Kind Hands · Balance of Maat</span>
+      </a>
     </div>
     <div class="btns rv">
       <a class="btn btn-gold" href="/soundtrack/">Play all 20 songs</a>
@@ -1033,7 +1227,7 @@
         </button>
       </div>
     </div>
-    <div class="grid3 rv" style="margin-top:18px">
+    <div class="grid4 rv" style="margin-top:18px">
       <a class="lcard" href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">
         <span class="ic">▶️</span>
         <span class="b"><span class="t">YouTube</span>
@@ -1277,6 +1471,12 @@
           <a href="https://quantummelaninmedia.gumroad.com" target="_blank" rel="noopener">Gumroad</a>
         </div>
         <div>
+          <h4>Apps</h4>
+          <a href="https://quantus-ai.onrender.com" target="_blank" rel="noopener">QUAN-TESS AI</a>
+          <a href="https://alignment365.onrender.com" target="_blank" rel="noopener">Alignment 365</a>
+          <a href="/soundtrack/">The Soundtrack</a>
+        </div>
+        <div>
           <h4>Hire</h4>
           <a href="/work/">Work with me</a>
           <a href="/ai-audit/">AI Delivery Assurance</a>
@@ -1317,6 +1517,17 @@ if (reduced.matches) { hero.removeAttribute('autoplay'); hero.pause(); } else tr
 // In-page reels (the chess match) carry preload="none" and only start once they are actually
 // on screen — a visitor who never scrolls to the games never pays for the bytes.
 const reels = document.querySelectorAll('video.reel');
+// Card spotlight: hand the pointer position to the card under it as --mx/--my.
+if (matchMedia('(hover: hover)').matches) {
+  addEventListener('pointermove', (e) => {
+    const c = e.target.closest && e.target.closest('.prod,.lcard,.gcard,.app');
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, { passive: true });
+}
+
 const reelIO = new IntersectionObserver((entries) => {
   for (const e of entries) {
     if (reduced.matches) continue;

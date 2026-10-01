@@ -126,6 +126,15 @@
   .play:hover{transform:scale(1.05)}
   .skip{color:var(--mut);font-size:.9rem;padding:6px;flex:0 0 auto;transition:color .16s}
   .skip:hover{color:var(--gold)}
+  /* repeat toggles: lit gold with a dot under them when on, like every player people already know */
+  .rep{position:relative;flex:0 0 auto;display:grid;place-items:center;width:34px;height:34px;
+       border-radius:10px;color:var(--mut);transition:color .16s,background .16s}
+  .rep svg{width:19px;height:19px}
+  .rep:hover{color:var(--txt);background:rgba(232,194,90,.08)}
+  .rep:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+  .rep[aria-pressed="true"]{color:var(--gold)}
+  .rep[aria-pressed="true"]::after{content:"";position:absolute;bottom:1px;left:50%;width:4px;height:4px;
+       margin-left:-2px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold)}
   .now{flex:1;min-width:0}
   .now .k{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
   .now .v{font-family:var(--serif);font-size:1.02rem;overflow:hidden;
@@ -241,6 +250,17 @@
       <div class="track-line" id="line"><div class="fill" id="fill" style="width:0"></div></div>
       <span class="time" id="dur">0:00</span>
     </div>
+    <button class="rep" id="repAll" aria-pressed="true" aria-label="Repeat all" title="Repeat all">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>
+      </svg>
+    </button>
+    <button class="rep" id="repOne" aria-pressed="false" aria-label="Repeat this song" title="Repeat this song">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>
+        <path d="M11 10.5l1.5-1v5" stroke-width="1.8"/>
+      </svg>
+    </button>
     <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
   </div>
 </div>
@@ -315,7 +335,25 @@
     if (a.currentTime > 3) { a.currentTime = 0; return; }
     loadTrack(cur - 1, !a.paused);
   });
-  a.addEventListener("ended", function () { loadTrack(cur + 1, true); });
+  // Repeat: "all" wraps 20 back to 1 (the old default), "one" loops the current song,
+  // "off" stops after the last song. Repeat-one rides the native loop flag, so "ended"
+  // never fires for it and there is no gap between plays.
+  var REPEATS = ["off", "all", "one"];
+  var repeat = "all";
+  function setRepeat(mode) {
+    repeat = REPEATS.indexOf(mode) >= 0 ? mode : "all";
+    a.loop = repeat === "one";
+    $("repAll").setAttribute("aria-pressed", repeat === "all" ? "true" : "false");
+    $("repOne").setAttribute("aria-pressed", repeat === "one" ? "true" : "false");
+    save({ repeat: repeat });
+  }
+  $("repAll").addEventListener("click", function () { setRepeat(repeat === "all" ? "off" : "all"); });
+  $("repOne").addEventListener("click", function () { setRepeat(repeat === "one" ? "all" : "one"); });
+
+  a.addEventListener("ended", function () {
+    if (repeat === "off" && cur === T.length - 1) { loadTrack(0, false); sync(); return; }
+    loadTrack(cur + 1, true);
+  });
   a.addEventListener("play", sync);
   a.addEventListener("pause", sync);
   a.addEventListener("timeupdate", function () {
@@ -335,12 +373,25 @@
     if (e.key === " ") { e.preventDefault(); $("play").click(); }
     if (e.key === "]") $("next").click();
     if (e.key === "[") $("prev").click();
+    if (e.key === "r" || e.key === "R") setRepeat(REPEATS[(REPEATS.indexOf(repeat) + 1) % REPEATS.length]);
   });
 
   var s = load();
   a.volume = typeof s.vol === "number" ? s.vol : 0.7;
   $("vol").value = a.volume;
-  loadTrack(typeof s.track === "number" && s.track < T.length ? s.track : 0, false);
+  setRepeat(s.repeat);
+  // /soundtrack/#t9 (from the record sleeves on the home page) cues that song. It can't
+  // autoplay — the browser wants a click on THIS page — so it is selected and scrolled to.
+  function cueFromHash() {
+    var h = /^#t(\d{1,2})$/.exec(location.hash), want = h ? +h[1] - 1 : -1;
+    if (want < 0 || want >= T.length) return false;
+    loadTrack(want, !a.paused);
+    var b = document.querySelector('.trk[data-i="' + want + '"]');
+    if (b) { b.scrollIntoView({ block: "center" }); b.focus({ preventScroll: true }); }
+    return true;
+  }
+  addEventListener("hashchange", cueFromHash);
+  if (!cueFromHash()) loadTrack(typeof s.track === "number" && s.track < T.length ? s.track : 0, false);
 })();
 </script>
 </body>
