@@ -527,6 +527,62 @@
   @media (max-width:1020px){ .grid4{grid-template-columns:1fr 1fr} }
   @media (max-width:600px){ .grid4{grid-template-columns:1fr} }
 
+  /* ---------- cosmos: stars, nebulae, orbits, melanin, sacred geometry ---------- */
+  /* One fixed starfield behind the whole page (three tiled SVG layers, the top one
+     twinkling), a different nebula colour per section, and line art parked in each
+     section's empty margins. All of it is pointer-events:none and sits under the content. */
+  .sky{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.95;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='%23fff6dc'%3E%3Ccircle cx='104' cy='48' r='0.6' fill-opacity='0.40'/%3E%3Ccircle cx='171' cy='117' r='0.6' fill-opacity='0.94'/%3E%3Ccircle cx='69' cy='28' r='1.2' fill-opacity='0.40'/%3E%3Ccircle cx='29' cy='136' r='1.5' fill-opacity='0.43'/%3E%3Ccircle cx='71' cy='201' r='0.6' fill-opacity='0.73'/%3E%3Ccircle cx='127' cy='312' r='0.6' fill-opacity='0.71'/%3E%3Ccircle cx='43' cy='134' r='1.5' fill-opacity='0.43'/%3E%3Ccircle cx='99' cy='261' r='0.8' fill-opacity='0.42'/%3E%3Ccircle cx='183' cy='60' r='0.6' fill-opacity='0.71'/%3E%3Ccircle cx='20' cy='19' r='0.8' fill-opacity='0.67'/%3E%3Ccircle cx='170' cy='249' r='1.2' fill-opacity='0.73'/%3E%3Ccircle cx='145' cy='96' r='0.8' fill-opacity='0.80'/%3E%3Ccircle cx='78' cy='184' r='1.5' fill-opacity='0.67'/%3E%3Ccircle cx='110' cy='144' r='1.5' fill-opacity='0.99'/%3E%3Ccircle cx='38' cy='134' r='1' fill-opacity='0.45'/%3E%3Ccircle cx='156' cy='13' r='0.6' fill-opacity='0.85'/%3E%3Ccircle cx='183' cy='280' r='1' fill-opacity='0.57'/%3E%3Ccircle cx='112' cy='159' r='1.2' fill-opacity='0.39'/%3E%3Ccircle cx='30' cy='86' r='0.6' fill-opacity='0.39'/%3E%3Ccircle cx='224' cy='207' r='1.2' fill-opacity='0.53'/%3E%3Ccircle cx='123' cy='214' r='0.6' fill-opacity='0.96'/%3E%3Ccircle cx='114' cy='195' r='1.2' fill-opacity='0.39'/%3E%3Ccircle cx='246' cy='41' r='0.8' fill-opacity='0.61'/%3E%3Ccircle cx='293' cy='159' r='0.8' fill-opacity='0.64'/%3E%3Ccircle cx='176' cy='283' r='1.2' fill-opacity='0.91'/%3E%3Ccircle cx='89' cy='133' r='1' fill-opacity='0.79'/%3E%3Ccircle cx='122' cy='74' r='0.6' fill-opacity='0.46'/%3E%3Ccircle cx='74' cy='75' r='1.2' fill-opacity='0.89'/%3E%3Ccircle cx='58' cy='90' r='0.8' fill-opacity='0.62'/%3E%3Ccircle cx='118' cy='181' r='0.8' fill-opacity='0.80'/%3E%3Ccircle cx='165' cy='198' r='0.6' fill-opacity='0.65'/%3E%3Ccircle cx='279' cy='305' r='1.5' fill-opacity='0.61'/%3E%3Ccircle cx='128' cy='33' r='1.2' fill-opacity='0.39'/%3E%3Ccircle cx='22' cy='67' r='0.8' fill-opacity='0.42'/%3E%3Ccircle cx='192' cy='33' r='1.5' fill-opacity='0.45'/%3E%3Ccircle cx='32' cy='116' r='0.6' fill-opacity='0.40'/%3E%3Ccircle cx='67' cy='120' r='1' fill-opacity='0.97'/%3E%3Ccircle cx='193' cy='152' r='0.6' fill-opacity='0.90'/%3E%3Ccircle cx='318' cy='149' r='1.2' fill-opacity='0.55'/%3E%3Ccircle cx='46' cy='240' r='1' fill-opacity='0.66'/%3E%3Ccircle cx='221' cy='165' r='0.8' fill-opacity='0.97'/%3E%3Ccircle cx='169' cy='47' r='1.5' fill-opacity='0.94'/%3E%3Ccircle cx='243' cy='95' r='0.6' fill-opacity='0.80'/%3E%3Ccircle cx='84' cy='117' r='0.8' fill-opacity='0.58'/%3E%3Ccircle cx='71' cy='173' r='1.5' fill-opacity='0.56'/%3E%3Ccircle cx='71' cy='260' r='0.8' fill-opacity='0.87'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='510' height='510' fill='%23e7d6ff'%3E%3Ccircle cx='345' cy='400' r='1.5' fill-opacity='0.43'/%3E%3Ccircle cx='102' cy='177' r='1.5' fill-opacity='0.54'/%3E%3Ccircle cx='76' cy='133' r='1' fill-opacity='0.62'/%3E%3Ccircle cx='494' cy='426' r='1' fill-opacity='0.93'/%3E%3Ccircle cx='12' cy='315' r='0.6' fill-opacity='0.95'/%3E%3Ccircle cx='58' cy='232' r='0.6' fill-opacity='0.87'/%3E%3Ccircle cx='211' cy='51' r='1.2' fill-opacity='0.84'/%3E%3Ccircle cx='202' cy='336' r='1' fill-opacity='0.72'/%3E%3Ccircle cx='256' cy='81' r='1.2' fill-opacity='0.50'/%3E%3Ccircle cx='278' cy='373' r='0.8' fill-opacity='0.60'/%3E%3Ccircle cx='71' cy='319' r='0.6' fill-opacity='0.71'/%3E%3Ccircle cx='234' cy='488' r='1.2' fill-opacity='0.74'/%3E%3Ccircle cx='265' cy='421' r='1.2' fill-opacity='0.59'/%3E%3Ccircle cx='457' cy='442' r='0.6' fill-opacity='0.51'/%3E%3Ccircle cx='13' cy='192' r='0.6' fill-opacity='0.79'/%3E%3Ccircle cx='333' cy='477' r='1.2' fill-opacity='0.53'/%3E%3Ccircle cx='206' cy='375' r='1.2' fill-opacity='0.64'/%3E%3Ccircle cx='157' cy='390' r='0.6' fill-opacity='0.49'/%3E%3Ccircle cx='351' cy='384' r='0.6' fill-opacity='0.65'/%3E%3Ccircle cx='239' cy='230' r='0.6' fill-opacity='0.46'/%3E%3Ccircle cx='331' cy='38' r='0.8' fill-opacity='0.46'/%3E%3Ccircle cx='146' cy='238' r='0.6' fill-opacity='0.48'/%3E%3Ccircle cx='240' cy='509' r='0.6' fill-opacity='0.63'/%3E%3Ccircle cx='482' cy='78' r='1.2' fill-opacity='0.75'/%3E%3Ccircle cx='148' cy='325' r='0.6' fill-opacity='0.72'/%3E%3Ccircle cx='300' cy='489' r='0.8' fill-opacity='0.52'/%3E%3Ccircle cx='162' cy='13' r='1' fill-opacity='0.77'/%3E%3Ccircle cx='107' cy='101' r='1.5' fill-opacity='0.65'/%3E%3Ccircle cx='256' cy='504' r='1.5' fill-opacity='0.87'/%3E%3Ccircle cx='287' cy='366' r='1' fill-opacity='0.77'/%3E%3C/svg%3E");
+    background-size:320px 320px,510px 510px}
+  .sky::after{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='410' height='410' fill='%23fff2c4'%3E%3Ccircle cx='5' cy='46' r='1.2' fill-opacity='0.44'/%3E%3Ccircle cx='18' cy='390' r='1.5' fill-opacity='0.50'/%3E%3Ccircle cx='311' cy='60' r='0.6' fill-opacity='0.78'/%3E%3Ccircle cx='56' cy='220' r='1.2' fill-opacity='0.69'/%3E%3Ccircle cx='84' cy='243' r='0.6' fill-opacity='0.36'/%3E%3Ccircle cx='385' cy='165' r='0.8' fill-opacity='0.48'/%3E%3Ccircle cx='161' cy='245' r='0.8' fill-opacity='0.49'/%3E%3Ccircle cx='89' cy='240' r='1.5' fill-opacity='0.39'/%3E%3Ccircle cx='21' cy='74' r='0.8' fill-opacity='0.48'/%3E%3Ccircle cx='343' cy='405' r='0.6' fill-opacity='0.41'/%3E%3Ccircle cx='218' cy='180' r='0.8' fill-opacity='0.49'/%3E%3Ccircle cx='177' cy='151' r='1' fill-opacity='0.77'/%3E%3Ccircle cx='90' cy='17' r='1' fill-opacity='0.54'/%3E%3Ccircle cx='234' cy='198' r='1' fill-opacity='0.97'/%3E%3Ccircle cx='400' cy='407' r='1' fill-opacity='0.93'/%3E%3Ccircle cx='230' cy='384' r='1' fill-opacity='0.41'/%3E%3Ccircle cx='79' cy='378' r='1.5' fill-opacity='0.59'/%3E%3Ccircle cx='392' cy='275' r='1' fill-opacity='0.94'/%3E%3Ccircle cx='266' cy='407' r='0.8' fill-opacity='0.42'/%3E%3Ccircle cx='83' cy='137' r='1.2' fill-opacity='0.86'/%3E%3Ccircle cx='230' cy='48' r='0.6' fill-opacity='0.92'/%3E%3Ccircle cx='261' cy='394' r='0.8' fill-opacity='0.57'/%3E%3Ccircle cx='293' cy='350' r='1.2' fill-opacity='0.39'/%3E%3Ccircle cx='251' cy='210' r='1' fill-opacity='0.99'/%3E%3Ccircle cx='201' cy='242' r='0.6' fill-opacity='0.67'/%3E%3Ccircle cx='327' cy='249' r='1.2' fill-opacity='0.98'/%3E%3C/svg%3E");
+    background-size:410px 410px;animation:twinkle 4.8s ease-in-out infinite alternate}
+  @keyframes twinkle{from{opacity:.15}to{opacity:1}}
+
+  section>.wrap{position:relative;z-index:1}
+  .deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .d{position:absolute;display:block;opacity:var(--o,.25)}
+  .d svg{display:block;width:100%;height:auto}
+  .spin svg{animation:dspin var(--t,160s) linear infinite}
+  .spin.rev svg{animation-direction:reverse}
+  .float svg{animation:dfloat var(--t,16s) ease-in-out infinite}
+  @keyframes dspin{to{transform:rotate(360deg)}}
+  @keyframes dfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-16px) rotate(3deg)}}
+  .d .mol{filter:drop-shadow(0 0 6px currentColor)}
+  @media (max-width:820px){ .deco{opacity:.5} .d{scale:.6} .d.hm{display:none} }
+
+  #apps{background:radial-gradient(800px 420px at 4% 0%,rgba(168,119,230,.16),transparent 70%),
+    radial-gradient(700px 480px at 100% 30%,rgba(63,210,199,.10),transparent 70%)}
+  #games{background:radial-gradient(900px 500px at 0% 10%,rgba(59,111,224,.14),transparent 70%),
+    radial-gradient(700px 400px at 100% 70%,rgba(255,90,60,.07),transparent 70%)}
+  #listen{background:radial-gradient(800px 420px at 96% 0%,rgba(232,170,60,.15),transparent 70%),
+    radial-gradient(600px 380px at 0% 100%,rgba(208,69,154,.10),transparent 70%)}
+  #books{background:radial-gradient(900px 440px at 6% 0%,rgba(168,119,230,.14),transparent 70%)}
+  #receipts{background:radial-gradient(900px 460px at 96% 0%,rgba(192,57,43,.13),transparent 70%)}
+  #saga{background:radial-gradient(800px 460px at 0% 0%,rgba(63,210,199,.11),transparent 70%),
+    radial-gradient(800px 460px at 100% 8%,rgba(168,119,230,.15),transparent 70%)}
+  #watch{background:radial-gradient(900px 480px at 96% 0%,rgba(80,80,230,.14),transparent 70%)}
+  #build{background:radial-gradient(800px 440px at 0% 0%,rgba(53,208,138,.11),transparent 70%),
+    radial-gradient(700px 420px at 100% 40%,rgba(232,194,90,.09),transparent 70%)}
+  #shelf{background:radial-gradient(900px 460px at 96% 0%,rgba(208,69,154,.12),transparent 70%)}
+  #drops{background:radial-gradient(700px 360px at 50% 50%,rgba(232,194,90,.10),transparent 70%)}
+
+  /* ---------- blended play buttons ---------- */
+  /* Same two-colour blend as the app buttons, each game in its own colours. The gradient
+     is oversized so hover can slide it, which reads as the colours flowing. */
+  .btn-play{--b1:#f5dc8e;--b2:#3fd2c7;color:#1b1206;
+    background:linear-gradient(120deg,var(--b1),var(--b2) 60%,var(--b1));background-size:220% 100%;background-position:0 0;
+    box-shadow:0 14px 32px -16px var(--b1),0 12px 34px -18px var(--b2);
+    transition:transform .16s cubic-bezier(.16,1,.3,1),filter .16s,box-shadow .16s,background-position .6s ease}
+  .btn-play:hover,.btn-play:focus-visible{background-position:100% 0;transform:translateY(-2px);filter:brightness(1.07);
+    box-shadow:0 18px 40px -14px var(--b1),0 16px 40px -16px var(--b2);outline:none}
+  .p-qm3d{--b1:#f8cf52;--b2:#ff5a3c}
+  .p-chess{--b1:#f3c766;--b2:#b277f2}
+  .p-qm85{--b1:#5fdcff;--b2:#a46bf0}
+  .p-une{--b1:#ff86c0;--b2:#9a6af2}
+  .p-cui{--b1:#f5dc8e;--b2:#35d08a}
+  .p-music{--b1:#f5dc8e;--b2:#3fd2c7}
+  .chip.solid.blend{background:linear-gradient(120deg,#f8cf52,#ff5a3c);color:#1b1206}
+
   /* ---------- reveal ---------- */
   .rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
   .rv.in{opacity:1;transform:none}
@@ -535,11 +591,13 @@
     .rv{opacity:1;transform:none;transition:none}
     .eyebrow::before,.live::before,.qe::before{animation:none}
     .qe{animation:none}
+    .sky::after,.d svg{animation:none}
     *{transition-duration:.01ms !important}
   }
 </style>
 </head>
 <body>
+<div class="sky" aria-hidden="true"></div>
 
 <nav class="nav" id="nav">
   <div class="wrap nav-in">
@@ -586,7 +644,7 @@
     <p class="lede">Afrofuturist games, apps, books and receipts — built in the open by Robert Hadden Jr.
       &amp; Mahal Kita. Plain-English proof on melanin, history &amp; truth.</p>
     <div class="btns">
-      <a class="btn btn-gold" href="/quantummotors3dracing/">▶ Play Quantum Motors 3D</a>
+      <a class="btn btn-gold btn-play p-qm3d" href="/quantummotors3dracing/">▶ Play Quantum Motors 3D</a>
       <a class="btn btn-ghost" href="#receipts">Read the receipts</a>
     </div>
     <div class="stats">
@@ -601,6 +659,7 @@
 
 <!-- ============ APPS ============ -->
 <section id="apps">
+  <div class="deco" aria-hidden="true"><div class="d " style="width:640px;right:-60px;top:-10px;--o:.8"><svg class="orrery" viewBox="-320 -130 640 260"><defs><radialGradient id="oas"><stop offset="0" stop-color="#fff6d0"/><stop offset=".35" stop-color="#f5c84a"/><stop offset="1" stop-color="#e8c25a" stop-opacity="0"/></radialGradient><radialGradient id="oap0" cx=".35" cy=".35"><stop offset="0" stop-color="#c9c2b6"/><stop offset="1" stop-color="#6e675e"/></radialGradient><radialGradient id="oap1" cx=".35" cy=".35"><stop offset="0" stop-color="#f3d59a"/><stop offset="1" stop-color="#b98a3c"/></radialGradient><radialGradient id="oap2" cx=".35" cy=".35"><stop offset="0" stop-color="#8fd8ff"/><stop offset="1" stop-color="#2a6fb0"/></radialGradient><radialGradient id="oap3" cx=".35" cy=".35"><stop offset="0" stop-color="#ff9a6c"/><stop offset="1" stop-color="#a2361f"/></radialGradient><radialGradient id="oap4" cx=".35" cy=".35"><stop offset="0" stop-color="#f2c48a"/><stop offset="1" stop-color="#9a5a2a"/></radialGradient><radialGradient id="oap5" cx=".35" cy=".35"><stop offset="0" stop-color="#f5dc8e"/><stop offset="1" stop-color="#a8761f"/></radialGradient></defs><circle r="70" fill="url(#oas)" opacity=".55"/><ellipse rx="62" ry="22.3" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="3.2" fill="url(#oap0)"/><animateMotion dur="9s" begin="-1.2s" repeatCount="indefinite" path="M62,0 A62,22.3 0 1,1 -62,0 A62,22.3 0 1,1 62,0"/></g><ellipse rx="96" ry="34.6" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="4.6" fill="url(#oap1)"/><animateMotion dur="15s" begin="-4.5s" repeatCount="indefinite" path="M96,0 A96,34.6 0 1,1 -96,0 A96,34.6 0 1,1 96,0"/></g><ellipse rx="134" ry="48.2" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="5.2" fill="url(#oap2)"/><animateMotion dur="24s" begin="-11.3s" repeatCount="indefinite" path="M134,0 A134,48.2 0 1,1 -134,0 A134,48.2 0 1,1 134,0"/></g><ellipse rx="176" ry="63.4" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="4.2" fill="url(#oap3)"/><animateMotion dur="38s" begin="-24.3s" repeatCount="indefinite" path="M176,0 A176,63.4 0 1,1 -176,0 A176,63.4 0 1,1 176,0"/></g><ellipse rx="232" ry="83.5" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="10" fill="url(#oap4)"/><path d="M-10,-3 H10 M-10,2.5 H10" stroke="#7a4220" stroke-opacity=".5" stroke-width="1.2"/><animateMotion dur="62s" begin="-50.2s" repeatCount="indefinite" path="M232,0 A232,83.5 0 1,1 -232,0 A232,83.5 0 1,1 232,0"/></g><ellipse rx="292" ry="105.1" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="8" fill="url(#oap5)"/><ellipse rx="16.8" ry="4.8" fill="none" stroke="#f5dc8e" stroke-opacity=".85" stroke-width="1.4" transform="rotate(-18)"/><animateMotion dur="96s" begin="-94.1s" repeatCount="indefinite" path="M292,0 A292,105.1 0 1,1 -292,0 A292,105.1 0 1,1 292,0"/></g><circle r="17" fill="url(#oas)"/></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">⚡ Live apps</p>
@@ -675,6 +734,7 @@
 
 <!-- ============ GAMES ============ -->
 <section id="games">
+  <div class="deco" aria-hidden="true"><div class="d float" style="width:360px;right:3%;top:24px;--o:.4;--t:18s;color:#e8c25a"><svg class="mol" viewBox="-59.3 -178.2 297.5 240.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M17.3,-10 L0,-20 L-17.3,-10 L-17.3,10 L0,20 L17.3,10Z M17.3,10 L36.3,16.2 L48.1,-0 L36.3,-16.2 L17.3,-10Z M98.1,-17.3 L108.1,-0 L98.1,17.3 L78.1,17.3 L68.1,-0 L78.1,-17.3Z M78.1,-17.3 L71.9,-36.3 L88.1,-48.1 L104.3,-36.3 L98.1,-17.3Z M105.4,-98.1 L88.1,-108.1 L70.8,-98.1 L70.8,-78.1 L88.1,-68.1 L105.4,-78.1Z M105.4,-78.1 L124.4,-71.9 L136.2,-88.1 L124.4,-104.3 L105.4,-98.1Z M186.2,-105.4 L196.2,-88.1 L186.2,-70.8 L166.2,-70.8 L156.2,-88.1 L166.2,-105.4Z M166.2,-105.4 L160,-124.4 L176.2,-136.2 L192.4,-124.4 L186.2,-105.4Z M-17.3,-10 L-31.2,-18 M-17.3,10 L-31.2,18 M48.1,-0 L68.1,-0 M98.1,17.3 L106.1,31.2 M78.1,17.3 L70.1,31.2 M88.1,-48.1 L88.1,-68.1 M70.8,-98.1 L56.9,-106.1 M70.8,-78.1 L56.9,-70.1 M136.2,-88.1 L156.2,-88.1 M186.2,-70.8 L194.2,-56.9 M166.2,-70.8 L158.2,-56.9"/><g stroke-width=".9" opacity=".7"><circle cx="0" cy="0" r="11"/><circle cx="88.1" cy="-0" r="11"/><circle cx="88.1" cy="-88.1" r="11"/><circle cx="176.2" cy="-88.1" r="11"/></g><g fill="currentColor" stroke="none" font-size="10" font-family="Georgia,serif" text-anchor="middle" dominant-baseline="middle"><text x="-42.4" y="-24.5">OH</text><text x="-42.4" y="24.5">OH</text><text x="41.3" y="31.4">NH</text><text x="112.6" y="42.4">OH</text><text x="63.6" y="42.4">OH</text><text x="56.7" y="-41.3">NH</text><text x="45.7" y="-112.6">OH</text><text x="45.7" y="-63.6">OH</text><text x="129.4" y="-56.7">NH</text><text x="200.7" y="-45.7">OH</text><text x="151.7" y="-45.7">OH</text><text x="144.8" y="-129.4">NH</text></g></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">🎮 Play free</p>
@@ -696,7 +756,7 @@
           hole in a San Francisco road, a Hot Wheels loop in Egypt, and the long red dusk of Mali.
           Garage, upgrades, championship ladder and a police-pursuit street mode.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="/quantummotors3dracing/">▶ Play now</a>
+          <a class="btn btn-gold btn-play p-qm3d" href="/quantummotors3dracing/">▶ Play now</a>
           <a class="btn btn-ghost" href="https://quantum-melanin-media.itch.io/quantum-motors-3d"
              target="_blank" rel="noopener">itch.io page</a>
         </div>
@@ -735,7 +795,7 @@
           Sengoku Japan, the Maya. A full engine behind it, a difficulty ladder in front of it,
           and every piece carrying the lore of the dynasty that owns it.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="/bloodlines-chess/">▶ Play now</a>
+          <a class="btn btn-gold btn-play p-chess" href="/bloodlines-chess/">▶ Play now</a>
           <a class="btn btn-ghost" href="https://quantum-melanin-media.itch.io/bloodlines-noble-chess"
              target="_blank" rel="noopener">itch.io page</a>
         </div>
@@ -777,7 +837,7 @@
           and survive the clock: it gets harder by noon, THE OVERSEER holds the afternoon, and THE SERPENT PRIEST
           owns the night. Cyberspace — QM85's home world — is the second front.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="/qm85/">▶ Play now</a>
+          <a class="btn btn-gold btn-play p-qm85" href="/qm85/">▶ Play now</a>
         </div>
       </div>
     </div>
@@ -798,7 +858,7 @@
           foe. Every crate you open still gives back a <b>real record</b>, and the whole QMM
           soundtrack plays while you fight.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="/theunerased/3d/">▶ Play 3D</a>
+          <a class="btn btn-gold btn-play p-une" href="/theunerased/3d/">▶ Play 3D</a>
           <a class="btn btn-ghost" href="/theunerased/">Classic 2D</a>
           <a class="btn btn-ghost" href="https://quantum-melanin-media.itch.io/the-unerased"
              target="_blank" rel="noopener">itch.io page</a>
@@ -838,7 +898,7 @@
           odds and the block either holds or it doesn't. Every building carries the real-world
           version of itself.</p>
         <div class="btns">
-          <a class="btn btn-gold" href="/cui/3d/">▶ Play the 3D world</a>
+          <a class="btn btn-gold btn-play p-cui" href="/cui/3d/">▶ Play the 3D world</a>
           <a class="btn btn-ghost" href="/cui/">Classic 2D</a>
           <a class="btn btn-ghost" href="/cui/network/">Join the network</a>
         </div>
@@ -853,7 +913,7 @@
           <h3>QUANTUM MOTORS — arcade</h3>
           <p>The original top-down drift racer. Chain your slides, burn melanin nitro, and
             outrun the Eraser Patrol through a neon city that never stops raining.</p>
-          <div class="row"><span class="chip solid">Play free</span>
+          <div class="row"><span class="chip solid blend">Play free</span>
             <span class="chip">on itch.io</span><span class="go">→</span></div>
         </div>
       </a>
@@ -873,6 +933,7 @@
 
 <!-- ============ BOOKS ============ -->
 <section id="listen">
+  <div class="deco" aria-hidden="true"><div class="d spin" style="width:440px;right:-40px;top:-20px;--o:.34;--t:170s;color:#e8c25a"><svg class="geo" viewBox="-100 -100 200 200" fill="none" stroke="currentColor" stroke-width=".7"><circle cx="-60" cy="0" r="30"/><circle cx="-45" cy="-26" r="30"/><circle cx="-45" cy="26" r="30"/><circle cx="-30" cy="-52" r="30"/><circle cx="-30" cy="0" r="30"/><circle cx="-30" cy="52" r="30"/><circle cx="-15" cy="-26" r="30"/><circle cx="-15" cy="26" r="30"/><circle cx="0" cy="-52" r="30"/><circle cx="0" cy="0" r="30"/><circle cx="0" cy="52" r="30"/><circle cx="15" cy="-26" r="30"/><circle cx="15" cy="26" r="30"/><circle cx="30" cy="-52" r="30"/><circle cx="30" cy="0" r="30"/><circle cx="30" cy="52" r="30"/><circle cx="45" cy="-26" r="30"/><circle cx="45" cy="26" r="30"/><circle cx="60" cy="0" r="30"/><circle r="90" stroke-width="1.1"/><circle r="94" stroke-width=".5"/></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">♪ The soundtrack</p>
@@ -905,13 +966,14 @@
       </a>
     </div>
     <div class="btns rv">
-      <a class="btn btn-gold" href="/soundtrack/">Play all 20 songs</a>
+      <a class="btn btn-gold btn-play p-music" href="/soundtrack/">Play all 20 songs</a>
       <a class="btn btn-ghost" href="/melanin-key/">Read the book free</a>
     </div>
   </div>
 </section>
 
 <section id="books">
+  <div class="deco" aria-hidden="true"><div class="d float" style="width:92px;right:7%;top:46px;--o:.8;--t:20s"><svg class="moon" viewBox="-60 -60 120 120"><defs><mask id="cmk"><rect x="-60" y="-60" width="120" height="120" fill="#fff"/><circle cx="18" cy="-10" r="40" fill="#000"/></mask><radialGradient id="mgr" cx=".3" cy=".4"><stop offset="0" stop-color="#fff7dc"/><stop offset="1" stop-color="#e8c25a"/></radialGradient></defs><circle r="44" fill="url(#mgr)" mask="url(#cmk)"/></svg></div><div class="d spin rev hm" style="width:380px;left:-70px;top:-30px;--o:.26;--t:220s;color:#b48cf0"><svg class="geo" viewBox="-70 -70 140 140" fill="none" stroke="currentColor" stroke-width=".45"><path d="M0,0 L0,-26 M0,0 L22.5,-13 M0,0 L22.5,13 M0,0 L0,26 M0,0 L-22.5,13 M0,0 L-22.5,-13 M0,0 L0,-52 M0,0 L45,-26 M0,0 L45,26 M0,0 L0,52 M0,0 L-45,26 M0,0 L-45,-26 M0,-26 L22.5,-13 M0,-26 L22.5,13 M0,-26 L0,26 M0,-26 L-22.5,13 M0,-26 L-22.5,-13 M0,-26 L0,-52 M0,-26 L45,-26 M0,-26 L45,26 M0,-26 L0,52 M0,-26 L-45,26 M0,-26 L-45,-26 M22.5,-13 L22.5,13 M22.5,-13 L0,26 M22.5,-13 L-22.5,13 M22.5,-13 L-22.5,-13 M22.5,-13 L0,-52 M22.5,-13 L45,-26 M22.5,-13 L45,26 M22.5,-13 L0,52 M22.5,-13 L-45,26 M22.5,-13 L-45,-26 M22.5,13 L0,26 M22.5,13 L-22.5,13 M22.5,13 L-22.5,-13 M22.5,13 L0,-52 M22.5,13 L45,-26 M22.5,13 L45,26 M22.5,13 L0,52 M22.5,13 L-45,26 M22.5,13 L-45,-26 M0,26 L-22.5,13 M0,26 L-22.5,-13 M0,26 L0,-52 M0,26 L45,-26 M0,26 L45,26 M0,26 L0,52 M0,26 L-45,26 M0,26 L-45,-26 M-22.5,13 L-22.5,-13 M-22.5,13 L0,-52 M-22.5,13 L45,-26 M-22.5,13 L45,26 M-22.5,13 L0,52 M-22.5,13 L-45,26 M-22.5,13 L-45,-26 M-22.5,-13 L0,-52 M-22.5,-13 L45,-26 M-22.5,-13 L45,26 M-22.5,-13 L0,52 M-22.5,-13 L-45,26 M-22.5,-13 L-45,-26 M0,-52 L45,-26 M0,-52 L45,26 M0,-52 L0,52 M0,-52 L-45,26 M0,-52 L-45,-26 M45,-26 L45,26 M45,-26 L0,52 M45,-26 L-45,26 M45,-26 L-45,-26 M45,26 L0,52 M45,26 L-45,26 M45,26 L-45,-26 M0,52 L-45,26 M0,52 L-45,-26 M-45,26 L-45,-26"/><g stroke-width=".8"><circle cx="0" cy="0" r="9"/><circle cx="0" cy="-26" r="9"/><circle cx="22.5" cy="-13" r="9"/><circle cx="22.5" cy="13" r="9"/><circle cx="0" cy="26" r="9"/><circle cx="-22.5" cy="13" r="9"/><circle cx="-22.5" cy="-13" r="9"/><circle cx="0" cy="-52" r="9"/><circle cx="45" cy="-26" r="9"/><circle cx="45" cy="26" r="9"/><circle cx="0" cy="52" r="9"/><circle cx="-45" cy="26" r="9"/><circle cx="-45" cy="-26" r="9"/></g></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">📚 The library</p>
@@ -975,6 +1037,7 @@
 
 <!-- ============ I CALL BULLSHIT ============ -->
 <section id="receipts">
+  <div class="deco" aria-hidden="true"><div class="d spin" style="width:330px;right:2%;top:10px;--o:.34;--t:150s;color:#f08ab8"><svg class="geo" viewBox="-80 -80 160 160" fill="none" stroke="currentColor" stroke-width=".8"><circle r="70"/><circle r="60" stroke-width=".4"/><circle r="30" stroke-width=".4"/><path d="M0,-60 L52,30 L-52,30Z M0,60 L-52,-30 L52,-30Z M0,-38 L32.9,19 L-32.9,19Z M0,38 L-32.9,-19 L32.9,-19Z"/></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">📄 I Call Bullshit</p>
@@ -1120,6 +1183,7 @@
 
 <!-- ============ SAGA ============ -->
 <section id="saga">
+  <div class="deco" aria-hidden="true"><div class="d float" style="width:300px;right:2%;top:24px;--o:.85;--t:22s"><svg class="planet" viewBox="-110 -70 220 140"><defs><radialGradient id="rpg" cx=".32" cy=".3"><stop offset="0" stop-color="#d9b8ff"/><stop offset=".55" stop-color="#7a4bc4"/><stop offset="1" stop-color="#1c0f33"/></radialGradient></defs><g transform="rotate(-16)"><path d="M-100,0 A100,22 0 0,1 100,0" fill="none" stroke="#e8c25a" stroke-opacity=".55" stroke-width="5"/><circle r="44" fill="url(#rpg)"/><path d="M-100,0 A100,22 0 0,0 100,0" fill="none" stroke="#f5dc8e" stroke-opacity=".75" stroke-width="5"/><path d="M-84,0 A84,17 0 0,0 84,0" fill="none" stroke="#f5dc8e" stroke-opacity=".35" stroke-width="2"/></g></svg></div><div class="d spin rev hm" style="width:360px;left:-100px;top:420px;--o:.2;--t:200s;color:#5fd6cc"><svg class="geo" viewBox="-100 -100 200 200" fill="none" stroke="currentColor" stroke-width=".7"><circle cx="-60" cy="0" r="30"/><circle cx="-45" cy="-26" r="30"/><circle cx="-45" cy="26" r="30"/><circle cx="-30" cy="-52" r="30"/><circle cx="-30" cy="0" r="30"/><circle cx="-30" cy="52" r="30"/><circle cx="-15" cy="-26" r="30"/><circle cx="-15" cy="26" r="30"/><circle cx="0" cy="-52" r="30"/><circle cx="0" cy="0" r="30"/><circle cx="0" cy="52" r="30"/><circle cx="15" cy="-26" r="30"/><circle cx="15" cy="26" r="30"/><circle cx="30" cy="-52" r="30"/><circle cx="30" cy="0" r="30"/><circle cx="30" cy="52" r="30"/><circle cx="45" cy="-26" r="30"/><circle cx="45" cy="26" r="30"/><circle cx="60" cy="0" r="30"/><circle r="90" stroke-width="1.1"/><circle r="94" stroke-width=".5"/></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">✨ The universe</p>
@@ -1255,6 +1319,7 @@
 
 <!-- ============ WATCH ============ -->
 <section id="watch">
+  <div class="deco" aria-hidden="true"><div class="d float" style="width:330px;right:3%;top:24px;--o:.4;--t:16s;color:#b48cf0"><svg class="mol" viewBox="-59.3 -150.1 237.5 212.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M17.3,-10 L0,-20 L-17.3,-10 L-17.3,10 L0,20 L17.3,10Z M17.3,10 L36.3,16.2 L48.1,-0 L36.3,-16.2 L17.3,-10Z M98.1,-17.3 L108.1,-0 L98.1,17.3 L78.1,17.3 L68.1,-0 L78.1,-17.3Z M78.1,-17.3 L71.9,-36.3 L88.1,-48.1 L104.3,-36.3 L98.1,-17.3Z M105.4,-98.1 L88.1,-108.1 L70.8,-98.1 L70.8,-78.1 L88.1,-68.1 L105.4,-78.1Z M105.4,-78.1 L124.4,-71.9 L136.2,-88.1 L124.4,-104.3 L105.4,-98.1Z M-17.3,-10 L-31.2,-18 M-17.3,10 L-31.2,18 M48.1,-0 L68.1,-0 M98.1,17.3 L106.1,31.2 M78.1,17.3 L70.1,31.2 M88.1,-48.1 L88.1,-68.1 M70.8,-98.1 L56.9,-106.1 M70.8,-78.1 L56.9,-70.1"/><g stroke-width=".9" opacity=".7"><circle cx="0" cy="0" r="11"/><circle cx="88.1" cy="-0" r="11"/><circle cx="88.1" cy="-88.1" r="11"/></g><g fill="currentColor" stroke="none" font-size="10" font-family="Georgia,serif" text-anchor="middle" dominant-baseline="middle"><text x="-42.4" y="-24.5">OH</text><text x="-42.4" y="24.5">OH</text><text x="41.3" y="31.4">NH</text><text x="112.6" y="42.4">OH</text><text x="63.6" y="42.4">OH</text><text x="56.7" y="-41.3">NH</text><text x="45.7" y="-112.6">OH</text><text x="45.7" y="-63.6">OH</text><text x="129.4" y="-56.7">NH</text></g></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">▶️ Watch · free</p>
@@ -1322,6 +1387,7 @@
 
 <!-- ============ BUILD ============ -->
 <section id="build">
+  <div class="deco" aria-hidden="true"><div class="d spin" style="width:300px;right:3%;top:10px;--o:.32;--t:140s;color:#5fd6cc"><svg class="geo" viewBox="-80 -80 160 160" fill="none" stroke="currentColor" stroke-width=".8"><circle r="70"/><circle r="60" stroke-width=".4"/><circle r="30" stroke-width=".4"/><path d="M0,-60 L52,30 L-52,30Z M0,60 L-52,-30 L52,-30Z M0,-38 L32.9,19 L-32.9,19Z M0,38 L-32.9,-19 L32.9,-19Z"/></svg></div><div class="d spin rev hm" style="width:300px;left:-90px;top:40%;--o:.2;--t:240s;color:#e8c25a"><svg class="geo" viewBox="-70 -70 140 140" fill="none" stroke="currentColor" stroke-width=".45"><path d="M0,0 L0,-26 M0,0 L22.5,-13 M0,0 L22.5,13 M0,0 L0,26 M0,0 L-22.5,13 M0,0 L-22.5,-13 M0,0 L0,-52 M0,0 L45,-26 M0,0 L45,26 M0,0 L0,52 M0,0 L-45,26 M0,0 L-45,-26 M0,-26 L22.5,-13 M0,-26 L22.5,13 M0,-26 L0,26 M0,-26 L-22.5,13 M0,-26 L-22.5,-13 M0,-26 L0,-52 M0,-26 L45,-26 M0,-26 L45,26 M0,-26 L0,52 M0,-26 L-45,26 M0,-26 L-45,-26 M22.5,-13 L22.5,13 M22.5,-13 L0,26 M22.5,-13 L-22.5,13 M22.5,-13 L-22.5,-13 M22.5,-13 L0,-52 M22.5,-13 L45,-26 M22.5,-13 L45,26 M22.5,-13 L0,52 M22.5,-13 L-45,26 M22.5,-13 L-45,-26 M22.5,13 L0,26 M22.5,13 L-22.5,13 M22.5,13 L-22.5,-13 M22.5,13 L0,-52 M22.5,13 L45,-26 M22.5,13 L45,26 M22.5,13 L0,52 M22.5,13 L-45,26 M22.5,13 L-45,-26 M0,26 L-22.5,13 M0,26 L-22.5,-13 M0,26 L0,-52 M0,26 L45,-26 M0,26 L45,26 M0,26 L0,52 M0,26 L-45,26 M0,26 L-45,-26 M-22.5,13 L-22.5,-13 M-22.5,13 L0,-52 M-22.5,13 L45,-26 M-22.5,13 L45,26 M-22.5,13 L0,52 M-22.5,13 L-45,26 M-22.5,13 L-45,-26 M-22.5,-13 L0,-52 M-22.5,-13 L45,-26 M-22.5,-13 L45,26 M-22.5,-13 L0,52 M-22.5,-13 L-45,26 M-22.5,-13 L-45,-26 M0,-52 L45,-26 M0,-52 L45,26 M0,-52 L0,52 M0,-52 L-45,26 M0,-52 L-45,-26 M45,-26 L45,26 M45,-26 L0,52 M45,-26 L-45,26 M45,-26 L-45,-26 M45,26 L0,52 M45,26 L-45,26 M45,26 L-45,-26 M0,52 L-45,26 M0,52 L-45,-26 M-45,26 L-45,-26"/><g stroke-width=".8"><circle cx="0" cy="0" r="9"/><circle cx="0" cy="-26" r="9"/><circle cx="22.5" cy="-13" r="9"/><circle cx="22.5" cy="13" r="9"/><circle cx="0" cy="26" r="9"/><circle cx="-22.5" cy="13" r="9"/><circle cx="-22.5" cy="-13" r="9"/><circle cx="0" cy="-52" r="9"/><circle cx="45" cy="-26" r="9"/><circle cx="45" cy="26" r="9"/><circle cx="0" cy="52" r="9"/><circle cx="-45" cy="26" r="9"/><circle cx="-45" cy="-26" r="9"/></g></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">🧭 Build with us</p>
@@ -1427,6 +1493,7 @@
 
 <!-- ============ SHELF ============ -->
 <section id="shelf">
+  <div class="deco" aria-hidden="true"><div class="d " style="width:560px;right:-40px;top:-10px;--o:.65"><svg class="orrery" viewBox="-320 -130 640 260"><defs><radialGradient id="oss"><stop offset="0" stop-color="#fff6d0"/><stop offset=".35" stop-color="#f5c84a"/><stop offset="1" stop-color="#e8c25a" stop-opacity="0"/></radialGradient><radialGradient id="osp0" cx=".35" cy=".35"><stop offset="0" stop-color="#c9c2b6"/><stop offset="1" stop-color="#6e675e"/></radialGradient><radialGradient id="osp1" cx=".35" cy=".35"><stop offset="0" stop-color="#f3d59a"/><stop offset="1" stop-color="#b98a3c"/></radialGradient><radialGradient id="osp2" cx=".35" cy=".35"><stop offset="0" stop-color="#8fd8ff"/><stop offset="1" stop-color="#2a6fb0"/></radialGradient><radialGradient id="osp3" cx=".35" cy=".35"><stop offset="0" stop-color="#ff9a6c"/><stop offset="1" stop-color="#a2361f"/></radialGradient><radialGradient id="osp4" cx=".35" cy=".35"><stop offset="0" stop-color="#f2c48a"/><stop offset="1" stop-color="#9a5a2a"/></radialGradient><radialGradient id="osp5" cx=".35" cy=".35"><stop offset="0" stop-color="#f5dc8e"/><stop offset="1" stop-color="#a8761f"/></radialGradient></defs><circle r="70" fill="url(#oss)" opacity=".55"/><ellipse rx="62" ry="22.3" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="3.2" fill="url(#osp0)"/><animateMotion dur="9s" begin="-1.2s" repeatCount="indefinite" path="M62,0 A62,22.3 0 1,1 -62,0 A62,22.3 0 1,1 62,0"/></g><ellipse rx="96" ry="34.6" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="4.6" fill="url(#osp1)"/><animateMotion dur="15s" begin="-4.5s" repeatCount="indefinite" path="M96,0 A96,34.6 0 1,1 -96,0 A96,34.6 0 1,1 96,0"/></g><ellipse rx="134" ry="48.2" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="5.2" fill="url(#osp2)"/><animateMotion dur="24s" begin="-11.3s" repeatCount="indefinite" path="M134,0 A134,48.2 0 1,1 -134,0 A134,48.2 0 1,1 134,0"/></g><ellipse rx="176" ry="63.4" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="4.2" fill="url(#osp3)"/><animateMotion dur="38s" begin="-24.3s" repeatCount="indefinite" path="M176,0 A176,63.4 0 1,1 -176,0 A176,63.4 0 1,1 176,0"/></g><ellipse rx="232" ry="83.5" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8"/><g><circle r="10" fill="url(#osp4)"/><path d="M-10,-3 H10 M-10,2.5 H10" stroke="#7a4220" stroke-opacity=".5" stroke-width="1.2"/><animateMotion dur="62s" begin="-50.2s" repeatCount="indefinite" path="M232,0 A232,83.5 0 1,1 -232,0 A232,83.5 0 1,1 232,0"/></g><ellipse rx="292" ry="105.1" fill="none" stroke="#e8c25a" stroke-opacity=".3" stroke-width=".8" stroke-dasharray="2 5"/><g><circle r="8" fill="url(#osp5)"/><ellipse rx="16.8" ry="4.8" fill="none" stroke="#f5dc8e" stroke-opacity=".85" stroke-width="1.4" transform="rotate(-18)"/><animateMotion dur="96s" begin="-94.1s" repeatCount="indefinite" path="M292,0 A292,105.1 0 1,1 -292,0 A292,105.1 0 1,1 292,0"/></g><circle r="17" fill="url(#oss)"/></svg></div></div>
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">🛍️ The rest of the shelf</p>
@@ -1477,6 +1544,7 @@
 
 <!-- ============ DROPS ============ -->
 <section id="drops">
+  <div class="deco" aria-hidden="true"><div class="d spin" style="width:560px;left:50%;top:50%;margin:-280px 0 0 -280px;--o:.16;--t:260s;color:#e8c25a"><svg class="geo" viewBox="-100 -100 200 200" fill="none" stroke="currentColor" stroke-width=".7"><circle cx="-60" cy="0" r="30"/><circle cx="-45" cy="-26" r="30"/><circle cx="-45" cy="26" r="30"/><circle cx="-30" cy="-52" r="30"/><circle cx="-30" cy="0" r="30"/><circle cx="-30" cy="52" r="30"/><circle cx="-15" cy="-26" r="30"/><circle cx="-15" cy="26" r="30"/><circle cx="0" cy="-52" r="30"/><circle cx="0" cy="0" r="30"/><circle cx="0" cy="52" r="30"/><circle cx="15" cy="-26" r="30"/><circle cx="15" cy="26" r="30"/><circle cx="30" cy="-52" r="30"/><circle cx="30" cy="0" r="30"/><circle cx="30" cy="52" r="30"/><circle cx="45" cy="-26" r="30"/><circle cx="45" cy="26" r="30"/><circle cx="60" cy="0" r="30"/><circle r="90" stroke-width="1.1"/><circle r="94" stroke-width=".5"/></svg></div></div>
   <div class="wrap">
     <div class="capture rv">
       <p class="kicker">Don't miss a drop</p>
@@ -1582,6 +1650,9 @@ if (reduced.matches) { hero.removeAttribute('autoplay'); hero.pause(); } else tr
 // In-page reels (the chess match) carry preload="none" and only start once they are actually
 // on screen — a visitor who never scrolls to the games never pays for the bytes.
 const reels = document.querySelectorAll('video.reel');
+// Reduced motion: the orbits are SMIL, which CSS can't stop, so pause them directly.
+if (reduced.matches) document.querySelectorAll('svg.orrery').forEach(svg => svg.pauseAnimations());
+
 // Card spotlight: hand the pointer position to the card under it as --mx/--my.
 if (matchMedia('(hover: hover)').matches) {
   addEventListener('pointermove', (e) => {
