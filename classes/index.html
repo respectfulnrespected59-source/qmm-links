@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stop Timing the Market: a free DCA class — Quantum Melanin Media</title>
-<meta name="description" content="A free five-lesson class on dollar cost averaging, taught on real charts: 47 minutes, five years of Bitcoin and S&amp;P 500 prices, and the honest numbers, including where the method loses. Educational, not financial advice.">
+<title>The Para-Sail Strategy: a free class — Quantum Melanin Media</title>
+<meta name="description" content="A free class on the Para-Sail strategy, taught on real charts: buy near the monthly low, sell half at +40 percent, cap every coin at ten percent of your pile, and sell when the news says a coin is dying. Five years of real prices, including where it loses. Educational, not financial advice.">
 <link rel="canonical" href="https://quantummelaninmedia.com/classes/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Quantum Melanin Media">
 <meta property="og:url" content="https://quantummelaninmedia.com/classes/">
-<meta property="og:title" content="Stop Timing the Market: a free DCA class">
-<meta property="og:description" content="Five lessons, 47 minutes, real charts. Free.">
+<meta property="og:title" content="The Para-Sail Strategy: a free class">
+<meta property="og:description" content="Shop the low, take the icing. Two lessons on real charts. Free.">
 <meta property="og:image" content="https://quantummelaninmedia.com/assets/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <style>
@@ -149,15 +149,16 @@
 
 <header class="top">
   <div class="wrap">
-    <span class="eyebrow">Free class · MarketPulse · being re-recorded</span>
-    <h1>The buying class is being rebuilt.<span class="q">Taught on real charts, free, back here soon.</span></h1>
+    <span class="eyebrow">Free class · MarketPulse</span>
+    <h1>The Para-Sail Strategy.<span class="q">Shop the low, take the icing.</span></h1>
     <p class="lede">
-      The first cut of the <b>dollar cost averaging</b> class came down: it taught buying on a fixed schedule no matter
-      the price, and that is not how we buy. The new lessons are being recorded on five years of Bitcoin and S&amp;P 500
-      prices, every number computed from the chart on screen. They will land on this page when they are ready.
+      Buy only near the <b>monthly low</b>. When a coin is up 40 percent, <b>sell half</b>. Never let one coin take more
+      than <b>ten percent</b> of your pile, and sell everything when the news says it is dying. Taught on five years of
+      real prices, every number computed from the chart on screen, including where it loses.
     </p>
     <div class="stat">
       <div><b>$0</b><span>To watch</span></div>
+      <div><b>2</b><span>Lessons</span></div>
       <div><b>Real</b><span>Charts, real prices</span></div>
     </div>
     <div class="cta-row">
@@ -170,9 +171,10 @@
 
 <section class="wrap">
   <div class="app">
-    <h2>It will play on a chart you can touch.</h2>
-    <p>Inside MarketPulse the rebuilt lessons will run on the live chart itself: it rewinds, draws each buy, and points
-      at the exact tool that does the job. When a lesson ends, the chart is yours to practise on. Free there too.</p>
+    <h2>It plays on a chart you can touch.</h2>
+    <p>Inside MarketPulse the lessons run on the live chart itself: it rewinds, draws every buy and every sale, and
+      points at the exact tool that does the job. When a lesson ends, the chart is yours to practise on, and the
+      Para-Sail card in the DCA tab runs the same formula on any coin or stock you type in. Free there too.</p>
     <div class="cta-row">
       <a class="btn btn-gold" href="https://marketpulse-22bi.onrender.com/app" target="_blank" rel="noopener">Open MarketPulse</a>
     </div>
@@ -190,10 +192,19 @@
 <script>
 /* The lessons. `yt` is the YouTube video id; the player loads only when a lesson is pressed (youtube-nocookie),
    so the page itself sets no third-party cookies and stays fast.
-   2026-09-30: the five fixed-schedule DCA lessons were taken down (owner: that is not how we buy) — the list is
-   empty until the rebuilt class is recorded. Never list a video here that oEmbed cannot see: the deploy gate
-   screenshots this page and fails the whole site on a dead thumbnail. */
-const LESSONS = [];
+   2026-09-30: the five fixed-schedule DCA lessons were taken down (owner: that is not how we buy); the class is now
+   the Para-Sail strategy. Never list a video here that oEmbed cannot see: the deploy gate screenshots this page and
+   fails the whole site on a dead thumbnail. */
+const LESSONS = [
+  { yt: "b-dkc_iGRCk", len: "6:20", title: "The formula, on five years of Solana",
+    blurb: "The whole Para-Sail formula on a coin that fell more than 90 percent and came back: every buy, every sale, and the result next to simply holding the same buys.",
+    points: ["The buy zone: the 30-day low plus 8 percent", "One fixed fill a week, and a 10 percent cap per coin",
+             "Sell half at +40 percent, once per wave", "Why Bitcoin is held and never sold for icing"] },
+  { yt: "0vCosZtfW0Q", len: "5:29", title: "The two cords, on a coin that died",
+    blurb: "FTT, the FTX exchange's token, went from $65 to a quarter. What the cap and the news cord did when a coin really did die, and what they could not do.",
+    points: ["Twenty buys on the way down, and never any icing", "Withdrawals halted: pull the cord, sell it all",
+             "Why the cap did the heavy lifting", "How to tell a death from a crash"] },
+];
 
 const list = document.getElementById("lessons");
 
