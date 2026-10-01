@@ -446,6 +446,23 @@
   h1 .q.qe{display:block;width:fit-content}
   .brand .qe{font-weight:700}
 
+  /* ---------- product titles: the QUANTUM energy in each product's own colours ---------- */
+  /* Colours are read off each product's cover art (two most vivid hues, lifted for contrast).
+     The sweep + flicker only run while a title is on screen (.lit, set by an observer), so
+     dozens of glowing titles never animate at once. */
+  .gt{--g1:#f5dc8e;--g2:#e8c25a;width:fit-content;max-width:100%;
+    background:linear-gradient(100deg,var(--g1) 0%,var(--g2) 40%,#fff8e2 50%,var(--g2) 60%,var(--g1) 100%);
+    background-size:300% 100%;background-position:100% 0;
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 .2em color-mix(in srgb,var(--g1) 55%,transparent))}
+  .gt.big{font-weight:700;transform:skewX(-7deg);transform-origin:0 100%}
+  .gt.lit{animation:gsweep 8s ease-in-out infinite,gflick 11s linear infinite;animation-delay:var(--gd,0s),var(--gd,0s)}
+  /* a quick pass of light, then rest: only ~1 in 5 lit titles is repainting at any moment */
+  @keyframes gsweep{0%{background-position:100% 0}20%,100%{background-position:-200% 0}}
+  @keyframes gflick{0%,12%,15.5%,61%,64.5%,100%{opacity:1}
+    13%,62.5%{opacity:.62}14%,63.5%{opacity:1}}
+  /* opacity only: re-filtering the glow every frame cost ~8 fps on a busy section (measured) */
+
   /* ---------- apps ---------- */
   .apps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
   @media (max-width:1000px){ .apps{grid-template-columns:1fr;max-width:640px} }
@@ -596,9 +613,13 @@
     .rv{opacity:1;transform:none;transition:none}
     .eyebrow::before,.live::before,.qe::before{animation:none}
     .qe{animation:none}
-    .glints i,.d svg{animation:none}
+    .glints i,.d svg,.gt{animation:none}
     *{transition-duration:.01ms !important}
   }
+  /* Phones: the bold, leaning QUANTUM made the brand + CTA wider than a 360-390px screen
+     (2-36px sideways scroll, measured). A slightly more compact bar fits every phone width. */
+  @media (max-width:480px){ .nav-in{gap:10px} .brand{gap:8px} .brand svg{width:26px;height:26px}
+    .brand b{font-size:.9rem} .nav-cta{padding:9px 13px;font-size:.76rem} }
 </style>
 </head>
 <body>
@@ -682,7 +703,7 @@
         </a>
         <div class="c">
           <p class="meta">The Akashic AI · research · images · documents</p>
-          <h3><em>QUAN-TESS</em> AI</h3>
+          <h3 class="gt big" style="--g1:#f5dc8e;--g2:#4fe0d4;--gd:-3.5s"><em>QUAN-TESS</em> AI</h3>
           <p>Two souls, one field. QUANTUS and TESS research the suppressed sciences, make clean
             images, write glossy documents and repair whole manuscripts — all grounded in the
             six books of the Quantum Melanin library.</p>
@@ -702,7 +723,7 @@
         </a>
         <div class="c">
           <p class="meta">Holistic wellness companion</p>
-          <h3>Alignment <em>365</em></h3>
+          <h3 class="gt big" style="--g1:#c49af7;--g2:#6aaaf7;--gd:-2.2s">Alignment <em>365</em></h3>
           <p>Align your mind, body &amp; spirit. One accountability partner for nutrition, fitness,
             hydration, health vitals, medication and personal growth — built as a safe space for
             your wellness journey.</p>
@@ -722,7 +743,7 @@
         </a>
         <div class="c">
           <p class="meta">Honest trading system · stocks &amp; crypto</p>
-          <h3>Market<em>Pulse</em></h3>
+          <h3 class="gt big" style="--g1:#f5dc8e;--g2:#4fe0a0;--gd:-6.8s">Market<em>Pulse</em></h3>
           <p>The system reads the market — you make the call. Real prices through a transparent
             signal engine, sized so one bad trade can't sink you, and it publishes its own
             backtests, losses included. No black box. No guarantees.</p>
@@ -757,7 +778,7 @@
       </div>
       <div class="copy">
         <p class="meta">Arcade racer · WebGL</p>
-        <h3>QUANTUM MOTORS 3D</h3>
+        <h3 class="gt big" style="--g1:#f8cf52;--g2:#ff6a4c;--gd:-4.0s">QUANTUM MOTORS 3D</h3>
         <p>Full 3D chase-cam racing across ten tracks — the neon Golden City, a jump over a real
           hole in a San Francisco road, a Hot Wheels loop in Egypt, and the long red dusk of Mali.
           Garage, upgrades, championship ladder and a police-pursuit street mode.</p>
@@ -796,7 +817,7 @@
       </div>
       <div class="copy">
         <p class="meta">3D chess · WebGL</p>
-        <h3>BLOODLINES — Noble Chess</h3>
+        <h3 class="gt big" style="--g1:#f3c766;--g2:#c08cf7;--gd:-3.6s">BLOODLINES — Noble Chess</h3>
         <p>Real chess, fought through melanated empires: Ancient Khem, Elam, Mali, the Moors,
           Sengoku Japan, the Maya. A full engine behind it, a difficulty ladder in front of it,
           and every piece carrying the lore of the dynasty that owns it.</p>
@@ -835,7 +856,7 @@
       </div>
       <div class="copy">
         <p class="meta">3D flight battle · real Oakland · dawn to night · the QMM soundtrack</p>
-        <h3>QM85: QUANTUM RUN</h3>
+        <h3 class="gt big" style="--g1:#6fe0ff;--g2:#b88af5;--gd:-1.5s">QM85: QUANTUM RUN</h3>
         <p>QMM's little robot flies a real, street-accurate Oakland — Lake Merritt, the Tribune tower, the
           Bay Bridge, the QMM Arena — collecting his <b>data drives</b> and <b>battle parts</b> and walking them into
           the QMM Warehouse where Rob &amp; Mahal wait. Land on streets and rooftops for <b>FIGHT MODE</b>, chain
@@ -856,7 +877,7 @@
       </div>
       <div class="copy">
         <p class="meta">3D action · three fronts · the QMM soundtrack</p>
-        <h3>THE UNERASED</h3>
+        <h3 class="gt big" style="--g1:#ff8fc6;--g2:#b48cf5;--gd:-1.9s">THE UNERASED</h3>
         <p>Melvinci and Ki-Maya take on the alien-robot erasure-force in full 3D. Draw the plasma
           blade off your back, chain combos to break armoured guards, leap onto the rune terraces
           to cut drones out of the air, and unleash <b>chakra powers</b> — Root Quake, the Solar
@@ -898,7 +919,7 @@
       </div>
       <div class="copy">
         <p class="meta">Block builder · WebGL · with Red Pillar's Common Unity Initiative</p>
-        <h3>C.U.I. F.A.C.T.S.</h3>
+        <h3 class="gt big" style="--g1:#f5dc8e;--g2:#4fe0a0;--gd:-8.3s">C.U.I. F.A.C.T.S.</h3>
         <p>Walk your own block and build it for real — <b>Food, Art, Clothes, Tech, Shelter</b>.
           A neighbor asks and you give or you work; a crisis lands off live prediction-market
           odds and the block either holds or it doesn't. Every building carries the real-world
@@ -916,7 +937,7 @@
         <img src="/assets/img/qm2d-drift.jpg" width="1100" height="619" loading="lazy"
              alt="Quantum Motors — top-down neon arcade racer showing a six-car drift chain">
         <div class="c">
-          <h3>QUANTUM MOTORS — arcade</h3>
+          <h3 class="gt big" style="--g1:#9d6cda;--g2:#da6cc2;--gd:-3.7s">QUANTUM MOTORS — arcade</h3>
           <p>The original top-down drift racer. Chain your slides, burn melanin nitro, and
             outrun the Eraser Patrol through a neon city that never stops raining.</p>
           <div class="row"><span class="chip solid blend">Play free</span>
@@ -927,7 +948,7 @@
         <img src="/assets/img/chess-tutorial.jpg" width="1100" height="619" loading="lazy"
              alt="BLOODLINES — the guided tutorial match teaching a first move">
         <div class="c">
-          <h3>Everything on itch.io</h3>
+          <h3 class="gt big" style="--g1:#eaa05c;--g2:#f1f353;--gd:-0.5s">Everything on itch.io</h3>
           <p>Ratings, devlogs, downloadable builds and whatever is in the oven next — the
             full Quantum Melanin Media shelf of playable work.</p>
           <div class="row"><span class="chip">Browse</span><span class="go">→</span></div>
@@ -952,21 +973,21 @@
       <a class="sleeve s-qmm" href="/soundtrack/#t1">
         <span class="rec"><span class="disc" aria-hidden="true"></span>
           <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>Quantum Melanin Media</small><b>The Singles</b></span></span>
-        <span class="t">The singles</span>
+        <span class="t gt" style="--g1:#c49af7;--g2:#f5dc8e;--gd:-1.6s">The singles</span>
         <span class="s">8 songs · 25 min</span>
         <span class="tl">I Refuse · World Wide Wake Up · They Don’t · SCFL 10-2</span>
       </a>
       <a class="sleeve s-mali" href="/soundtrack/#t9">
         <span class="rec"><span class="disc" aria-hidden="true"></span>
           <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>The suite</small><b>Lion of Mali</b></span></span>
-        <span class="t">Lion of Mali</span>
+        <span class="t gt" style="--g1:#ffb070;--g2:#f0c060;--gd:-5.9s">Lion of Mali</span>
         <span class="s">7 songs · 20 min</span>
         <span class="tl">The Lion Rises · Battle of Kirina · Nine Witches of Mali</span>
       </a>
       <a class="sleeve s-laf" href="/soundtrack/#t16">
         <span class="rec"><span class="disc" aria-hidden="true"></span>
           <span class="art"><svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.1" aria-hidden="true"><circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/><circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/><circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/><circle cx="50" cy="50" r="26" stroke-width="1.6"/><circle cx="50" cy="50" r="39" stroke-width=".6"/></svg><small>The set</small><b>Light as a Feather</b></span></span>
-        <span class="t">Light as a Feather</span>
+        <span class="t gt" style="--g1:#f6d27a;--g2:#7fd6ea;--gd:-6.1s">Light as a Feather</span>
         <span class="s">5 songs · 14 min</span>
         <span class="tl">Light as a Feather · Kind Hands · Balance of Maat</span>
       </a>
@@ -991,49 +1012,49 @@
       <a class="book" href="https://www.amazon.com/dp/B0GKZSPH45" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-magnum-opus.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Magnum Opus of Melanin by Robert Hadden Jr."></span>
-        <b>The Magnum Opus of Melanin</b>
+        <b class="gt" style="--g1:#c26cda;--g2:#746cda;--gd:-7.8s">The Magnum Opus of Melanin</b>
         <span>Immortality, time travel &amp; cosmic consciousness</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0GB6L4MR3" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-cosmic-lie.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Cosmic Lie by Robert Hadden Jr."></span>
-        <b>The Cosmic Lie</b>
+        <b class="gt" style="--g1:#6c93da;--g2:#da8c6c;--gd:-6.8s">The Cosmic Lie</b>
         <span>Reclaiming the stolen legacy of melanated people</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0G6XVTDK2" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-quantum-code.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Quantum Melanin Code by Robert Hadden Jr."></span>
-        <b>The Quantum Melanin Code</b>
+        <b class="gt" style="--g1:#da7b6c;--g2:#f3bf53;--gd:-4.4s">The Quantum Melanin Code</b>
         <span>Mastering conscious reality thru the physics of intention</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0G59TYPMT" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-holographic.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Holographic Body by Robert Hadden Jr."></span>
-        <b>The Holographic Body</b>
+        <b class="gt" style="--g1:#daa26c;--g2:#6c9eda;--gd:-8.7s">The Holographic Body</b>
         <span>The body as a projection, and who taught you otherwise</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0GJN5DPCQ" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-melanin-key.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Melanin Key: Consciousness Mastery by Robert Hadden Jr."></span>
-        <b>The Melanin Key</b>
+        <b class="gt" style="--g1:#6c87da;--g2:#da6c82;--gd:-3.2s">The Melanin Key</b>
         <span>Melanin biology meets the CIA Gateway Process</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0GRPMVX8S" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-legacy-document.jpg" width="520" height="780" loading="lazy"
           alt="Cover of The Legacy Document by Robert Hadden Jr. and Free Mahal Kita"></span>
-        <b>The Legacy Document</b>
+        <b class="gt" style="--g1:#e6d399;--g2:#6cb2da;--gd:-8.6s">The Legacy Document</b>
         <span>A unified field theory of thievery</span>
         <em>Amazon →</em>
       </a>
       <a class="book" href="https://www.amazon.com/dp/B0GQ54G8F2" target="_blank" rel="noopener">
         <span class="cov"><img src="/assets/img/book-sea-moss.jpg" width="520" height="780" loading="lazy"
           alt="Cover of Sea Moss Unveiled by Myan Free Mahal Kita Marshall"></span>
-        <b>Sea Moss Unveiled</b>
+        <b class="gt" style="--g1:#daa76c;--g2:#5da4ea;--gd:-1.6s">Sea Moss Unveiled</b>
         <span>Mahal Kita · a full nutritional analysis of sea moss</span>
         <em>Amazon →</em>
       </a>
@@ -1058,7 +1079,7 @@
              alt="Cover art for I Call Bullshit: How the Consciousness Physics Industry Stole Black Cosmology">
         <div class="c">
           <span class="vol">The original</span>
-          <h4>I Call Bullshit</h4>
+          <h4 class="gt" style="--g1:#6caada;--g2:#daa86c;--gd:-6.1s">I Call Bullshit</h4>
           <p>How the consciousness physics industry stole Black cosmology — and started
             charging you $997 to hear it back.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div>
@@ -1069,7 +1090,7 @@
              alt="Cover art for The First Erasure">
         <div class="c">
           <span class="vol">Companion</span>
-          <h4>The First Erasure</h4>
+          <h4 class="gt" style="--g1:#da8f6c;--g2:#da6c9a;--gd:-8.3s">The First Erasure</h4>
           <p>The playbook didn't start in 1938. It started in 1550 BCE — and the first people
             they erased looked like you.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div>
@@ -1080,7 +1101,7 @@
              alt="Cover art for The Web of Amnesia">
         <div class="c">
           <span class="vol">The map</span>
-          <h4>The Web of Amnesia</h4>
+          <h4 class="gt" style="--g1:#6cb4da;--g2:#5365f3;--gd:-6.9s">The Web of Amnesia</h4>
           <p>Six names, six languages, one story. Told back to you in pieces so you would never
             recognise yourself in it.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div>
@@ -1091,7 +1112,7 @@
              alt="Cover art for The Persian Thread">
         <div class="c">
           <span class="vol">Vol. IV</span>
-          <h4>The Persian Thread</h4>
+          <h4 class="gt" style="--g1:#dab36c;--g2:#d6f353;--gd:-2.6s">The Persian Thread</h4>
           <p>Before there were Persians there were the Elamites — a Black people who built
             civilisation in southwest Iran 5,000 years ago.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div>
@@ -1102,7 +1123,7 @@
              alt="Cover art for Before The Playbook">
         <div class="c">
           <span class="vol">Vol. V</span>
-          <h4>Before The Playbook</h4>
+          <h4 class="gt" style="--g1:#dabf6c;--g2:#da716c;--gd:-1.7s">Before The Playbook</h4>
           <p>White skin is a 6,000-year-old mutation. This is the civilisation that stood there
             for 200,000 years before it.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div>
@@ -1120,7 +1141,7 @@
         <img src="/assets/img/gr-epi-ponzi.jpg" width="720" height="405" loading="lazy"
              alt="Cover art for EPISTEMICIDE: The Ponzi Scheme on Melanin Activation">
         <div class="c">
-          <h4>The Ponzi Scheme on Melanin Activation</h4>
+          <h4 class="gt" style="--g1:#7a6cda;--g2:#bf6cda;--gd:-3.5s">The Ponzi Scheme on Melanin Activation</h4>
           <p>Supplements, protocols, sun-gazing, frequency attunement. A multi-million dollar
             industry built on a thing you already have.</p>
           <div class="foot"><span class="tag">$26.99+</span><span class="arrow">Gumroad →</span></div>
@@ -1130,7 +1151,7 @@
         <img src="/assets/img/gr-epi-archive.jpg" width="720" height="405" loading="lazy"
              alt="Cover art for EPISTEMICIDE: The Visual Evidence Archive Vol. 2">
         <div class="c">
-          <h4>The Visual Evidence Archive · Vol. 2</h4>
+          <h4 class="gt" style="--g1:#ac6cda;--g2:#6c7ada;--gd:-3.5s">The Visual Evidence Archive · Vol. 2</h4>
           <p>The image library behind the argument — the pictures the summary version of
             history does not print.</p>
           <div class="foot"><span class="tag">$230+</span><span class="arrow">Gumroad →</span></div>
@@ -1141,7 +1162,7 @@
              alt="Cover art for the EPISTEMICIDE Complete Research Bundle">
         <div class="c">
           <span class="vol">Best value</span>
-          <h4>Complete Research Bundle</h4>
+          <h4 class="gt" style="--g1:#6cb3da;--g2:#bf6cda;--gd:-5.0s">Complete Research Bundle</h4>
           <p>Both documents. One framework for how melanated knowledge systems were destroyed,
             and how the hole was sold back.</p>
           <div class="foot"><span class="tag">$219.99+</span><span class="arrow">Gumroad →</span></div>
@@ -1155,31 +1176,31 @@
     <div class="pgrid rv">
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/bgczvox" target="_blank" rel="noopener">
         <img src="/assets/img/gr-mansas.jpg" width="720" height="405" loading="lazy" alt="Cover art for THE MANSAS">
-        <div class="c"><h4>THE MANSAS</h4>
+        <div class="c"><h4 class="gt" style="--g1:#db976b;--g2:#f3e853;--gd:-0.3s">THE MANSAS</h4>
           <p>The Lions of Mali and the empire that crossed the Atlantic before Columbus.</p>
           <div class="foot"><span class="tag">$12+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/uflapj" target="_blank" rel="noopener">
         <img src="/assets/img/gr-alkebulies.jpg" width="720" height="405" loading="lazy" alt="Cover art for Alkebu-Lies">
-        <div class="c"><h4>Alkebu-Lies: True the Receipts</h4>
+        <div class="c"><h4 class="gt" style="--g1:#dfb781;--g2:#6c9eda;--gd:-6.9s">Alkebu-Lies: True the Receipts</h4>
           <p>Where the pan-African origin story gets sloppy, and what survives a fact-check.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/gmpqwy" target="_blank" rel="noopener">
         <img src="/assets/img/gr-2wrongs.jpg" width="720" height="405" loading="lazy" alt="Cover art for 2 Wrongs Don't Shed the Light">
-        <div class="c"><h4>2 Wrongs Don't Shed the Light</h4>
+        <div class="c"><h4 class="gt" style="--g1:#6cbfda;--g2:#5375f3;--gd:-0.1s">2 Wrongs Don't Shed the Light</h4>
           <p>Answering a lie with a better lie still leaves you in the dark.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/kemhax" target="_blank" rel="noopener">
         <img src="/assets/img/gr-oms-bundle.jpg" width="720" height="405" loading="lazy" alt="Cover art for the Occult Media Spell complete bundle">
-        <div class="c"><span class="vol">7 chapters</span><h4>The Occult Media Spell</h4>
+        <div class="c"><span class="vol">7 chapters</span><h4 class="gt" style="--g1:#dab06c;--g2:#da6c7c;--gd:-4.0s">The Occult Media Spell</h4>
           <p>How language, image and frequency get used on you — and how to break the loop.</p>
           <div class="foot"><span class="tag">$58+</span><span class="arrow">Full bundle →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/htmojg" target="_blank" rel="noopener">
         <img src="/assets/img/gr-oms-1.jpg" width="720" height="405" loading="lazy" alt="Cover art for Occult Media Spell Chapter 1">
-        <div class="c"><span class="vol">Chapter 1</span><h4>The Spell Begins</h4>
+        <div class="c"><span class="vol">Chapter 1</span><h4 class="gt" style="--g1:#dab06c;--g2:#da6c7c;--gd:-5.4s">The Spell Begins</h4>
           <p>Start here if you want to read the series one chapter at a time.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
@@ -1200,31 +1221,31 @@
     <div class="pgrid rv">
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/bpofkq" target="_blank" rel="noopener">
         <img src="/assets/img/gr-mg-origin.jpg" width="720" height="405" loading="lazy" alt="Cover art for Melvinci: The Origin Bundle">
-        <div class="c"><span class="vol">Start here</span><h4>Melvinci: The Origin Bundle</h4>
+        <div class="c"><span class="vol">Start here</span><h4 class="gt" style="--g1:#da826c;--g2:#ceebad;--gd:-2.6s">Melvinci: The Origin Bundle</h4>
           <p>Where the Guardians begin. The origin story, collected.</p>
           <div class="foot"><span class="tag">$27+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/jdheuj" target="_blank" rel="noopener">
         <img src="/assets/img/gr-mg-12.jpg" width="720" height="405" loading="lazy" alt="Cover art for Melanin Guardians Vol 1 and 2">
-        <div class="c"><span class="vol">Vol. 1 &amp; 2</span><h4>Melanin Guardians</h4>
+        <div class="c"><span class="vol">Vol. 1 &amp; 2</span><h4 class="gt" style="--g1:#64d0e3;--g2:#da6c8a;--gd:-3.5s">Melanin Guardians</h4>
           <p>The complete collection of the first two volumes.</p>
           <div class="foot"><span class="tag">$12+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/eqiocn" target="_blank" rel="noopener">
         <img src="/assets/img/gr-mg-34.jpg" width="720" height="405" loading="lazy" alt="Cover art for Melanin Guardians Vol 3 and 4">
-        <div class="c"><span class="vol">Vol. 3 &amp; 4</span><h4>Melanin Guardians</h4>
+        <div class="c"><span class="vol">Vol. 3 &amp; 4</span><h4 class="gt" style="--g1:#da936c;--g2:#6cbada;--gd:-6.7s">Melanin Guardians</h4>
           <p>The story widens: new bloodlines, older enemies.</p>
           <div class="foot"><span class="tag">$12+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/vaqhfc" target="_blank" rel="noopener">
         <img src="/assets/img/gr-print-melvinci.jpg" width="720" height="405" loading="lazy" alt="Melvinci — The Quantum Code art print">
-        <div class="c"><span class="vol">Art print</span><h4>Melvinci — The Quantum Code</h4>
+        <div class="c"><span class="vol">Art print</span><h4 class="gt" style="--g1:#da996c;--g2:#da6c91;--gd:-5.3s">Melvinci — The Quantum Code</h4>
           <p>Vol. 5 key art, sized for a wall.</p>
           <div class="foot"><span class="tag">$100+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/fsvkt" target="_blank" rel="noopener">
         <img src="/assets/img/gr-print-kimaya.jpg" width="720" height="405" loading="lazy" alt="Ki-Maya — The Cosmic Goddess art print">
-        <div class="c"><span class="vol">Art print</span><h4>Ki-Maya — The Cosmic Goddess</h4>
+        <div class="c"><span class="vol">Art print</span><h4 class="gt" style="--g1:#dc8172;--g2:#cc6cda;--gd:-1.9s">Ki-Maya — The Cosmic Goddess</h4>
           <p>The companion piece. Vol. 5, full bleed.</p>
           <div class="foot"><span class="tag">$100+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
@@ -1285,37 +1306,37 @@
     <div class="pgrid trio rv">
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/iplwzk" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-all.jpg" width="720" height="405" loading="lazy" alt="Cover art for the Bloodline Complete Collection">
-        <div class="c"><span class="vol">Best value</span><h4>Complete Collection</h4>
+        <div class="c"><span class="vol">Best value</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-5.8s">Complete Collection</h4>
           <p>Novella, all three parts and the audiobook together.</p>
           <div class="foot"><span class="tag">$34.99+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/ptino" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-novella.jpg" width="720" height="405" loading="lazy" alt="Cover art for the Bloodline novella">
-        <div class="c"><span class="vol">The novella</span><h4>Bloodline</h4>
+        <div class="c"><span class="vol">The novella</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-7.6s">Bloodline</h4>
           <p>The full text, start to finish.</p>
           <div class="foot"><span class="tag">$26.99+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/pexxev" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-audio.jpg" width="720" height="405" loading="lazy" alt="Cover art for the Bloodline audiobook">
-        <div class="c"><span class="vol">Audiobook</span><h4>Bloodline — Unabridged</h4>
+        <div class="c"><span class="vol">Audiobook</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-7.1s">Bloodline — Unabridged</h4>
           <p>The whole novella, read aloud.</p>
           <div class="foot"><span class="tag">$26.99+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/prsgzy" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-p1.jpg" width="720" height="405" loading="lazy" alt="Cover art for Bloodline Part One">
-        <div class="c"><span class="vol">Part one</span><h4>The Vital Libria</h4>
+        <div class="c"><span class="vol">Part one</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-2.9s">The Vital Libria</h4>
           <p>Where the bloodline is first written down.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/qtwged" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-p2.jpg" width="720" height="405" loading="lazy" alt="Cover art for Bloodline Part Two">
-        <div class="c"><span class="vol">Part two</span><h4>The Earth Dog</h4>
+        <div class="c"><span class="vol">Part two</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-0.4s">The Earth Dog</h4>
           <p>The debt comes due.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/zprxvm" target="_blank" rel="noopener">
         <img src="/assets/img/gr-bsa-p3.jpg" width="720" height="405" loading="lazy" alt="Cover art for Bloodline Part Three">
-        <div class="c"><span class="vol">Part three</span><h4>The Phoenix Bridge</h4>
+        <div class="c"><span class="vol">Part three</span><h4 class="gt" style="--g1:#daa16c;--g2:#f0f353;--gd:-1.4s">The Phoenix Bridge</h4>
           <p>What crosses over, and what it costs.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
@@ -1365,25 +1386,25 @@
     <div class="grid4 rv" style="margin-top:18px">
       <a class="lcard" href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">
         <span class="ic">▶️</span>
-        <span class="b"><span class="t">YouTube</span>
+        <span class="b"><span class="t gt" style="--g1:#ff7a6e;--g2:#ffb199;--gd:-6.8s">YouTube</span>
           <span class="s">The whole channel · 177 videos</span></span>
         <span class="price free">Free</span>
       </a>
       <a class="lcard" href="/classes/">
         <span class="ic">📈</span>
-        <span class="b"><span class="t">The Para-Sail Strategy</span>
+        <span class="b"><span class="t gt" style="--g1:#f5dc8e;--g2:#4fe0a0;--gd:-3.7s">The Para-Sail Strategy</span>
           <span class="s">Free class · 5 lessons · 29 minutes</span></span>
         <span class="price free">Free</span>
       </a>
       <a class="lcard" href="https://www.tiktok.com/@quantummelaninmedia" target="_blank" rel="noopener">
         <span class="ic">🎵</span>
-        <span class="b"><span class="t">TikTok</span>
+        <span class="b"><span class="t gt" style="--g1:#6ff3f0;--g2:#ff7ab0;--gd:-6.0s">TikTok</span>
           <span class="s">Shorts · I Call Bullshit</span></span>
         <span class="price free">Free</span>
       </a>
       <a class="lcard" href="https://www.instagram.com/quantummelaninmedia" target="_blank" rel="noopener">
         <span class="ic">📸</span>
-        <span class="b"><span class="t">Instagram</span>
+        <span class="b"><span class="t gt" style="--g1:#ff9a6a;--g2:#e07af5;--gd:-8.2s">Instagram</span>
           <span class="s">Reels &amp; stills from the cinematic engine</span></span>
         <span class="price free">Free</span>
       </a>
@@ -1406,7 +1427,7 @@
         <img src="/assets/img/gr-starter-map.jpg" width="720" height="405" loading="lazy"
              alt="The AI Business GPS — Starter Map cover">
         <div class="c">
-          <h4>The Starter Map</h4>
+          <h4 class="gt" style="--g1:#dad36c;--g2:#6cdada;--gd:-3.0s">The Starter Map</h4>
           <p>Pick a real money goal and let AI call your next move. The whole method, free.</p>
           <div class="foot"><span class="tag free">Free</span><span class="arrow">Gumroad →</span></div>
         </div>
@@ -1415,7 +1436,7 @@
         <img src="/assets/img/gr-builder-kit.jpg" width="720" height="405" loading="lazy"
              alt="The AI Business GPS — Builder Kit cover">
         <div class="c">
-          <h4>The Builder Kit</h4>
+          <h4 class="gt" style="--g1:#dac36c;--g2:#6cdacd;--gd:-4.8s">The Builder Kit</h4>
           <p>Persistent AI persona, 12 prompts and the templates that keep it honest.</p>
           <div class="foot"><span class="tag">$19+</span><span class="arrow">Gumroad →</span></div>
         </div>
@@ -1424,7 +1445,7 @@
         <img src="/assets/img/gr-dwy-build.jpg" width="720" height="405" loading="lazy"
              alt="The AI Business GPS — Done-With-You Build cover">
         <div class="c">
-          <h4>Done-With-You Build</h4>
+          <h4 class="gt" style="--g1:#dac06c;--g2:#6cdaa0;--gd:-2.1s">Done-With-You Build</h4>
           <p>We build your GPS live, 1:1, on your numbers — and you keep the whole thing.</p>
           <div class="foot"><span class="tag">$297</span><span class="arrow">Gumroad →</span></div>
         </div>
@@ -1437,20 +1458,20 @@
     <div class="pgrid trio rv">
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/karen-manuscript-repair" target="_blank" rel="noopener">
         <img src="/assets/img/gr-karen.jpg" width="720" height="405" loading="lazy" alt="KAREN manuscript repair tool cover">
-        <div class="c"><h4>KAREN — Manuscript Repair</h4>
+        <div class="c"><h4 class="gt" style="--g1:#daac6c;--g2:#dff353;--gd:-7.1s">KAREN — Manuscript Repair</h4>
           <p>Fix AI-shattered DOCX and PDF book formatting in one command.</p>
           <div class="foot"><span class="tag">$39+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/nfflqh" target="_blank" rel="noopener">
         <img src="/assets/img/gr-agent-q23.jpg" width="720" height="405" loading="lazy" alt="AGENT-Q23 remote AI work agent stack cover">
-        <div class="c"><h4>AGENT-Q23</h4>
+        <div class="c"><h4 class="gt" style="--g1:#dab46c;--g2:#d5f353;--gd:-5.2s">AGENT-Q23</h4>
           <p>The remote AI work agent stack, built on Claude Code — the way this whole shelf
             actually gets made.</p>
           <div class="foot"><span class="tag">$99+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/detailshopkit" target="_blank" rel="noopener">
         <img src="/assets/img/gr-detail-kit.jpg" width="720" height="405" loading="lazy" alt="The Detail Shop Builder Kit cover">
-        <div class="c"><h4>Detail Shop Builder Kit</h4>
+        <div class="c"><h4 class="gt" style="--g1:#dac76c;--g2:#b8f353;--gd:-8.8s">Detail Shop Builder Kit</h4>
           <p>DM scripts, flows and an ROI calculator for shops doing it themselves.</p>
           <div class="foot"><span class="tag">$19</span><span class="arrow">Gumroad →</span></div></div>
       </a>
@@ -1459,37 +1480,37 @@
     <div class="grid3 rv" style="margin-top:16px">
       <a class="lcard" href="/leak-sheet/">
         <span class="ic">🔍</span>
-        <span class="b"><span class="t">The Leak Sheet</span>
+        <span class="b"><span class="t gt" style="--g1:#f5dc8e;--g2:#5fd6cc;--gd:-1.3s">The Leak Sheet</span>
           <span class="s">Where detail, PPF &amp; tint shops lose booked jobs</span></span>
         <span class="price free">Free</span>
       </a>
       <a class="lcard" href="https://quantummelaninmedia.gumroad.com/l/mzwrgk" target="_blank" rel="noopener">
         <span class="ic">📈</span>
-        <span class="b"><span class="t">MarketPulse Free</span>
+        <span class="b"><span class="t gt" style="--g1:#f5dc8e;--g2:#4fe0a0;--gd:-4.3s">MarketPulse Free</span>
           <span class="s">Honest signal screener + paper trading</span></span>
         <span class="price free">Free</span>
       </a>
       <a class="lcard" href="/articles/">
         <span class="ic">📰</span>
-        <span class="b"><span class="t">Honest AI comparisons</span>
+        <span class="b"><span class="t gt" style="--g1:#e8dcc0;--g2:#f5dc8e;--gd:-9.0s">Honest AI comparisons</span>
           <span class="s">Tool guides for small local shops — and we say what we sell</span></span>
         <span class="price free">Read</span>
       </a>
       <a class="lcard" href="/ai-audit/">
         <span class="ic">✅</span>
-        <span class="b"><span class="t">AI Delivery Assurance</span>
+        <span class="b"><span class="t gt" style="--g1:#7ff0a8;--g2:#f5dc8e;--gd:-2.4s">AI Delivery Assurance</span>
           <span class="s">Green checkmarks lie. We find the work that never shipped.</span></span>
         <span class="price free">Info</span>
       </a>
       <a class="lcard" href="https://quantummelaninmedia.gumroad.com/l/rvwia" target="_blank" rel="noopener">
         <span class="ic">📊</span>
-        <span class="b"><span class="t">Tesla Options Masterclass</span>
+        <span class="b"><span class="t gt" style="--g1:#ff8a7a;--g2:#f5dc8e;--gd:-1.4s">Tesla Options Masterclass</span>
           <span class="s">Cheat sheet + trade journal pack</span></span>
         <span class="price">$12+</span>
       </a>
       <a class="lcard" href="https://quantummelaninmedia.gumroad.com/l/fvkqiy" target="_blank" rel="noopener">
         <span class="ic">♟️</span>
-        <span class="b"><span class="t">BLOODLINES on Gumroad</span>
+        <span class="b"><span class="t gt" style="--g1:#f3c766;--g2:#c08cf7;--gd:-6.5s">BLOODLINES on Gumroad</span>
           <span class="s">Support the chess game directly</span></span>
         <span class="price">$10+</span>
       </a>
@@ -1510,37 +1531,37 @@
     <div class="pgrid trio rv">
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/lssur" target="_blank" rel="noopener">
         <img src="/assets/img/gr-laf-bundle.jpg" width="720" height="405" loading="lazy" alt="Light As A Feather book and soundtrack bundle cover">
-        <div class="c"><span class="vol">Kids · bundle</span><h4>Light As A Feather</h4>
+        <div class="c"><span class="vol">Kids · bundle</span><h4 class="gt" style="--g1:#e5ba62;--g2:#6ca1da;--gd:-1.2s">Light As A Feather</h4>
           <p>The illustrated 42 Laws of Maat plus five songs, for the next generation.</p>
           <div class="foot"><span class="tag">$14+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/lywakm" target="_blank" rel="noopener">
         <img src="/assets/img/gr-laf-book.jpg" width="720" height="405" loading="lazy" alt="Light As A Feather illustrated children's book cover">
-        <div class="c"><span class="vol">Kids · book</span><h4>The 42 Laws of Maat</h4>
+        <div class="c"><span class="vol">Kids · book</span><h4 class="gt" style="--g1:#dcae6a;--g2:#6ca0da;--gd:-6.9s">The 42 Laws of Maat</h4>
           <p>A children's book of Maat, illustrated all the way through.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/bjnkrm" target="_blank" rel="noopener">
         <img src="/assets/img/gr-laf-ost.jpg" width="720" height="405" loading="lazy" alt="Light As A Feather soundtrack cover">
-        <div class="c"><span class="vol">Kids · music</span><h4>The Soundtrack</h4>
+        <div class="c"><span class="vol">Kids · music</span><h4 class="gt" style="--g1:#f0b656;--g2:#6ca1da;--gd:-1.3s">The Soundtrack</h4>
           <p>Five songs of Maat, written to be sung by children.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/zijain" target="_blank" rel="noopener">
         <img src="/assets/img/gr-lom-feature.jpg" width="720" height="405" loading="lazy" alt="Lion of Mali cinematic feature pack cover">
-        <div class="c"><span class="vol">For creators</span><h4>Lion of Mali — Feature Pack</h4>
+        <div class="c"><span class="vol">For creators</span><h4 class="gt" style="--g1:#dca56b;--g2:#eaf353;--gd:-0.1s">Lion of Mali — Feature Pack</h4>
           <p>The cinematic pack behind the Mali films.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com/l/pppjdt" target="_blank" rel="noopener">
         <img src="/assets/img/gr-lom-style.jpg" width="720" height="405" loading="lazy" alt="Lion of Mali QMM style prompt pack cover">
-        <div class="c"><span class="vol">For creators</span><h4>Lion of Mali — Style Prompts</h4>
+        <div class="c"><span class="vol">For creators</span><h4 class="gt" style="--g1:#dd7169;--g2:#ebd9ad;--gd:-3.2s">Lion of Mali — Style Prompts</h4>
           <p>The QMM look, written down as prompts you can run.</p>
           <div class="foot"><span class="tag">$10+</span><span class="arrow">Gumroad →</span></div></div>
       </a>
       <a class="prod" href="https://quantummelaninmedia.gumroad.com" target="_blank" rel="noopener">
         <img src="/assets/img/gr-oms-5.jpg" width="720" height="405" loading="lazy" alt="Occult Media Spell chapter art">
-        <div class="c"><span class="vol">All 47</span><h4>The whole Gumroad shelf</h4>
+        <div class="c"><span class="vol">All 47</span><h4 class="gt" style="--g1:#dab26c;--g2:#da6cda;--gd:-4.6s">The whole Gumroad shelf</h4>
           <p>Every book, chapter, pack, print and tool Quantum Melanin Media has released.</p>
           <div class="foot"><span class="tag free">Browse</span><span class="arrow">Gumroad →</span></div></div>
       </a>
@@ -1658,6 +1679,12 @@ if (reduced.matches) { hero.removeAttribute('autoplay'); hero.pause(); } else tr
 const reels = document.querySelectorAll('video.reel');
 // Reduced motion: the orbits are SMIL, which CSS can't stop, so pause them directly.
 if (reduced.matches) document.querySelectorAll('svg.orrery').forEach(svg => svg.pauseAnimations());
+
+// Product titles shimmer only while on screen.
+const gtIO = new IntersectionObserver((entries) => {
+  for (const e of entries) e.target.classList.toggle('lit', e.isIntersecting);
+});
+if (!reduced.matches) document.querySelectorAll('.gt').forEach(el => gtIO.observe(el));
 
 // Card spotlight: hand the pointer position to the card under it as --mx/--my.
 if (matchMedia('(hover: hover)').matches) {

@@ -151,6 +151,48 @@
   footer{border-top:1px solid var(--line);padding:28px 0;color:var(--mut);font-size:.84rem}
   footer a{color:var(--gold);text-decoration:none}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  /* ---------- QUANTUM: the gold-energy wordmark ---------- */
+  /* Bold, leaning right from its baseline, with molten gold sweeping through the letters.
+     The glow flickers on an irregular beat like an unstable field, and on the surges a
+     stroked "ghost" of the word jumps half a step out of phase — the superposition. */
+  .qe{
+    position:relative;display:inline-block;font-weight:700;font-style:normal;
+    transform:skewX(-9deg);transform-origin:0 100%;padding-right:.08em;
+    background:linear-gradient(100deg,#a8761f 0%,var(--gold) 20%,#fff7d6 30%,var(--gold-hi) 38%,
+      var(--gold) 52%,#b9862a 72%,var(--gold-hi) 88%,#a8761f 100%);
+    background-size:260% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 .09em rgba(232,194,90,.6)) drop-shadow(0 0 .32em rgba(232,194,90,.22));
+    animation:qsweep 5s linear infinite,qflicker 7s linear infinite;
+  }
+  .qe::before{
+    content:attr(data-text);position:absolute;left:0;top:0;pointer-events:none;
+    -webkit-text-stroke:1px rgba(255,236,170,.75);opacity:0;
+    animation:qghost 7s linear infinite;
+  }
+  @keyframes qsweep{from{background-position:100% 0}to{background-position:-160% 0}}
+  @keyframes qflicker{
+    0%,7%,11%,46%,52%,77%,100%{opacity:1;
+      filter:drop-shadow(0 0 .09em rgba(232,194,90,.6)) drop-shadow(0 0 .32em rgba(232,194,90,.22))}
+    8%,47.5%,49.5%{opacity:1;
+      filter:drop-shadow(0 0 .14em rgba(255,226,140,.95)) drop-shadow(0 0 .6em rgba(232,194,90,.55))}
+    9%,48.5%,78%{opacity:.72;
+      filter:drop-shadow(0 0 .04em rgba(232,194,90,.3))}
+    10%,79%{opacity:1;
+      filter:drop-shadow(0 0 .2em rgba(255,236,170,1)) drop-shadow(0 0 .8em rgba(232,194,90,.6))}
+  }
+  @keyframes qghost{
+    0%,7.5%,11%,47%,50.5%,78.5%,100%{opacity:0;transform:none}
+    8%,48%{opacity:.85;transform:translate(.035em,-.02em)}
+    9.5%,49.5%{opacity:.5;transform:translate(-.03em,.015em)}
+    79.5%{opacity:.6;transform:translate(.02em,.02em)}
+  }
+  .brand .qe{font-weight:700}
+  @media (prefers-reduced-motion:reduce){ .qe,.qe::before{animation:none} }
+  /* Phones: the bold, leaning QUANTUM made the brand + CTA wider than a 360-390px screen
+     (2-36px sideways scroll, measured). A slightly more compact bar fits every phone width. */
+  @media (max-width:480px){ .nav-in{gap:10px} .brand{gap:8px} .brand svg{width:26px;height:26px}
+    .brand b{font-size:.9rem} .nav-cta{padding:9px 13px;font-size:.76rem} }
 </style>
 </head>
 <body>
@@ -164,7 +206,7 @@
         <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
         <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
       </svg>
-      <b><i>Quantum</i> Melanin Media</b>
+      <b><i class="qe" data-text="Quantum">Quantum</i> Melanin Media</b>
     </a>
     <div class="nav-links">
       <a href="/#games">Games</a>
