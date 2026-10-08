@@ -482,6 +482,10 @@
   .app .shot img{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top;
     transition:transform .6s cubic-bezier(.16,1,.3,1)}
   .app:hover .shot img{transform:scale(1.035)}
+  /* a looping reel in place of a screenshot (BakeTunes: its sigil logo, spinning to a beat) */
+  .app .shot video{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;
+    transition:transform .6s cubic-bezier(.16,1,.3,1)}
+  .app:hover .shot video{transform:scale(1.035)}
   /* an app's own logo as an icon badge on its screenshot (beats the .shot img rules above) */
   .app .shot img.appicon{position:absolute;z-index:2;top:14px;right:14px;width:72px;height:72px;
     aspect-ratio:1;border-radius:18px;border:1px solid rgba(242,197,92,.55);transform:none;
@@ -764,8 +768,8 @@
       <article class="app bt">
         <a class="shot" href="https://baketunes-site.onrender.com/" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
           <span class="live">Live</span>
-          <img src="/assets/img/work-baketunes.jpg" width="1280" height="720" loading="lazy"
-               alt="">
+          <video class="reel" muted loop playsinline preload="none" width="1280" height="720"
+                 poster="/assets/video/baketunes-sigil.jpg" src="/assets/video/baketunes-sigil.mp4"></video>
           <img class="appicon" src="/assets/img/baketunes-icon.png" width="192" height="192" loading="lazy" alt="">
         </a>
         <div class="c">
