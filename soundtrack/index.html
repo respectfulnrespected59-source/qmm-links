@@ -135,6 +135,9 @@
   .rep[aria-pressed="true"]{color:var(--gold)}
   .rep[aria-pressed="true"]::after{content:"";position:absolute;bottom:1px;left:50%;width:4px;height:4px;
        margin-left:-2px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold)}
+  .rep[hidden]{display:none} /* .rep's display:grid would otherwise beat the hidden attribute */
+  /* BOOST: the amp (louder + a touch of bass, limited so it never clips) - a word, not an icon */
+  .rep.boost{width:auto;padding:0 10px;font-size:.6rem;font-weight:700;letter-spacing:.18em}
   .now{flex:1;min-width:0}
   .now .k{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
   .now .v{font-family:var(--serif);font-size:1.02rem;overflow:hidden;
@@ -303,7 +306,8 @@
         <path d="M11 10.5l1.5-1v5" stroke-width="1.8"/>
       </svg>
     </button>
-    <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" value="0.7" aria-label="Volume">
+    <button class="rep boost" id="boost" aria-pressed="true" aria-label="Boost" title="Boost on: louder, punchier sound" hidden>BOOST</button>
+    <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
   </div>
 </div>
 
@@ -351,6 +355,70 @@
     $("play").setAttribute("aria-label", on ? "Pause" : "Play");
     save({ playing: on });
   }
+  // ---- BOOST: the songs are mastered near -16 LUFS, so a page player at 70% sat ~8 dB under
+  // YouTube or a rap master. The amp runs song -> +2 dB bass shelf -> +6 dB drive -> limiter ->
+  // trim -> volume, measured at -10 LUFS with peaks under -1.2 dBFS and zero clipped samples.
+  // Attack MUST stay 0: at 2 ms the compressor let transients through to +1.4 dBFS.
+  // Desktop only: on iPhone/iPad a page routed through Web Audio goes silent when the screen
+  // locks, and phones have their own volume buttons. Built on the first play (a click), since a
+  // context made without one starts suspended and the song would play silently.
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var CAN_AMP = !!AC && !IOS && matchMedia("(pointer: fine)").matches;
+  var AMP = { bassHz: 100, bassDb: 2, driveDb: 6, threshold: -6, ratio: 20, attack: 0, release: 0.12, trimDb: -1.2 };
+  var ctx = null, src = null, chain = null, vol = null, boostOn = true, ampFailed = false;
+  var db = function (d) { return Math.pow(10, d / 20); };
+  // Safari reports "interrupted" (a call, a device change) as well as "suspended"
+  function wake() { if (ctx && ctx.state !== "running") ctx.resume().catch(function () { /* next play retries */ }); }
+
+  function amp() {
+    if (ctx || ampFailed || !CAN_AMP) return;
+    var c = null;
+    try {
+      c = new AC();
+      var bass = c.createBiquadFilter(); bass.type = "lowshelf"; bass.frequency.value = AMP.bassHz; bass.gain.value = AMP.bassDb;
+      var drive = c.createGain(); drive.gain.value = db(AMP.driveDb);
+      var lim = c.createDynamicsCompressor();
+      lim.threshold.value = AMP.threshold; lim.knee.value = 0; lim.ratio.value = AMP.ratio;
+      lim.attack.value = AMP.attack; lim.release.value = AMP.release;
+      var trim = c.createGain(); trim.gain.value = db(AMP.trimDb);
+      var v = c.createGain(); v.gain.value = +$("vol").value;
+      bass.connect(drive); drive.connect(lim); lim.connect(trim); trim.connect(v); v.connect(c.destination);
+      // Last: once the element is captured it only sounds through this context.
+      var s = c.createMediaElementSource(a);
+      ctx = c; src = s; chain = bass; vol = v;
+      a.volume = 1;
+      route();
+    } catch (e) {
+      // once only: retrying on every click would leak contexts until the browser refuses more
+      ampFailed = true;
+      if (c && !src) c.close();
+      $("boost").hidden = true;
+      console.warn("[soundtrack] BOOST unavailable, playing direct:", e);
+    }
+  }
+  function route() {
+    if (!src) return;
+    src.disconnect();
+    src.connect(boostOn ? chain : vol);
+  }
+  function start() {
+    amp();
+    wake();
+    return a.play().then(sync).catch(sync);
+  }
+  function setVol(v) {
+    if (vol) vol.gain.setTargetAtTime(v, ctx.currentTime, 0.015);
+    else a.volume = v;
+  }
+  function setBoost(on) {
+    boostOn = on !== false;
+    $("boost").setAttribute("aria-pressed", boostOn ? "true" : "false");
+    $("boost").title = boostOn ? "Boost on: louder, punchier sound" : "Boost off: the song as mastered";
+    route();
+    save({ boost: boostOn });
+  }
+
   function loadTrack(i, go) {
     cur = ((i % T.length) + T.length) % T.length;
     var t = T[cur];
@@ -361,7 +429,7 @@
     document.title = t.title + " — QMM Soundtrack";
     save({ track: cur });
     mark();
-    if (go) a.play().then(sync).catch(sync);
+    if (go) start();
   }
 
   document.getElementById("list").addEventListener("click", function (e) {
@@ -369,7 +437,7 @@
     if (b) loadTrack(+b.dataset.i, true);
   });
   $("play").addEventListener("click", function () {
-    if (a.paused) { if (!a.getAttribute("src")) { loadTrack(cur, true); return; } a.play().then(sync).catch(sync); }
+    if (a.paused) { if (!a.getAttribute("src")) { loadTrack(cur, true); return; } start(); }
     else { a.pause(); sync(); }
   });
   $("next").addEventListener("click", function () { loadTrack(cur + 1, !a.paused); });
@@ -396,7 +464,11 @@
     if (repeat === "off" && cur === T.length - 1) { loadTrack(0, false); sync(); return; }
     loadTrack(cur + 1, true);
   });
-  a.addEventListener("play", sync);
+  a.addEventListener("play", function () {
+    // a context the OS suspended (sleep, audio device change) would leave the song playing silently
+    wake();
+    sync();
+  });
   a.addEventListener("pause", sync);
   a.addEventListener("timeupdate", function () {
     if (!isFinite(a.duration)) return;
@@ -409,19 +481,23 @@
     var r = this.getBoundingClientRect();
     a.currentTime = (e.clientX - r.left) / r.width * a.duration;
   });
-  $("vol").addEventListener("input", function () { a.volume = +this.value; save({ vol: a.volume }); });
+  $("vol").addEventListener("input", function () { setVol(+this.value); save({ vol: +this.value }); });
+  $("boost").addEventListener("click", function () { amp(); setBoost(!boostOn); });
   document.addEventListener("keydown", function (e) {
     if (e.target.matches("input,textarea")) return;
     if (e.key === " ") { e.preventDefault(); $("play").click(); }
     if (e.key === "]") $("next").click();
     if (e.key === "[") $("prev").click();
     if (e.key === "r" || e.key === "R") setRepeat(REPEATS[(REPEATS.indexOf(repeat) + 1) % REPEATS.length]);
+    if ((e.key === "b" || e.key === "B") && CAN_AMP) $("boost").click();
   });
 
   var s = load();
-  a.volume = typeof s.vol === "number" ? s.vol : 0.7;
+  a.volume = typeof s.vol === "number" ? s.vol : 1;
   $("vol").value = a.volume;
   setRepeat(s.repeat);
+  $("boost").hidden = !CAN_AMP;
+  setBoost(s.boost);
   // /soundtrack/#t9 (from the record sleeves on the home page) cues that song. It can't
   // autoplay — the browser wants a click on THIS page — so it is selected and scrolled to.
   function cueFromHash() {

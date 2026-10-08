@@ -464,7 +464,7 @@
   /* opacity only: re-filtering the glow every frame cost ~8 fps on a busy section (measured) */
 
   /* ---------- apps ---------- */
-  .apps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .apps{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
   @media (max-width:1000px){ .apps{grid-template-columns:1fr;max-width:640px} }
   .app{
     --ac:var(--gold);--ac2:#3fd2c7;
@@ -475,6 +475,7 @@
   }
   .app.a365{--ac:#a46bf0;--ac2:#3b8cf2}
   .app.mp{--ac:#e8c25a;--ac2:#35d08a}
+  .app.bt{--ac:#f2c55c;--ac2:#9b6bff}
   .app:hover,.app:focus-within{transform:translateY(-5px);border-color:var(--ac);
     box-shadow:0 30px 60px -30px var(--ac),0 0 0 1px var(--ac) inset}
   .app .shot{position:relative;display:block;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
@@ -502,7 +503,7 @@
   .app .btns{margin-top:22px}
   .app .btn-app{color:#fff;background:linear-gradient(135deg,var(--ac),var(--ac2));
     box-shadow:0 14px 34px -16px var(--ac)}
-  .app.qt .btn-app,.app.mp .btn-app{color:#20180a}
+  .app.qt .btn-app,.app.mp .btn-app,.app.bt .btn-app{color:#20180a}
   .app .btn-app:hover,.app .btn-app:focus-visible{transform:translateY(-2px);filter:brightness(1.08);outline:none}
 
   /* ---------- record sleeves (listen) ---------- */
@@ -675,7 +676,7 @@
       <a class="btn btn-ghost" href="#receipts">Read the receipts</a>
     </div>
     <div class="stats">
-      <div class="stat"><b>3</b><span>Live apps</span></div>
+      <div class="stat"><b>4</b><span>Live apps</span></div>
       <div class="stat"><b>5</b><span>Free browser games</span></div>
       <div class="stat"><b>7</b><span>Books on Amazon</span></div>
       <div class="stat"><b>47</b><span>Drops on Gumroad</span></div>
@@ -690,7 +691,7 @@
   <div class="wrap">
     <div class="head rv">
       <p class="kicker">⚡ Live apps</p>
-      <h2>Three apps, running right now.</h2>
+      <h2>Four apps, running right now.</h2>
       <p class="sub">Built in-house and live on our own servers. Open one, make an account, and
         it is yours to use.</p>
     </div>
@@ -752,6 +753,26 @@
           </ul>
           <div class="btns">
             <a class="btn btn-app" href="https://marketpulse-22bi.onrender.com/" target="_blank" rel="noopener">Open MarketPulse →</a>
+          </div>
+        </div>
+      </article>
+      <article class="app bt">
+        <a class="shot" href="https://baketunes-site.onrender.com/" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+          <span class="live">Live</span>
+          <img src="/assets/img/work-baketunes.jpg" width="1280" height="720" loading="lazy"
+               alt="">
+        </a>
+        <div class="c">
+          <p class="meta">Music videos · Beat Lab · studio</p>
+          <h3 class="gt big" style="--g1:#f5dc8e;--g2:#b98aff;--gd:-4.9s">Bake<em>Tunes</em></h3>
+          <p>Drop a song. We read it. We bake it. BakeTunes listens to your lyrics, works out what
+            the song is really saying, and directs a music video around it — every cut landing on
+            a hit. Don't like one shot? Re-roll that scene, not the whole video.</p>
+          <ul class="feats">
+            <li>Beat Lab — free</li><li>Lyrics read for meaning</li><li>Cut on the beat</li>
+          </ul>
+          <div class="btns">
+            <a class="btn btn-app" href="https://baketunes-site.onrender.com/" target="_blank" rel="noopener">Open BakeTunes →</a>
           </div>
         </div>
       </article>
@@ -1634,6 +1655,7 @@
           <a href="https://quantus-ai.onrender.com" target="_blank" rel="noopener">QUAN-TESS AI</a>
           <a href="https://alignment365.onrender.com" target="_blank" rel="noopener">Alignment 365</a>
           <a href="https://marketpulse-22bi.onrender.com/" target="_blank" rel="noopener">MarketPulse</a>
+          <a href="https://baketunes-site.onrender.com/" target="_blank" rel="noopener">BakeTunes</a>
           <a href="/soundtrack/">The Soundtrack</a>
         </div>
         <div>
