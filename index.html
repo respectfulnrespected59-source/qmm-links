@@ -482,6 +482,11 @@
   .app .shot img{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:top;
     transition:transform .6s cubic-bezier(.16,1,.3,1)}
   .app:hover .shot img{transform:scale(1.035)}
+  /* an app's own logo as an icon badge on its screenshot (beats the .shot img rules above) */
+  .app .shot img.appicon{position:absolute;z-index:2;top:14px;right:14px;width:72px;height:72px;
+    aspect-ratio:1;border-radius:18px;border:1px solid rgba(242,197,92,.55);transform:none;
+    box-shadow:0 10px 28px -8px rgba(0,0,0,.8),0 0 22px -4px rgba(242,197,92,.45)}
+  @media (max-width:520px){ .app .shot img.appicon{width:56px;height:56px;border-radius:14px;top:10px;right:10px} }
   .app .shot::after{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(180deg,transparent 55%,rgba(22,15,36,.85))}
   .live{position:absolute;z-index:2;bottom:14px;left:14px;display:inline-flex;align-items:center;gap:8px;
@@ -761,6 +766,7 @@
           <span class="live">Live</span>
           <img src="/assets/img/work-baketunes.jpg" width="1280" height="720" loading="lazy"
                alt="">
+          <img class="appicon" src="/assets/img/baketunes-icon.png" width="192" height="192" loading="lazy" alt="">
         </a>
         <div class="c">
           <p class="meta">Music videos · Beat Lab · studio</p>
