@@ -34,6 +34,10 @@ function strip(path, width, y, offset = 0, uPerM = 1) {
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  // ⛔ 10-10: no normals here made every lane/edge line light as NaN (a lit material normalizes a zero normal) —
+  // invisible with bloom off, but the moment bloom ran it smeared those ~2% NaN pixels over the whole frame.
+  // The strips lie flat on the road: straight up.
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(new Float32Array(pos.length).map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
   return g;
 }
 
@@ -72,16 +76,22 @@ export function sidewalks(root, roads, merge) {
 /** The little vertical face of the curb along a road edge. */
 function curbFace(path, offset, h) {
   const pos = [];
+  const nrm = [];
   for (let i = 0; i < path.length - 1; i++) {
     const [x1, z1] = path[i];
     const [x2, z2] = path[i + 1];
-    const len = Math.hypot(x2 - x1, z2 - z1) || 1;
+    const raw = Math.hypot(x2 - x1, z2 - z1);
+    const len = raw || 1;
     const nx = -(z2 - z1) / len * offset;
     const nz = (x2 - x1) / len * offset;
     pos.push(x1 + nx, 0.02, z1 + nz, x2 + nx, 0.02, z2 + nz, x2 + nx, h, z2 + nz, x1 + nx, 0.02, z1 + nz, x2 + nx, h, z2 + nz, x1 + nx, h, z1 + nz);
+    // ⛔ 10-10: these faces had NO normals (lit as NaN, like the road strips). Face the street; a zero-length segment points up.
+    const [fx, fy, fz] = raw ? [-(z2 - z1) / raw, 0, (x2 - x1) / raw] : [0, 1, 0];
+    for (let k = 0; k < 6; k++) nrm.push(fx, fy, fz);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(nrm, 3));
   g.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
   return g;
 }

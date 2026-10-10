@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Sky } from "three/addons/objects/Sky.js";
+import { MOVIE, movieSky, movieSunDir, tintSky, movieNightLights, windowsOnly, wetness, wetAsphalt } from "./movie-look.js";
 
 const TALL = 40; // >= this = glass tower
 const LOW = 12; // <  this = storefront low-rise
@@ -134,6 +135,7 @@ function skyAndSun(root) {
   u.rayleigh.value = 3.2;
   u.mieCoefficient.value = 0.005;
   u.mieDirectionalG.value = 0.92;
+  if (MOVIE) tintSky(sky.material); // sunset gradient (movie-look.js); before the first render and before the env clone
   const sunDir = new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - SUN_ELEVATION), THREE.MathUtils.degToRad(SUN_AZIMUTH));
   u.sunPosition.value.copy(sunDir);
   root.add(sky);
@@ -169,12 +171,18 @@ function skyAndSun(root) {
   const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 40, sizeAttenuation: true, transparent: true, opacity: 0, depthWrite: false, fog: false }));
   root.add(stars);
   const lights = { hemi, sun, stars, facades: [], lamps: null };
+  const movieDir = new THREE.Vector3();
   /** Drive every light from the day cycle: sun direction + how deep into night (0..1). */
-  const setTime = ({ sunDir: d, night01: n }) => {
+  const setTime = ({ sunDir: dayDir, night01: n }) => {
+    const d = MOVIE ? movieSunDir(dayDir, n, movieDir) : dayDir; // movie dusk = just after sunset (movie-look.js)
     sunDir.copy(d);
     u.sunPosition.value.copy(d);
-    u.turbidity.value = lerp(3.0, 1.2, n);
-    u.rayleigh.value = lerp(3.2, 0.4, n);
+    if (MOVIE) movieSky(u, n); // sunset at dusk, clear dark sky at night (movie-look.js)
+    else {
+      u.turbidity.value = lerp(3.0, 1.2, n);
+      u.rayleigh.value = lerp(3.2, 0.4, n);
+    }
+    if (MOVIE && lights.asphalt) wetAsphalt(lights.asphalt, wetness(n)); // after-rain streets from golden hour on
     hemi.color.setHex(0xcfe0ff).lerp(new THREE.Color(0x2a3a6a), n);
     hemi.groundColor.setHex(0x5a4a3a).lerp(new THREE.Color(0x0a0a14), n);
     hemi.intensity = lerp(1.2, 0.28, n);
@@ -182,6 +190,7 @@ function skyAndSun(root) {
     sun.color.setHex(0xffd2a0).lerp(new THREE.Color(0x9ab0ff), n);
     sun.intensity = n > 0.8 ? 0.55 : lerp(3.2 * daylight, 0.55, n); // the moon takes over
     if (n > 0.8) sunDir.set(-0.4, 0.55, 0.3).normalize(); // moonlight from the south-west
+    if (MOVIE) movieNightLights(hemi, sun, n); // darker night city: the lights carry it
     stars.material.opacity = clamp01((n - 0.55) * 2.2);
     for (const m of lights.facades) m.emissiveIntensity = lerp(m.userData.dayGlow, m.userData.nightGlow, n);
     if (lights.lamps) {
@@ -294,6 +303,7 @@ export async function renderRealisticOakland(root, city, extent, { shoreX = -ext
     : { color: fallback, roughness: 0.6, side: THREE.DoubleSide, vertexColors: true }); // dusk: the lit windows in the art glow warm
     m.userData.dayGlow = glossy ? 0.16 : 0.11;
     m.userData.nightGlow = glossy ? 0.85 : 0.65; // night mode: every lit window in the art becomes a real light
+    if (MOVIE && map) windowsOnly(m); // only the lit panes glow — not whole beige walls (movie-look.js)
     lights.facades.push(m);
     return m;
   }; // OSM winds some footprints backwards: single-sided walls went hollow
@@ -322,6 +332,7 @@ export async function renderRealisticOakland(root, city, extent, { shoreX = -ext
   }
 
   const asphalt = new THREE.MeshStandardMaterial({ color: 0x2c2c2f, roughness: 0.92, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+  lights.asphalt = asphalt; // setTime wets it from golden hour on (MOVIE)
   const roadGeos = city.roads.filter((r) => r.p.length > 1).map((r) => ribbon(r.p, ROAD_WIDTH[r.k] ?? 6, 0.06));
   if (roadGeos.length) root.add(mesh(mergeGeometries(roadGeos), asphalt));
 

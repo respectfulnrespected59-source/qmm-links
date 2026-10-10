@@ -1,5 +1,6 @@
 // The film finish for FLIGHT BATTLE: grade (violet shadows, warm gold highlights), a touch of
 // lens chromatic aberration toward the edges, vignette and moving film grain.
+import * as THREE from "three";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 
 const FilmShader = {
@@ -12,13 +13,20 @@ const FilmShader = {
     grade: { value: 1 }, // 1 = QMM violet/gold grade (cyberspace), 0 = true colours (realistic Oakland)
     realistic: { value: 0 }, // 1 = filmic S-curve contrast, warm highlights, cool shadows (Oakland)
     speed: { value: 0 }, // 09-25 SPEED FEEL: 0..~0.55 edge smear toward the centre on boost (speed-fx.js)
+    // 10-10 MOVIE WORLD grade (movie-look.js drives these per time of day; movie 0 = off, the old look)
+    movie: { value: 0 },
+    contrast: { value: 1 },
+    sat: { value: 1 },
+    lift: { value: new THREE.Vector3(0, 0, 0) },
+    gain: { value: new THREE.Vector3(1, 1, 1) },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
     void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
-    uniform float time, grain, vignette, aberration, grade, realistic, speed;
+    uniform float time, grain, vignette, aberration, grade, realistic, speed, movie, contrast, sat;
+    uniform vec3 lift, gain;
     varying vec2 vUv;
     float rand(vec2 c) { return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
@@ -40,6 +48,14 @@ const FilmShader = {
       graded += mix(vec3(-0.02, -0.01, 0.035), vec3(0.04, 0.02, -0.03), smoothstep(0.15, 0.85, l2));
       graded = mix(vec3(l2), graded, 1.1);
       col = mix(col, graded, realistic);
+      if (movie > 0.5) { // MOVIE WORLD: contrast, violet-blue shadows, warm highlights, a little more colour
+        float L = dot(col, vec3(0.299, 0.587, 0.114));
+        col = (col - 0.5) * contrast + 0.5;
+        col += lift * (1.0 - smoothstep(0.0, 0.5, L));
+        col *= mix(vec3(1.0), gain, smoothstep(0.35, 1.0, L));
+        float L2 = dot(col, vec3(0.299, 0.587, 0.114));
+        col = max(mix(vec3(L2), col, sat), 0.0);
+      }
       float d = distance(vUv, vec2(0.5));
       col *= 1.0 - vignette * smoothstep(0.35, 0.85, d);
       col += (rand(vUv * 911.0 + fract(time * 13.0)) - 0.5) * grain;

@@ -6,6 +6,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createFilmPass } from "./cinematic.js";
+import { MOVIE, movieHaze, movieExposure, movieBloom, movieGrade, sanitizeBloom } from "./movie-look.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 import { loadAssets } from "./assets.js";
@@ -432,6 +433,19 @@ function startFlight(zone = game.zone, resume = null, race = null) {
   film.uniforms.realistic.value = flight.arena.realistic ?? 0; // Oakland: filmic contrast, warm highs, cool lows
   if (flight.arena.bloom !== undefined) bloom.strength = flight.arena.bloom;
   bloom.enabled = bloom.strength > 0;
+  const movie = MOVIE && flight.arena.realistic === 1; // MOVIE WORLD (movie-look.js): realistic Oakland only
+  film.uniforms.movie.value = movie ? 1 : 0;
+  if (movie) {
+    movieBloom(bloom, 0); // lights-only bloom; strength follows the clock every frame
+    bloom.enabled = sanitizeBloom(bloom); // never bloom an unsanitised buffer: one Inf pixel blacked out the frame
+    bloom.halfRes = true; // half-res bloom; composer.setPixelRatio below re-sizes it
+    if (bloom.highPassUniforms.bloomCap) bloom.highPassUniforms.bloomCap.value = 6;
+  } else {
+    bloom.halfRes = false;
+    if (bloom.highPassUniforms.bloomCap) bloom.highPassUniforms.bloomCap.value = 65000; // cyberspace: uncapped, as before
+    bloom.threshold = 0.82; // the constructor's values: cyberspace keeps its glow
+    bloom.radius = 0.5;
+  }
   renderer.toneMappingExposure = flight.arena.exposure ?? 1;
   const ratio = Math.min(devicePixelRatio, flight.arena.pixelRatio ?? 2);
   renderer.setPixelRatio(ratio);
@@ -613,13 +627,19 @@ function tick() {
     game.flight.step(dt); // hit-stop + boss-death slow motion live in step()
     const day = game.flight.day;
     if (day && scene.fog) { // night mode: haze and sky go deep blue-black, exposure lifts so the streets stay readable
-      scene.fog.color.copy(game.flight.arena.haze).lerp(NIGHT_HAZE, day.night01);
+      const movie = MOVIE && game.flight.arena.realistic === 1;
+      if (movie) movieHaze(day.night01, scene.fog.color); // dusty-rose dusk, deep indigo night
+      else scene.fog.color.copy(game.flight.arena.haze).lerp(NIGHT_HAZE, day.night01);
       const occ = game.flight.districts?.occupied01 ?? 0;
       if (occ > 0.001) scene.fog.color.lerp(OCCUPIED_HAZE, occ * OCCUPIED_TINT);
       scene.background = scene.fog.color;
       const w = game.flight.weather; // 09-25: fog thickens the haze; lightning kicks the exposure
       if (w && scene.fog.isFogExp2) scene.fog.density = game.flight.arena.fogDensity * w.fogMul;
-      renderer.toneMappingExposure = day.exposure * (1 - OCCUPIED_DIM * occ) * (1 + (w?.flash ?? 0) * 1.6);
+      renderer.toneMappingExposure = (movie ? movieExposure(day.night01) : day.exposure) * (1 - OCCUPIED_DIM * occ) * (1 + (w?.flash ?? 0) * 1.6);
+      if (movie) {
+        movieGrade(film, day.night01);
+        movieBloom(bloom, day.night01);
+      }
     }
     autoQuality();
     if (game.mode === "flight") {

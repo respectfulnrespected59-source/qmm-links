@@ -7,6 +7,7 @@
 // InstancedMesh. main.js reads fogMul (haze density) and flash (a lightning exposure kick).
 import * as THREE from "three";
 import { sfx } from "./audio.js";
+import { MOVIE, wetness } from "./movie-look.js";
 
 const FOG_BANKS = 26;
 const FOG_DRIFT = 5; // m/s east (the fog comes in off the Bay)
@@ -131,7 +132,7 @@ export class Weather {
     this.#updateFog(t, w, day);
     this.#updateRain(dt, camera, w.rain01);
     if (this.pools) {
-      const k = w.rain01 * (day?.night01 ?? 0);
+      const k = (MOVIE && this.arena.realistic === 1 ? wetness(day?.night01 ?? 0, w.rain01) : w.rain01) * (day?.night01 ?? 0); // MOVIE: after-rain pools from dusk on
       this.pools.visible = k > 0.01;
       this.poolMat.opacity = 0.55 * k;
     }
