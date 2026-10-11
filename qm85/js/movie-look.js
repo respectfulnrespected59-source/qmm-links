@@ -139,6 +139,77 @@ export function movieGrade(film, n) {
   u.gain.value.set(lerp(1.0, 1.07, dusk) + 0.03 * night, 1.0, lerp(1.0, 0.88, dusk) + 0.05 * night);
 }
 
+// MOVIE WORLD BOTS (owner 10-10: "do the bots metal and rim light next"). The stills light every bot like a hero shot:
+// glossy painted metal that mirrors the sunset, a warm edge on the sun side, a cool violet edge on the shadow side. It all
+// lives in the shader on ONE shared uniform set, because the armour (battle-body.js) clones the bot's materials and writes
+// their roughness / metalness / colour itself — the movie look never writes a material property, so both stack.
+const BOT = {
+  movieGloss: { value: 1 }, // x roughness (map included): below 1 = a glossier coat
+  movieEnv: { value: 1 }, // x the reflected sky
+  rimWarm: { value: new THREE.Color(0, 0, 0) },
+  rimCool: { value: new THREE.Color(0, 0, 0) },
+  rimDir: { value: new THREE.Vector3(0, 1, 0) }, // view space: the way the warm edge faces
+};
+const RIM_POWER = "4.5"; // how thin the edge light is (GLSL float)
+const WARM_DUSK = new THREE.Color(1.0, 0.42, 0.14); // the sunset, low on the horizon
+const COOL_DUSK = new THREE.Color(0.38, 0.3, 1.0); // violet sky on the shadow side
+const WARM_NIGHT = new THREE.Color(1.0, 0.55, 0.2); // sodium streetlight glow from below
+const COOL_NIGHT = new THREE.Color(0.45, 0.36, 1.0);
+const DOWN = new THREE.Vector3(0, -1, 0);
+const rimWorld = new THREE.Vector3();
+const botScratch = new THREE.Color();
+const botPatched = new WeakSet(); // material.clone() drops onBeforeCompile, so the armour's clones get patched on sight
+
+const BOT_HOOKS = ["#include <roughnessmap_fragment>", "#include <emissivemap_fragment>", "#include <lights_fragment_maps>"];
+let botHookWarned = false;
+
+function patchBotMaterial(m) {
+  m.onBeforeCompile = (shader) => {
+    const missing = BOT_HOOKS.filter((h) => !shader.fragmentShader.includes(h));
+    if (missing.length) { // a three.js upgrade renamed a chunk: render the stock bot rather than half a patch
+      if (!botHookWarned) console.warn("movie-look: bot shader hooks missing, stock look kept:", missing);
+      botHookWarned = true;
+      return;
+    }
+    Object.assign(shader.uniforms, BOT);
+    shader.fragmentShader = "uniform float movieGloss;\nuniform float movieEnv;\nuniform vec3 rimWarm;\nuniform vec3 rimCool;\nuniform vec3 rimDir;\n"
+      + shader.fragmentShader
+        .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n\troughnessFactor *= movieGloss;")
+        .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+	float rimF = pow( 1.0 - saturate( dot( normal, normalize( vViewPosition ) ) ), ${RIM_POWER} );
+	totalEmissiveRadiance += rimF * mix( rimCool, rimWarm, smoothstep( -0.3, 0.7, dot( normal, rimDir ) ) );`)
+        .replace("#include <lights_fragment_maps>", "#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\n\tradiance *= movieEnv;\n#endif");
+  };
+  m.customProgramCacheKey = () => "qm85-movie-bot";
+  m.needsUpdate = true;
+  botPatched.add(m);
+}
+
+/** Movie Oakland: the pilot bot gets its own copies of the shared model materials, so the menu's bots keep theirs. */
+export function movieBotSetup(bot) {
+  bot.traverse((o) => {
+    if (!o.isMesh || !o.material?.isMeshStandardMaterial || !o.material.userData.shared) return;
+    const m = o.material.clone();
+    m.userData.shared = false; // freed with the flight; its textures stay shared (dispose.js)
+    o.material = m;
+  });
+}
+
+/** Every frame: gloss + reflections from golden hour on, a warm sun-side edge at dusk, streetlight + violet edges at night. */
+export function movieBot(bot, n, sunDir, camera) {
+  bot.traverse((o) => {
+    if (o.isMesh && o.material?.isMeshStandardMaterial && !botPatched.has(o.material)) patchBotMaterial(o.material);
+  });
+  const dusk = duskBand(n), night = nightBand(n), glow = smooth(0.15, 0.7, n);
+  BOT.movieGloss.value = lerp(1, 0.6, glow);
+  BOT.movieEnv.value = lerp(1, 1.8, glow);
+  BOT.rimWarm.value.copy(WARM_DUSK).multiplyScalar(0.9 * dusk).add(botScratch.copy(WARM_NIGHT).multiplyScalar(0.3 * night));
+  BOT.rimCool.value.copy(COOL_DUSK).multiplyScalar(0.3 * dusk).add(botScratch.copy(COOL_NIGHT).multiplyScalar(0.45 * night));
+  // the warm edge faces the sunset on the horizon at dusk, then turns to the streetlights below at night
+  rimWorld.set(sunDir.x, 0.15, sunDir.z).normalize().lerp(DOWN, night).normalize();
+  BOT.rimDir.value.copy(rimWorld).transformDirection(camera.matrixWorldInverse);
+}
+
 /** How wet the streets read: after-rain from golden hour on (the movie look), soaked when it actually rains. */
 export function wetness(n, rain01 = 0) {
   return Math.max(rain01, 0.85 * smooth(0.2, 0.8, n));

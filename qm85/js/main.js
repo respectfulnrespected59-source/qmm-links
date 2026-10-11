@@ -6,7 +6,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createFilmPass } from "./cinematic.js";
-import { MOVIE, movieHaze, movieExposure, movieBloom, movieGrade, sanitizeBloom } from "./movie-look.js";
+import { MOVIE, movieHaze, movieExposure, movieBloom, movieGrade, sanitizeBloom, movieBot, movieBotSetup } from "./movie-look.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 import { loadAssets } from "./assets.js";
@@ -440,6 +440,7 @@ function startFlight(zone = game.zone, resume = null, race = null) {
     bloom.enabled = sanitizeBloom(bloom); // never bloom an unsanitised buffer: one Inf pixel blacked out the frame
     bloom.halfRes = true; // half-res bloom; composer.setPixelRatio below re-sizes it
     if (bloom.highPassUniforms.bloomCap) bloom.highPassUniforms.bloomCap.value = 6;
+    movieBotSetup(flight.pilot.bot); // its own materials: the movie gloss + edge light never touch the menu's bots
   } else {
     bloom.halfRes = false;
     if (bloom.highPassUniforms.bloomCap) bloom.highPassUniforms.bloomCap.value = 65000; // cyberspace: uncapped, as before
@@ -639,6 +640,7 @@ function tick() {
       if (movie) {
         movieGrade(film, day.night01);
         movieBloom(bloom, day.night01);
+        movieBot(game.flight.pilot.bot, day.night01, day.sunDir, camera); // glossy metal + warm/cool edge light
       }
     }
     autoQuality();
