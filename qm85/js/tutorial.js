@@ -4,7 +4,23 @@
 // Phone players see the pad's button names instead of keys. T skips.
 import { input } from "./input.js";
 import { touch } from "./touch.js";
+import { pad } from "./padinput.js";
 import { hud } from "./hud.js";
+
+// THE CONTROLLER (11-02): with an Xbox / PlayStation pad in his hands, every step names the pad's button (js/gamepad.js)
+const XB = {
+  steer: "LEFT STICK — left / right to turn, UP to dive, DOWN to climb",
+  boost: "hold A — BOOST (the bar is your fuel)",
+  fire: "hold RT — PLASMA PUNCHES. Put the ring on a drone",
+  missile: "X — HEAT-SEEKING MISSILE. Face a drone (it locks the nearest one ahead), 3 in the rack",
+  special: "RB — SPECIAL: VLTRN8's DRONE SWARM · 3BIZZLE's MISSILE CANNON (3 missiles — needs blaster LV2: grab a CYAN beam)",
+  roll: "flick the LEFT STICK left or right TWICE — BARREL ROLL (untouchable while rolling)",
+  brake: "hold LT — AIRBRAKE: flare, level out, hover",
+  land: "get under 45 m over a street or rooftop and press Y — LAND (Y again = fly)",
+  punch: "on foot: X — PUNCH (the VLTRNs swing their blades). Press it 3 times fast = the 3-HIT COMBO",
+  dodge: "on foot: B or LT — DODGE ROLL (hold the stick to roll that way). A then X = GROUND POUND",
+};
+const say = (step) => (pad.active ? XB[step.id] ?? step.pad : touch.enabled ? step.pad : step.key);
 
 const DONE_KEY = "qm85_tutorial_done";
 const MIN_STEP_TIME = 1.2; // a step is shown at least this long before it can clear (no instant skips)
@@ -143,6 +159,12 @@ class Tutorial {
       return;
     }
     const step = this.steps[this.i];
+    const e = el(); // the pad picked up / put down mid-step: the words follow the device in his hands
+    const words = say(step);
+    if (e.querySelector("span").textContent !== words) {
+      e.querySelector("span").textContent = words;
+      e.querySelector("i").textContent = pad.active ? "VIEW = skip" : "T = skip";
+    }
     const did = step.done(this.state, f, dt); // runs every frame so hold-timers count from the moment the step shows
     if (did) this.state.did = true;
     const gaveUp = !this.state.did && this.shownFor >= GIVE_UP_AFTER;
@@ -161,7 +183,8 @@ class Tutorial {
     step.reset(this.state, f ?? { yaw: 0, pitch: 0, missiles: { ammo: 3 } });
     const e = el();
     e.querySelector("b").textContent = `TUTORIAL ${this.i + 1}/${this.steps.length}`;
-    e.querySelector("span").textContent = touch.enabled ? step.pad : step.key;
+    e.querySelector("span").textContent = say(step);
+    e.querySelector("i").textContent = pad.active ? "VIEW = skip" : "T = skip";
     e.hidden = false;
   }
 

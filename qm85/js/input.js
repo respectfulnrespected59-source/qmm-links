@@ -35,6 +35,11 @@ export const input = {
   release(code) {
     held.delete(code);
   },
+  /** Controller layer (padinput.js): keep a key it still holds held, WITHOUT a new press edge (a window blur clears `held`;
+   *  a pad has no key repeat to bring it back, and a fresh edge there would fire a jump / count toward a double-tap). */
+  hold(code) {
+    held.add(code);
+  },
   held: (...codes) => codes.some((c) => held.has(c)),
   pressed: (...codes) => codes.some((c) => pressed.has(c)),
   /** Horizontal right-drag since the last frame, in pixels. */

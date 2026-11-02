@@ -1,5 +1,10 @@
 // All on-screen text: menu, story cards, counters, toasts, Rob's subtitles, build bar.
 import { touch } from "./touch.js";
+import { pad } from "./padinput.js";
+
+// the little key letters on the HUD: the pad's button while a controller is in his hands (11-02), nothing on a phone
+const PAD_NAMES = { H: "RB", Q: "X", B: "B" };
+const keyHint = (k) => (pad.active ? PAD_NAMES[k] ?? k : touch.enabled ? "" : k);
 
 const $ = (id) => document.getElementById(id);
 let toastTimer = 0;
@@ -89,6 +94,7 @@ export const hud = {
        <p class="controls"><b>FLIGHT:</b> ↑ dive · ↓ climb · ←/→ turn · hold SPACE boost · click / L = plasma punches · hold SHIFT = AIRBRAKE (flare + hover, then F to land) ·
        Q = HEAT-SEEKING MISSILE · <b>H = SPECIAL</b> (VLTRN8 / 3BIZZLE) · rings = THRUSTER levels (LV3 + boost on a full bar = STEALTH MODE) · Merkabas = BLASTER levels · LV2+: double-tap ↑/↓ = HYPER LOOP, then press a direction to blast off (on a FULL bar the blast is the COSMIC PLASMA STRIKE) · double-tap SPACE (full bar) = MEGA BLAST · double-tap ←/→ = barrel roll, switch mid-roll = hard bank the other way · double-tap ↑/↓ at LV1 = twirl + power thrust · <b>B = BACK BLAST</b> (blaster LV2+): an upright 360° spin firing all around — for when they're on your tail<br>
        <b>FIGHT MODE:</b> fly low + <b>F</b> to land (drop in from high up = HERO LANDING shockwave) · W/S walk · A/D turn · <b>R = combo</b> (jab · cross · uppercut — the VLTRNs swing their blades) · SPACE jump · R in the air = GROUND POUND · <b>SHIFT = DODGE</b> · click / L = blasters fire UP · <b>F</b> = back to flight<br>
+       <b>XBOX / PLAYSTATION CONTROLLER:</b> left stick steer (↑ dive · ↓ climb) · hold <b>A</b> boost (double-tap on a full bar = MEGA) · hold <b>RT</b> plasma punches · hold <b>LT</b> airbrake · <b>X</b> missile · <b>B</b> back blast · <b>Y</b> land / fly · <b>RB</b> special · flick the stick twice = barrel roll (↑↑ / ↓↓ at LV2+ = hyper loop) · on foot: <b>A</b> jump · <b>X</b> punch (A then X = ground pound) · <b>B</b> / <b>LT</b> dodge · <b>RT</b> blasters up · <b>MENU</b> pause · <b>VIEW</b> skip the tutorial<br>
        <b>ANY TIME:</b> K = record / save a clip · P or Esc = pause · M = mute · N = music volume</p>
        </div></details>
        <button id="card-cyber" type="button" class="secondary">CYBERSPACE BATTLE</button>
@@ -148,7 +154,7 @@ export const hud = {
     const dz = s.districts;
     const here = dz?.here;
     const hereSig = here ? `${here.name},${here.state},${here.guards ?? ""},${here.shielded ?? ""},${here.awake ?? ""}` : "";
-    const sig = `${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${s.blaster}|${s.missiles}|${s.onFoot}|${bb}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}|${dz ? dz.freed : ""}|${hereSig}|${s.lotus}|${s.special ? `${s.special.name}${s.special.cd}` : ""}`;
+    const sig = `${pad.active ? "pad|" : ""}${s.wave}|${s.boss}|${s.left}|${s.score}|${s.shield}|${s.blaster}|${s.missiles}|${s.onFoot}|${bb}|${m ? `${m.data},${m.part},${m.carrying}` : ""}|${s.day ? s.day.clock : ""}|${dz ? dz.freed : ""}|${hereSig}|${s.lotus}|${s.special ? `${s.special.name}${s.special.cd}` : ""}`;
     if (sig !== flightSig) {
       flightSig = sig;
       // the boss's health lives in the big bar now (#bossbar); the stats line keeps the head count
@@ -168,16 +174,16 @@ export const hud = {
         `${clock}${freeLine}${zoneLine}${stage}<span>SCORE ${s.score}</span>` +
         `<span class="shield">SHIELD ${"▮".repeat(Math.max(0, s.shield))}${"▯".repeat(Math.max(0, s.maxShield - s.shield))}</span>` +
         (s.lotus ? `<span class="lotus">✿ LOTUS SHIELD</span>` : "") +
-        (s.special ? `<span class="special${s.special.cd ? " cool" : ""}">${s.special.name} ${s.special.cd ? `${s.special.cd}s` : `READY <i>${touch.enabled ? "" : "H"}</i>`}</span>` : "") +
+        (s.special ? `<span class="special${s.special.cd ? " cool" : ""}">${s.special.name} ${s.special.cd ? `${s.special.cd}s` : `READY <i>${keyHint("H")}</i>`}</span>` : "") +
         `<span class="blaster">BLASTER LV${s.blaster} ${"◆".repeat(s.blaster)}${"◇".repeat(5 - s.blaster)}</span>` +
-        `<span class="missiles">MISSILES ${"▲".repeat(s.missiles)}${"△".repeat(s.missilesMax - s.missiles)} <i>Q</i></span>${back}` +
+        `<span class="missiles">MISSILES ${"▲".repeat(s.missiles)}${"△".repeat(s.missilesMax - s.missiles)} <i>${keyHint("Q")}</i></span>${back}` +
         `<div id="fuel" class="meter"><span>THRUSTERS</span><div class="bar"><i></i></div></div>` + mission;
     }
     this.fuel(s.fuel, s.megaReady, s.stealth ? "STEALTH MODE" : `THRUSTERS LV${s.thrust}${s.thrust === 3 ? " · BOOST ON A FULL BAR = STEALTH" : ""}`);
     $("prompt").classList.toggle("ground", Boolean(s.onFoot)); // on foot the camera puts QM85 bottom-centre: the prompt moves aside
     // phones have no F / SPACE keys: say which BUTTON to tap (owner 09-24 on mobile)
     const strike = s.pilot !== "qm85" ? "SWORD" : "PUNCH"; // the VLTRNs cut, QM85 punches (the phone button says the same)
-    const k = touch.enabled ? { jump: "JUMP", fly: "LAND / FLY", land: "TAP LAND / FLY", brawl: `${strike} · DODGE`, pound: strike } : { jump: "SPACE JUMP", fly: "F = FLY", land: "F", brawl: `R ${strike} · SHIFT DODGE`, pound: "R" };
+    const k = pad.active ? { jump: "A JUMP", fly: "Y = FLY", land: "Y", brawl: `X ${strike} · B DODGE`, pound: "X" } : touch.enabled ? { jump: "JUMP", fly: "LAND / FLY", land: "TAP LAND / FLY", brawl: `${strike} · DODGE`, pound: strike } : { jump: "SPACE JUMP", fly: "F = FLY", land: "F", brawl: `R ${strike} · SHIFT DODGE`, pound: "R" };
     this.prompt(s.onFoot ? (m?.carrying ? `FOLLOW THE GOLD ARROW TO THE WAREHOUSE · ${k.brawl} · ${k.fly}` : `FIGHT MODE · ${k.brawl} · ${k.jump} (then ${k.pound} = POUND) · ${k.fly}`)
       : s.canLand ? (s.landOnRoof ? `${k.land} — LAND ON THE ROOF` : `${k.land} — LAND (FIGHT MODE)`) : s.braking ? "AIRBRAKE — GET UNDER 45 M TO LAND" : "");
   },

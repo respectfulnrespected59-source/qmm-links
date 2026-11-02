@@ -15,6 +15,7 @@ import { sfx, clipTap } from "./audio.js";
 import { FlightBattle } from "./flight.js";
 import { hud } from "./hud.js";
 import { touch } from "./touch.js";
+import { pad } from "./padinput.js";
 import { tutorial } from "./tutorial.js";
 import { music } from "./music.js";
 import { loadCheckpoint, clearCheckpoint } from "./oakland-day.js";
@@ -282,6 +283,15 @@ for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => music.un
 // Back to the title screen from anywhere: a clean reload drops every level, sound and timer at once.
 const toMenu = () => location.assign(location.pathname);
 hud.controls({ onPause: togglePause, onMute: toggleMute, onVolume: stepVolume, onMenu: toMenu, onSave: saveAndQuit });
+// THE CONTROLLER (owner 11-02: "we need ALL the games to be xbox controller fitted"): the pad presses the same keys (gamepad.js)
+pad.configure({
+  isPlaying: () => PLAY_MODES.has(game.mode) && !game.paused,
+  onFoot: () => Boolean(game.flight?.fight.active),
+  togglePause,
+  unlockAudio: () => { music.unlock(); sfx.unlock?.(); },
+  status: () => (game.mode === "flight" && game.flight ? { shield: game.flight.shield, mega: Boolean(game.flight.mega?.busy), foot: Boolean(game.flight.fight?.active) } : null),
+  onConnect: (on) => hud.toast(on ? "CONTROLLER CONNECTED — A BOOST · RT FIRE · Y LAND · MENU PAUSE" : "CONTROLLER UNPLUGGED"),
+});
 // The tab closed or the phone locked mid-mission: keep the run (a paused game is already saved).
 addEventListener("pagehide", () => {
   if (game.mode === "flight" && !game.paused) saveRun();
