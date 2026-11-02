@@ -150,6 +150,13 @@ body { font-family:var(--sans); color:var(--bone); -webkit-font-smoothing:antial
    marks it as new against a rail of gold; it is the only one in that colour. */
 .keys .key-new { color:var(--violet); }
 .keys .key-new kbd { color:var(--violet); text-shadow:0 0 12px rgba(168,119,230,.55); }
+/* THE CONTROLLER (src3d/padinput.js). The legend follows the device in his hands: html.pad-ui is set by the first pad
+   press and cleared by a real key or click. The pad's focus ring is WHITE so it never reads as the gold "picked" state
+   a card or a swatch already wears. */
+.keys.padkeys { display:none; }
+html.pad-ui .keys:not(.padkeys) { display:none; }
+html.pad-ui .keys.padkeys { display:flex; }
+.padfocus { outline:3px solid #fff !important; outline-offset:3px; }
 
 /* ── The E prompt ─────────────────────────────────────────────────────── */
 .prompt { position:fixed; left:50%; bottom:23%; transform:translate(-50%,8px);
@@ -504,7 +511,7 @@ body { font-family:var(--sans); color:var(--bone); -webkit-font-smoothing:antial
                        color:#FFE9BC; }
 
 @media (max-width:720px) {
-  .keys { display:none; }
+  .keys, html.pad-ui .keys.padkeys { display:none; }
   #hud-pillars { flex-wrap:wrap; justify-content:flex-end; max-width:56vw; }
   .sheet { padding:20px; }
 }
@@ -929,6 +936,15 @@ body.godseye-open .tutor { display:none; }
       <span><kbd>F</kbd> raise / claim</span>
       <span><kbd>DRAG</kbd> look</span>
     </div>
+    <div class="keys padkeys">
+      <span><kbd>L-STICK</kbd> walk</span>
+      <span><kbd>RT</kbd> run</span>
+      <span><kbd>A</kbd> act</span>
+      <span><kbd>X</kbd> raise / claim</span>
+      <span><kbd>Y</kbd> build</span>
+      <span><kbd>R-STICK</kbd> look</span>
+      <span><kbd>MENU</kbd> more</span>
+    </div>
 
     <!-- ☰ MORE — the hidden menu, matching the 2D game's #more-wrap. Every
          item here is a key that already worked and that nobody could find. -->
@@ -974,6 +990,6 @@ body.godseye-open .tutor { display:none; }
   if (classic) setTimeout(function () { location.replace(classic); }, 1800);
 })();
 </script>
-<script src="./bundle.js?v=1790045229140"></script>
+<script src="./bundle.js?v=1793636157885"></script>
 </body>
 </html>
