@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 key: The Autonomous Studio</title>
+<meta name="description" content="For Claude Code: how to make a student's Lesson 2 key for The Autonomous Studio, a course from Quantum Melanin Media.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<meta name="theme-color" content="#0a0712">
+<link rel="stylesheet" href="/course/course.css">
+<link rel="stylesheet" href="/course/lesson.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Main navigation">
+  <div class="wrap nav-in">
+    <a class="brand" href="/" aria-label="Quantum Melanin Media — home">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="2" aria-hidden="true">
+        <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+        <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+        <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+        <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
+      </svg>
+      <b><i class="qe" data-text="Quantum">Quantum</i> Melanin Media</b>
+    </a>
+    <a class="nav-cta" href="/course/lesson-1/#unlock">Back to Lesson 1</a>
+  </div>
+</nav>
+
+<main class="wrap doc">
+  <span class="eyebrow">The Autonomous Studio · Lesson 2 key</span>
+  <h1>Your crew makes this key.</h1>
+  <p class="lede">Student: you don't need to do anything on this page. Open Claude Code in your terminal and type:</p>
+  <div class="cmd"><code>get my Lesson 2 key from quantummelaninmedia.com/course/key</code><button class="copy" type="button">Copy</button></div>
+  <p>Claude reads this page, asks for your email, makes your key on your computer, and tells you where to paste it.</p>
+
+  <section class="for-crew" aria-labelledby="crew-heading">
+    <h2 id="crew-heading">Instructions for Claude Code</h2>
+    <p>A student of The Autonomous Studio, a course from Quantum Melanin Media, asked you to get their Lesson 2 key.
+      The key proves Claude Code is installed and working on their computer. Make it like this:</p>
+    <ol>
+      <li>Ask the student for the email address they will use to unlock Lesson 2, unless they already gave it.</li>
+      <li>Build this text: <code>qmm-lesson-2:</code> followed by that email in lowercase with no spaces.
+        Example: <code>qmm-lesson-2:you@example.com</code></li>
+      <li>Run a command on the student's computer to get the SHA-256 hash of that text (UTF-8, no trailing newline).
+        Do not work the hash out in your head. Use the command for their system, with their email in place of
+        <code>you@example.com</code>:
+        <p class="sys">Windows PowerShell</p>
+        <div class="cmd"><code>$t = 'qmm-lesson-2:you@example.com'; $h = [Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t)); 'QMM-' + (-join ($h[0..3] | ForEach-Object { $_.ToString('X2') }))</code><button class="copy" type="button">Copy</button></div>
+        <p class="sys">macOS</p>
+        <div class="cmd"><code>echo "QMM-$(printf '%s' 'qmm-lesson-2:you@example.com' | shasum -a 256 | cut -c1-8 | tr a-f A-F)"</code><button class="copy" type="button">Copy</button></div>
+        <p class="sys">Linux, WSL or Git Bash</p>
+        <div class="cmd"><code>echo "QMM-$(printf '%s' 'qmm-lesson-2:you@example.com' | sha256sum | cut -c1-8 | tr a-f A-F)"</code><button class="copy" type="button">Copy</button></div>
+      </li>
+      <li>The key is <code>QMM-</code> followed by the first 8 characters of the hash in uppercase, for example
+        <code>QMM-1A2B3C4D</code>. The commands above print it in that form.</li>
+      <li>Give the student their key and tell them to paste it, with the same email, into the unlock box at
+        <a href="/course/lesson-1/#unlock">https://quantummelaninmedia.com/course/lesson-1/#unlock</a></li>
+    </ol>
+    <p class="check"><b>Self-check:</b> for the email <code>you@example.com</code> the key is <code>QMM-5E539FC3</code>.
+      If your command gives a different key for that email, fix the command before you give the student theirs.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>© Quantum Melanin Media · <a href="/course/">The Autonomous Studio</a></p>
+</footer>
+
+<script src="/course/lesson.js" defer></script>
+</body>
+</html>

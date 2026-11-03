@@ -61,7 +61,7 @@
       .then(function (ok) {
         if (!ok) { setStatus(form, FAIL_MSG, 'err'); return; }
         form.reset();
-        setStatus(form, "You're on the list. Lesson 1 comes to " + data.email + " when it's ready.", 'ok');
+        setStatus(form, "You're on the list. New lessons come to " + data.email + ' first.', 'ok');
       })
       .catch(function () { setStatus(form, FAIL_MSG, 'err'); })
       .finally(function () { button.disabled = false; });

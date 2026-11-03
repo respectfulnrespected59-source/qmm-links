@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1: Install your crew · The Autonomous Studio</title>
+<meta name="description" content="Free lesson: install Claude Code in your terminal and drop in the Everything Claude Code skills, step by step with real footage. Then your crew makes the key that unlocks Lesson 2.">
+<link rel="canonical" href="https://quantummelaninmedia.com/course/lesson-1/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0712">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Quantum Melanin Media">
+<meta property="og:url" content="https://quantummelaninmedia.com/course/lesson-1/">
+<meta property="og:title" content="Lesson 1: Install your crew (free)">
+<meta property="og:description" content="Claude Code + the Everything Claude Code skills in your terminal. Real footage, every command.">
+<meta property="og:image" content="https://quantummelaninmedia.com/assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/course/course.css">
+<link rel="stylesheet" href="/course/lesson.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Main navigation">
+  <div class="wrap nav-in">
+    <a class="brand" href="/" aria-label="Quantum Melanin Media — home">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="2" aria-hidden="true">
+        <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+        <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+        <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+        <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
+      </svg>
+      <b><i class="qe" data-text="Quantum">Quantum</i> Melanin Media</b>
+    </a>
+    <div class="nav-links">
+      <a href="/course/">The course</a>
+      <a href="#steps">Steps</a>
+      <a href="#unlock">Unlock Lesson 2</a>
+    </div>
+    <a class="nav-cta" href="#unlock">Unlock Lesson 2</a>
+  </div>
+</nav>
+
+<header class="top">
+  <div class="wrap">
+    <a class="crumb" href="/course/">← The Autonomous Studio</a>
+    <span class="eyebrow">Lesson 1 of 10 · Free</span>
+    <h1>Install your crew.<span class="q">Claude Code and the Everything Claude Code skills, in your terminal.</span></h1>
+    <p class="lede">From a brand-new computer to an AI crew with <b>71 agents and 408 skills</b>. Quantus and Tess walk
+      you through every step on real footage. Then your crew's first job is making the key that unlocks Lesson 2.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="lesson-video media">
+    <button type="button" data-yt="k3qn1pQKT9E" aria-label="Play Lesson 1: Claude Code in your terminal (5:26)">
+      <img src="https://i.ytimg.com/vi/k3qn1pQKT9E/hqdefault.jpg" width="480" height="360" alt="">
+      <span class="play" aria-hidden="true"></span><span class="len">5:26</span>
+    </button>
+  </div>
+
+  <section class="needs" aria-labelledby="needs-heading">
+    <h2 id="needs-heading">What you need</h2>
+    <ul>
+      <li><b>A computer:</b> Windows 10 or 11, macOS 13 or newer, or Linux</li>
+      <li><b>A paid Claude plan:</b> Pro or higher. The free Claude plan doesn't include Claude Code.</li>
+      <li><b>About 15 minutes</b></li>
+    </ul>
+  </section>
+
+  <section class="sec steps" id="steps" aria-labelledby="steps-heading">
+    <span class="kicker">The steps</span>
+    <h2 id="steps-heading">Every command from the video.</h2>
+    <ol class="step-list">
+      <li>
+        <h3>Open a terminal</h3>
+        <p><b>Windows:</b> press <kbd>Windows</kbd> + <kbd>X</kbd>, then click <b>Terminal</b> (on Windows 10:
+          <b>Windows PowerShell</b>). <b>Mac:</b> press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type <b>Terminal</b>, press Enter.</p>
+      </li>
+      <li>
+        <h3>Install Claude Code</h3>
+        <p class="sys">Windows PowerShell</p>
+        <div class="cmd"><code>irm https://claude.ai/install.ps1 | iex</code><button class="copy" type="button">Copy</button></div>
+        <p class="sys">Mac, Linux or WSL</p>
+        <div class="cmd"><code>curl -fsSL https://claude.ai/install.sh | bash</code><button class="copy" type="button">Copy</button></div>
+        <p class="tip">It shows no progress while it downloads. Give it a minute.</p>
+      </li>
+      <li>
+        <h3>Check it</h3>
+        <p>Open a <b>new</b> terminal window, then run:</p>
+        <div class="cmd"><code>claude --version</code><button class="copy" type="button">Copy</button></div>
+        <p>You should see a version number like <code>2.1.316 (Claude Code)</code>. For a full health check:</p>
+        <div class="cmd"><code>claude doctor</code><button class="copy" type="button">Copy</button></div>
+      </li>
+      <li>
+        <h3>First launch and sign in</h3>
+        <div class="cmd"><code>mkdir my-first-project</code><button class="copy" type="button">Copy</button></div>
+        <div class="cmd"><code>cd my-first-project</code><button class="copy" type="button">Copy</button></div>
+        <div class="cmd"><code>claude</code><button class="copy" type="button">Copy</button></div>
+        <p>Your browser opens to sign in with your Claude account. Approve it, come back to the terminal, and
+          your crew is ready. Type <code>/exit</code> when you want to leave.</p>
+      </li>
+      <li>
+        <h3>Drop in the stack: Everything Claude Code</h3>
+        <p>Back in your normal terminal (not inside Claude), run these one at a time:</p>
+        <div class="cmd"><code>claude plugin marketplace add https://github.com/affaan-m/ECC</code><button class="copy" type="button">Copy</button></div>
+        <div class="cmd"><code>claude plugin install ecc@ecc</code><button class="copy" type="button">Copy</button></div>
+        <div class="cmd"><code>claude plugin details ecc@ecc</code><button class="copy" type="button">Copy</button></div>
+        <p>The last one lists everything you just added: the agents, the skills and the hooks.</p>
+      </li>
+      <li>
+        <h3>Red error the first time you start Claude?</h3>
+        <p>That's a known ECC issue (<a href="https://github.com/affaan-m/ECC/issues/2822" target="_blank" rel="noopener">#2822</a>):
+          the plugin installs without a few files it needs. Don't fix it yourself. Start <code>claude</code> and
+          tell your crew, the way the video does:</p>
+        <div class="cmd"><code>there's a red ECC hook error at startup, fix it</code><button class="copy" type="button">Copy</button></div>
+      </li>
+    </ol>
+    <details class="more">
+      <summary>Going further (optional): Ruflo</summary>
+      <p>Inside Claude Code, the video's next step adds Ruflo from its GitHub page:</p>
+      <div class="cmd"><code>/plugin marketplace add ruvnet/ruflo</code><button class="copy" type="button">Copy</button></div>
+      <div class="cmd"><code>/plugin install ruflo-core@ruflo</code><button class="copy" type="button">Copy</button></div>
+    </details>
+  </section>
+
+  <section class="sec" id="unlock" aria-labelledby="unlock-heading">
+    <div class="joinbox unlock">
+      <span class="kicker">Unlock Lesson 2</span>
+      <h2 id="unlock-heading">Your crew's first job: make your key.</h2>
+      <p class="intro">Start <code>claude</code> and type this sentence. Your crew reads our key page, makes a key from
+        your email on your computer, and hands it to you.</p>
+      <div class="cmd big"><code>get my Lesson 2 key from quantummelaninmedia.com/course/key</code><button class="copy" type="button">Copy</button></div>
+      <p class="intro">Then paste the key here, with the same email you gave Claude:</p>
+      <div class="formwrap" id="unlock-box">
+        <form class="join wide unlock-form" id="unlock-form" novalidate>
+          <label class="sr" for="unlock-email">Email address</label>
+          <input id="unlock-email" type="email" name="email" placeholder="the email you gave Claude" required autocomplete="email">
+          <label class="sr" for="unlock-key">Your Lesson 2 key</label>
+          <input id="unlock-key" type="text" name="key" placeholder="QMM-XXXXXXXX" required autocomplete="off" spellcheck="false">
+          <button class="btn btn-gold" type="submit">Unlock Lesson 2</button>
+        </form>
+        <p class="status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="unlocked" id="unlocked" hidden>
+        <p class="done-line">Lesson 2 is unlocked. Your crew just did its first real job.</p>
+        <a class="btn btn-gold" id="lesson-2-link" href="#">Open Lesson 2 →</a>
+      </div>
+      <p class="micro">Unlocking adds you to the course list: one email when each new lesson is ready.
+        Reply "stop" to any email and you're off the list.</p>
+    </div>
+  </section>
+
+  <p class="fine">Claude Code is made by Anthropic. Everything Claude Code (ECC) and Ruflo are free, open-source projects
+    by their own authors. We're not affiliated with any of them; we use them every day. Install steps match
+    <a href="https://code.claude.com/docs/en/setup" target="_blank" rel="noopener">Anthropic's setup guide</a> as of November 2026.
+    The six-step skill method in the video is Nate Herk's. Thank you, Nate.</p>
+</main>
+
+<footer class="wrap">
+  <p>© Quantum Melanin Media · <a href="/course/">The Autonomous Studio</a> ·
+     <a href="https://www.youtube.com/@quantummelaninmedia" target="_blank" rel="noopener">YouTube</a></p>
+</footer>
+
+<script src="/course/course.js" defer></script>
+<script src="/course/lesson.js" defer></script>
+</body>
+</html>

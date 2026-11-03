@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2: One terminal, whole studio · The Autonomous Studio</title>
+<meta name="description" content="How one AI session plans, builds and ships, and how to talk to it.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<meta name="theme-color" content="#0a0712">
+<link rel="stylesheet" href="/course/course.css">
+<link rel="stylesheet" href="/course/lesson.css">
+</head>
+<body>
+<!-- Built by autonomous-studio-course/build_lesson_pages.py from lesson-02/lesson-02.md. Edit the Markdown, not this file. -->
+
+<nav class="nav" aria-label="Main navigation">
+  <div class="wrap nav-in">
+    <a class="brand" href="/" aria-label="Quantum Melanin Media — home">
+      <svg viewBox="0 0 100 100" fill="none" stroke="#e8c25a" stroke-width="2" aria-hidden="true">
+        <circle cx="50" cy="50" r="13"/><circle cx="50" cy="37" r="13"/><circle cx="50" cy="63" r="13"/>
+        <circle cx="38.7" cy="43.5" r="13"/><circle cx="61.3" cy="43.5" r="13"/>
+        <circle cx="38.7" cy="56.5" r="13"/><circle cx="61.3" cy="56.5" r="13"/>
+        <circle cx="50" cy="50" r="26" stroke-width="2.6"/>
+      </svg>
+      <b><i class="qe" data-text="Quantum">Quantum</i> Melanin Media</b>
+    </a>
+    <a class="nav-cta" href="/course/">The course</a>
+  </div>
+</nav>
+
+<main class="wrap doc">
+  <a class="crumb" href="/course/">← The Autonomous Studio</a>
+  <span class="eyebrow">Lesson 2 of 10 · Unlocked</span>
+  <h1>One terminal, whole studio.</h1>
+  <p class="lede">How one AI session plans, builds and ships, and how to talk to it.</p>
+  <hr>
+  <p><strong>In this lesson</strong></p>
+  <ul>
+  <li>What one AI session actually is, and why it can run a whole studio</li>
+  <li>The three sentences that took a course idea to a live web page with a real signup in about 40 minutes</li>
+  <li>Five habits for talking to your crew so it does what you meant</li>
+  <li>The trap that makes a signup form say "thanks" while sending nothing, and how to beat it</li>
+  </ul>
+  <hr>
+  <h2>1. The whole studio is one conversation</h2>
+  <p>You installed your crew in Lesson 1. This lesson is how to work with it.</p>
+  <p>Quantum Melanin Media is two people. The games, the apps, the videos, the music and the uploads are built by an
+  AI crew: Claude Code, running in one terminal window.</p>
+  <p>One session is one long conversation. You talk to it in plain English. The difference from a chatbot is what
+  happens next: it doesn't hand you instructions to go do yourself. It opens the files, runs the commands, drives a
+  browser, does the work, and comes back with proof.</p>
+  <p>Keep three parts in your head, because the whole course is built on them:</p>
+  <ol>
+  <li><strong>Your words.</strong> The ask, the notes, and the go-live.</li>
+  <li><strong>The crew's hands.</strong> Files, the terminal, a browser. This is where the work happens.</li>
+  <li><strong>The crew's notes.</strong> The rules you've taught it, saved so the next session starts smart. (That's Lesson 3.)</li>
+  </ol>
+  <h2>2. The real job: one sentence to a live page</h2>
+  <p>The course page you found us on was built in this lesson's case study. Here is everything Rob typed, word for word:</p>
+  <table>
+  <thead>
+  <tr>
+  <th>Time (PT)</th>
+  <th>Rob typed</th>
+  <th>What came back</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>4:19 PM</td>
+  <td><code>let's start the course waitlist page</code></td>
+  <td>A finished page, tested, open in a browser on our machine for review. Not live.</td>
+  </tr>
+  <tr>
+  <td>4:54 PM</td>
+  <td><code>push it live and add the home page card</code></td>
+  <td>The page and a home page card live on quantummelaninmedia.com, checked from the live site.</td>
+  </tr>
+  <tr>
+  <td>5:01 PM</td>
+  <td></td>
+  <td>The first real test signup lands in the inbox.</td>
+  </tr>
+  <tr>
+  <td>5:07 PM</td>
+  <td><code>yes add it to both videos and IG</code></td>
+  <td>The link added to two YouTube descriptions and posted on Instagram, each one reloaded and confirmed.</td>
+  </tr>
+  </tbody>
+  </table>
+  <p>Three sentences. About 40 minutes from the first one to a live page with a real signup in the inbox, and that
+  includes the time Rob spent looking it over.</p>
+  <p>Notice what Rob did <strong>not</strong> type: no file names, no code, no list of steps. He said what he wanted, looked at the
+  result, and said when it could go public.</p>
+  <h2>3. What happened between the sentences</h2>
+  <p>This is the part you never see in a demo, and it's the part that makes it trustworthy. Between Rob's first and
+  second sentence, the crew:</p>
+  <ul>
+  <li><strong>Read its notes first.</strong> Which website, how it deploys, which signup form was already proven to work. It
+    didn't guess.</li>
+  <li><strong>Reused what already works.</strong> Same look as the rest of the site, same form setup that was already delivering
+    signups. New code only where something new was needed.</li>
+  <li><strong>Tested the failures on purpose.</strong> What if the form service refuses? What if the internet drops? What if
+    someone types a bad email? A bot? The page had to show an honest error every time and never say
+    "you're on the list" when you're not.</li>
+  <li><strong>Showed it before shipping it.</strong> The page opened in a browser for Rob to judge, and then the crew waited.</li>
+  </ul>
+  <p>After "push it live," it:</p>
+  <ul>
+  <li><strong>Ran the site's own check</strong> and only pushed when it passed.</li>
+  <li><strong>Asked the live site, not the report.</strong> It pulled every file back down from the public website and compared it
+    to what it had built. Then it signed up for real and went to the inbox to find the email.</li>
+  </ul>
+  <p>That last step is the habit to steal. "Deployed successfully" is a claim. The email in the inbox is proof.</p>
+  <h2>4. Five habits for talking to your crew</h2>
+  <p><strong>1. Say the outcome, not the steps.</strong>
+  <code>let's start the course waitlist page</code> worked because the crew already knew the site, the style and the tools.
+  You know what you want; it knows the steps. A strong ask has three parts:</p>
+  <blockquote>
+  <p><strong>what</strong> you want + <strong>who</strong> it's for + <strong>what "done" looks like</strong></p>
+  </blockquote>
+  <p><strong>2. Keep the go-live word separate.</strong>
+  Building and shipping are two different sentences. <code>push it live</code> was its own message. Until you say it, nothing
+  goes public. That one rule lets you move fast without being nervous.</p>
+  <p><strong>3. Give notes like a director: where, what, and what right sounds like.</strong>
+  Real notes from the same day, on a commercial and an explainer:</p>
+  <ul>
+  <li><code>Its night 'shift ' he said night shrift...redo</code> (the exact word, and what was wrong with it)</li>
+  <li><code>Yeah, but now he says it too slow...</code> (the next note, on the next take)</li>
+  <li><code>Nailed it...!!!..</code> (tell it when it's right, too)</li>
+  <li><code>you see the part at a minute and 30 something seconds ... we got to just, you know, fix that section</code>
+    (a timestamp and a scope: fix this part, leave the rest alone)</li>
+  </ul>
+  <p>Short, specific, and in your own words. Your eye and ear are the final check. When a tool says a line sounds fine
+  and your ear says it doesn't, your ear wins.</p>
+  <p><strong>4. Teach it once.</strong>
+  <code>also remember when we use quantus and tess to do explainers we use the voices from the QSPN1 SPORTS FOCAS show, ok?</code>
+  The crew wrote that into its notes. The next explainer used those voices without anyone asking. If you've said
+  the same thing twice, it belongs in the notes. Lesson 3 shows you how.</p>
+  <p><strong>5. Keep the keys.</strong>
+  Some things never leave your hands: passwords (you type them), money (you approve every spend), and going public
+  (your word). Write that list down before you start, and tell the crew. Lesson 10 builds it in for good.</p>
+  <h2>5. The trap: a "thank you" that sends nothing</h2>
+  <p>A signup form can show "Thanks, you're in!" and deliver nothing at all. Some form services need a one-time
+  activation before they forward a single signup, and until then every signup disappears. The page still says thanks.
+  Nobody knows until they wonder why nobody signed up.</p>
+  <p>How you beat it:</p>
+  <ol>
+  <li><strong>The page only says "you're on the list" when the service confirms it.</strong> Anything else shows an error.</li>
+  <li><strong>Break it on purpose.</strong> Test the refusal and the dropped connection before a real person ever sees them.</li>
+  <li><strong>Do one real signup and find it in the real inbox.</strong> The proof is the email, not the thank-you.</li>
+  </ol>
+  <p>The same rule covers every lesson in this course: <strong>ask the thing itself, not the report about it.</strong></p>
+  <h2>6. Your turn</h2>
+  <ol>
+  <li><strong>Write one outcome sentence</strong> for something small you want built: a page, a flyer, a 30-second video. Use the
+     three parts: what, who, and what "done" looks like.</li>
+  <li><strong>Pick your go-live word.</strong> The exact sentence you'll say before anything goes public.</li>
+  <li><strong>Write your keys list.</strong> What your crew never does without you: money, passwords, posting, deleting.</li>
+  <li><strong>Bonus:</strong> find one thing you've corrected twice this month. That's your first note for Lesson 3.</li>
+  </ol>
+  <hr>
+  <p><strong>Next: Lesson 3 · A memory that keeps your rules.</strong> How the crew's notes work, what belongs in them, and how one
+  sentence from you turns into a rule it follows in every session after.</p>
+</main>
+
+<footer class="wrap">
+  <p>© Quantum Melanin Media · <a href="/course/">The Autonomous Studio</a></p>
+</footer>
+</body>
+</html>

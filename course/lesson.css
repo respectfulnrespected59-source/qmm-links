@@ -1,0 +1,105 @@
+/* The Autonomous Studio — lesson pages (Lesson 1, the key page, Lesson 2). Loads after course.css and reuses its
+   tokens, nav, buttons, forms and .media/.play video card. */
+
+.crumb{display:block;width:max-content;color:var(--mut);text-decoration:none;font-size:.86rem;margin-bottom:16px}
+.crumb:hover,.crumb:focus-visible{color:var(--gold)}
+.top h1{max-width:18ch}
+
+/* the lesson video: the receipts card, full width */
+.lesson-video{border:1px solid var(--line);border-radius:18px;margin-top:6px;
+  box-shadow:0 40px 80px -40px rgba(0,0,0,.95),0 0 70px -30px rgba(168,119,230,.4)}
+.lesson-video .play{width:78px;height:78px;margin:-39px 0 0 -39px}
+.lesson-video .play::after{border-left-width:23px;border-top-width:14px;border-bottom-width:14px;margin-left:7px}
+.lesson-video .len{font-size:.8rem;padding:3px 9px}
+
+.needs{margin-top:22px;border:1px solid rgba(232,194,90,.3);border-radius:16px;padding:20px 22px;
+  background:linear-gradient(135deg,rgba(232,194,90,.08),rgba(168,119,230,.05))}
+.needs h2{font-family:var(--serif);font-weight:400;font-size:1.25rem}
+.needs ul{list-style:none;margin-top:10px;display:grid;gap:6px}
+.needs li{position:relative;padding-left:20px;color:var(--mut)}
+.needs li b{color:var(--txt);font-weight:600}
+.needs li::before{content:"";position:absolute;left:0;top:.68em;width:9px;height:2px;background:var(--gold)}
+
+/* numbered steps */
+.step-list{list-style:none;counter-reset:step;margin-top:22px;display:grid;gap:14px}
+.step-list>li{counter-increment:step;position:relative;padding:20px 22px 20px 70px;border:1px solid var(--line);
+  border-radius:16px;background:var(--card)}
+.step-list>li::before{content:counter(step);position:absolute;left:20px;top:16px;font-family:var(--serif);
+  font-size:1.9rem;line-height:1;color:var(--gold)}
+.step-list h3{font-family:var(--serif);font-weight:400;font-size:1.22rem;margin-bottom:8px}
+.step-list p{color:var(--mut);margin-top:8px}
+.step-list p b{color:var(--txt);font-weight:600}
+@media (max-width:560px){ .step-list>li{padding:18px 16px 18px 52px} .step-list>li::before{left:16px;font-size:1.6rem} }
+.sys{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold) !important;margin-top:12px !important}
+.tip{font-size:.9rem}
+kbd{font-family:var(--mono);font-size:.82em;border:1px solid #43345e;border-bottom-width:2px;border-radius:6px;
+  padding:1px 6px;background:var(--ink-2);color:var(--txt)}
+code{font-family:var(--mono);font-size:.9em;color:#f0e6c8;background:rgba(232,194,90,.08);border-radius:5px;padding:1px 5px}
+
+/* a command you can copy */
+.cmd{display:flex;align-items:stretch;gap:0;margin-top:8px;border:1px solid #33264a;border-radius:12px;overflow:hidden;
+  background:#0a0714}
+.cmd code{flex:1;min-width:0;display:block;padding:12px 14px;background:none;border-radius:0;color:#f3efe6;
+  font-size:.88rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.cmd .copy{flex:0 0 auto;padding:0 16px;border-left:1px solid #33264a;color:var(--gold);font-size:.78rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;transition:background .16s,color .16s}
+.cmd .copy:hover,.cmd .copy:focus-visible{background:rgba(232,194,90,.12);outline:none}
+.cmd .copy.done{color:var(--ok)}
+.cmd.big code{font-size:1rem;padding:15px 16px;color:var(--gold-hi)}
+
+.more{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 18px}
+.more summary{cursor:pointer;padding:15px 0;font-family:var(--serif);font-size:1.05rem}
+.more summary:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:6px}
+.more p{color:var(--mut)}
+.more .cmd:last-child{margin-bottom:16px}
+
+/* unlock */
+.unlock .intro{margin-top:14px}
+.unlock .cmd.big{margin-top:12px;max-width:760px}
+/* course.css styles email inputs + selects only; the key is a text input, so it needs the same field look here */
+.unlock-form input[name=key]{min-width:0;background:var(--ink-2);color:var(--txt);border:1px solid var(--line);
+  border-radius:999px;padding:13px 18px;font:inherit;font-size:1rem;font-family:var(--mono);letter-spacing:.06em;
+  text-transform:uppercase;transition:border-color .16s,box-shadow .16s}
+.unlock-form input[name=key]::placeholder{color:#7d7394}
+.unlock-form input[name=key]:hover{border-color:#43345e}
+.unlock-form input[name=key]:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,194,90,.18)}
+.unlocked{margin-top:18px;padding:20px;border:1px solid rgba(127,224,168,.45);border-radius:16px;
+  background:rgba(127,224,168,.07)}
+.unlocked .done-line{color:var(--ok);font-family:var(--serif);font-size:1.2rem;margin-bottom:14px}
+.unlock .micro{margin-top:14px}
+.fine{color:var(--mut);font-size:.84rem;max-width:80ch;margin-top:34px}
+.fine a{color:var(--gold)}
+
+/* long-form pages (the key page, Lesson 2) */
+.doc{padding-top:48px;padding-bottom:10px;max-width:860px}
+.doc h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,1.3rem + 3vw,3.2rem);line-height:1.08;margin-bottom:14px}
+.doc h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.4rem,1.1rem + 1.2vw,1.9rem);line-height:1.2;margin:40px 0 12px}
+.doc h3{font-family:var(--serif);font-weight:400;font-size:1.25rem;margin:26px 0 8px}
+.doc p,.doc li{color:#d9d2e6}
+.doc p{margin-top:12px}
+.doc ul,.doc ol{margin:12px 0 0 22px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+/* a long URL is one unbreakable word: without these it stretched the list past a phone screen (gate: +36px) */
+.doc li{min-width:0}
+.doc a{overflow-wrap:anywhere}
+.doc strong,.doc b{color:var(--txt)}
+.doc blockquote{margin:16px 0;padding:14px 18px;border-left:3px solid var(--gold);background:rgba(232,194,90,.06);
+  border-radius:0 12px 12px 0}
+.doc blockquote p{margin:0}
+.doc hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.doc table{width:100%;border-collapse:collapse;margin-top:16px;font-size:.93rem}
+.doc th,.doc td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.doc th{color:var(--gold);font-weight:600;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+.doc td:first-child{white-space:nowrap;color:var(--mut)}
+@media (max-width:640px){
+  .doc table,.doc thead,.doc tbody,.doc tr,.doc th,.doc td{display:block}
+  .doc thead{display:none}
+  .doc tr{padding:10px 0;border-bottom:1px solid var(--line)}
+  .doc td{border:0;padding:3px 0}
+  .doc td:empty{display:none}
+}
+.for-crew{margin-top:34px;border:1px solid rgba(168,119,230,.4);border-radius:18px;padding:6px 24px 22px;
+  background:linear-gradient(180deg,rgba(168,119,230,.08),rgba(168,119,230,.02))}
+.for-crew ol{gap:14px}
+.check{border-top:1px solid var(--line);padding-top:14px;margin-top:18px !important}
+.doc .lede{margin-top:8px}
+.next{margin-top:34px;padding:22px;border:1px solid rgba(232,194,90,.35);border-radius:16px;background:var(--ink-2)}
